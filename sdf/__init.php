@@ -34,7 +34,8 @@ if (PHP_SAPI == 'cli-server' and SDF_ENV == 'development') {
         }
     }
 }
-
+// Add Constants
+require SDF_DIR . 'constants.php';
 // lets require our core, benchmark and router files.
 require SDF_DIR . 'core/Core.php';
 $initializer = new SDF\Core();
@@ -52,6 +53,12 @@ $initializer::core_loadClass('Library');
 $initializer::core_loadClass('Model');
 $router::pathNotFound(SDF_EH_404);
 $router::methodNotAllowed(SDF_EH_405);
+// Set Routing Configuration (Class config not the routes.)
+foreach ($initializer::core_getConfig('app') as $config => $value) {
+    if (str_starts_with('rc_', $value)) {
+        $router::setRConfig(str_replace('rc_', '', $config), $value);
+    }
+}
 // Initialize routes configuration
 foreach ($initializer::core_getConfig('routes') as $route => $controller) {
     $router::add($route, $controller);

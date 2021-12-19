@@ -28,7 +28,7 @@ class Router extends Core
      * Router settings
      * @var array
      */
-    protected static array $settings = [
+    protected static array $rConfig = [
         'debug' => false,
         'magicRouting' => true,
         'controllersDir' => SDF_APP_CONT,
@@ -45,8 +45,8 @@ class Router extends Core
      */
     public static function _setSetting(string $field, string $value): bool
     {
-        if (array_key_exists($field, self::$settings)) {
-            self::$settings[$field] = $value;
+        if (array_key_exists($field, self::$rConfig)) {
+            self::$rConfig[$field] = $value;
             return true;
         }
         return false;
@@ -76,7 +76,7 @@ class Router extends Core
      */
     public static function pathNotFound($function)
     {
-        self::$settings['pathNotFound'] = $function;
+        self::$rConfig['pathNotFound'] = $function;
     }
 
     // --------------------------------------------------------------------
@@ -88,7 +88,7 @@ class Router extends Core
      */
     public static function methodNotAllowed($function)
     {
-        self::$settings['methodNotAllowed'] = $function;
+        self::$rConfig['methodNotAllowed'] = $function;
     }
 
     // --------------------------------------------------------------------
@@ -104,20 +104,15 @@ class Router extends Core
 
     // --------------------------------------------------------------------
 
-    /**
-     * Map's All Controllers And Creates Routing For Them
-     * Only index method will be added to routing scheme for security.
-     * @return void
-     * @uses \SDF\Router::add()
-     */
-    protected static function _magic_add()
+    public static function setRConfig(string $field, string $value): bool
     {
-        if (self::$settings['magicRouting']) {
-            foreach (self::core_scanDirectory(self::$settings['controllersDir']) as $controller) {
-                self::add(strtolower(rtrim($controller, '.php')), 'index');
-                $controller = null;
-            }
+        if (array_key_exists($field, self::$rConfig)) {
+            self::$rConfig[$field] = $value;
+            return true;
         }
+        // Return false and print err.
+        self::core_triggerError(SDF_E_RENDER, 'Router config ' . $field . ' not needed.');
+        return false;
     }
 
     // --------------------------------------------------------------------
@@ -130,8 +125,6 @@ class Router extends Core
      */
     public static function ignite(string $basePath = '/'): void
     {
-        // The controller must be found by magic add function for magic routing work
-        self::_magic_add();
         $parsed_url = parse_url($_SERVER['REQUEST_URI']);
         $path = $parsed_url['path'] ?? '/';
         $method = ($_SERVER['REQUEST_METHOD'] ?? 'get');
@@ -139,7 +132,7 @@ class Router extends Core
         $route_match_found = false;
         foreach (self::$routes as $route) {
             if ($basePath != '' && $basePath != '/') $route['expression'] = '(' . $basePath . ')' . $route['expression'];
-            if (preg_match('#' . $route['expression'] . '#', $path, $matches)) {
+            if (preg_match("@\A{$route['expression']}\z@", $path, $matches)) {
                 $path_match_found = true;
                 if (strtolower($method) == strtolower($route['method']) or $route['method'] == 'any') {
                     array_shift($matches);
@@ -150,7 +143,7 @@ class Router extends Core
                         if (sscanf($route['controller'], '%[^/]/%s', $class, $function) !== 2) {
                             $function = 'index';
                         } else {
-                            $controller = self::$settings['controllersDir'];
+                            $controller = self::$rConfig['controllersDir'];
                             if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
                                 $class = ucfirst($class);
                                 require $controller . $class . '.php';
@@ -180,52 +173,57 @@ class Router extends Core
                     break;
                 }
             } else {
-                $path_match_found = false;
-                $route_match_found = false;
-                if (sscanf(substr($path, 1), '%[^/]/%s', $class, $function) !== 2) {
-                    $function = 'index';
-                }
-                $controller = self::$settings['controllersDir'] . DIRECTORY_SEPARATOR;
-                if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
-                    $route_match_found = true;
-                    $class = ucfirst($class);
-                    require $controller . $class . '.php';
-                    $renderer = [new $class, $function];
-                    if (is_callable($renderer)) {
-                        $path_match_found = true;
-                        call_user_func_array($renderer, $matches);
+                // Begin magic routing
+                if (self::$rConfig['magicRouting']) {
+                    $path_match_found = false;
+                    $route_match_found = false;
+                    if (sscanf(substr($path, 1), '%[^/]/%s', $class, $function) !== 2) {
+                        $function = 'index';
                     }
-                } else {
-                    sscanf($function, '%[^/]/%s', $controllerclass, $function);
-                    if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerclass) . '.php')) {
-                        $classPath = $class . DIRECTORY_SEPARATOR;
-                        $class = ucfirst($controllerclass);
-                        require $controller . $classPath . $class . '.php';
+                    $controller = self::$rConfig['controllersDir'] . DIRECTORY_SEPARATOR;
+                    if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
+                        $route_match_found = true;
+                        $class = ucfirst($class);
+                        require $controller . $class . '.php';
                         $renderer = [new $class, $function];
                         if (is_callable($renderer)) {
+                            $path_match_found = true;
                             call_user_func_array($renderer, $matches);
-                        } else {
-                            $path_match_found = false;
+                        }
+                    } else {
+                        sscanf($function, '%[^/]/%s', $controllerclass, $function);
+                        if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerclass) . '.php')) {
+                            $route_match_found = true;
+                            $classPath = $class . DIRECTORY_SEPARATOR;
+                            $class = ucfirst($controllerclass);
+                            require $controller . $classPath . $class . '.php';
+                            $renderer = [new $class, $function];
+                            if (is_callable($renderer)) {
+                                $path_match_found = true;
+                                call_user_func_array($renderer, $matches);
+                            } else {
+                                $path_match_found = false;
+                            }
                         }
                     }
+                    break;
                 }
-                break;
             }
         }
         if (!$route_match_found) {
             if ($path_match_found) {
                 header("HTTP/1.0 405 Method Not Allowed");
-                if (self::$settings['methodNotAllowed']) {
-                    call_user_func_array(self::$settings['methodNotAllowed'], array($path, $method));
+                if (self::$rConfig['methodNotAllowed']) {
+                    call_user_func_array(self::$rConfig['methodNotAllowed'], array($path, $method));
                 }
             } else {
                 header("HTTP/1.0 404 Not Found");
-                call_user_func_array(self::$settings['pathNotFound'], array($path));
+                call_user_func_array(self::$rConfig['pathNotFound'], array($path));
             }
         } else {
             if (!$path_match_found) {
                 header("HTTP/1.0 404 Not Found");
-                call_user_func_array(self::$settings['pathNotFound'], array($path));
+                call_user_func_array(self::$rConfig['pathNotFound'], array($path));
             }
         }
     }

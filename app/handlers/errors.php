@@ -24,3 +24,10 @@ function eh_methodNotAllowed($requestPath, $requestMethod): void
     print_r("Method " . $requestMethod . " not allowed on this path.");
     exit();
 }
+
+/**
+ * @return void
+ */
+function eh_errorHandler(): void
+{
+}

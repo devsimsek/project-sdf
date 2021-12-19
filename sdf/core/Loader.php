@@ -6,9 +6,7 @@ class Loader
 {
 
     protected static array $isLoaded = [];
-
-    //todo
-
+    
     /**
      * todo: add documentation
      * @param string $name

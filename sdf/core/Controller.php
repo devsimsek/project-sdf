@@ -17,9 +17,9 @@ class Controller extends Core
         $this->load =& self::core_loadClass('Loader');
     }
 
-    public function get_config(string $config, string $key = null)
+    public function get_config(string $key = null)
     {
-        return self::core_getConfig($config, $key);
+        return self::core_getConfig('app', $key);
     }
 
 }

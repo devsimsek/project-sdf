@@ -5,4 +5,5 @@
  * Pattern Shortcuts;
  * {url}, {id}, {all}
  */
+$config['/home'] = 'example/home/test';
 $config['/'] = 'example/home/index';

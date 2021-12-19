@@ -2,7 +2,6 @@
 
 class Home extends \SDF\Controller
 {
-
     public function __construct()
     {
         parent::__construct();
@@ -10,6 +9,11 @@ class Home extends \SDF\Controller
 
     public function index()
     {
-        $this->load->view('example/home');
+        $this->load->view('example/home', $this);
+    }
+
+    public function test()
+    {
+        print_r('Welcome again. Magic routing works like a charm');
     }
 }

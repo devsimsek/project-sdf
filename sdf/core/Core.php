@@ -21,36 +21,7 @@ class Core
 
     private static array $isLoaded = [];
     private static array $classes = [];
-    protected static array $config = [];
-
-    // todo create __logger function
-    protected static function core_log_report()
-    {
-
-    }
-
-    /**
-     * Scan Directory
-     * todo: assign configuration to sdf config
-     * @param string $directory
-     * @return false|array
-     */
-    protected static function core_scanDirectory(string $directory = ''): false|array
-    {
-        if (empty($directory)) {
-            return glob('*.{php}', GLOB_BRACE);
-        } else {
-            $files = glob($directory . '/*.{php}', GLOB_BRACE);
-            if (is_array($files)) {
-                $return = [];
-                foreach ($files as $file) {
-                    array_push($return, str_replace($directory . '/', '', $file));
-                }
-                return $return;
-            }
-            return false;
-        }
-    }
+    private static array $config = [];
 
     /**
      * Load Class
@@ -116,7 +87,11 @@ class Core
             if (file_exists(SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file)) {
                 require SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file;
                 if (isset($config)) {
-                    self::$config[str_replace('.php', '', $file)] = array_merge(self::$config, $config);
+                    if (isset(self::$config[str_replace('.php', '', $file)])) {
+                        self::$config[str_replace('.php', '', $file)] = array_merge(self::$config[str_replace('.php', '', $file)], $config);
+                    } else {
+                        self::$config[str_replace('.php', '', $file)] = $config;
+                    }
                 }
             }
             $config = null;
@@ -144,9 +119,65 @@ class Core
         return false;
     }
 
-    protected static function core_getAppConfiguration()
+    /**
+     * Todo add documentation
+     * @param int $errnum
+     * @param string $errmessage
+     * @param string|null $errfile
+     * @param int $errline
+     * @return void
+     */
+    public static function core_triggerError(int $errnum, string $errmessage, string $errfile = null, int $errline = 0): void
     {
-        return self::$config;
+        if (!self::core_getConfig('app', 'eh_errorHandler')) {
+            $input = [
+                "errnum" => $errnum,
+                "errmessage" => $errmessage,
+                "errfile" => $errfile,
+                "errline" => $errline,
+            ];
+            call_user_func_array(self::core_getConfig('app', 'eh_errorHandler'), $input);
+        }
+        if (function_exists('eh_errorHandler')) {
+            $input = [
+                "errnum" => $errnum,
+                "errmessage" => $errmessage,
+                "errfile" => $errfile,
+                "errline" => $errline,
+            ];
+            call_user_func_array('eh_errorHandler', $input);
+        } else {
+            die("(E_eh404) Error. SDF can't find errorHandler function. Maybe it does not exists?");
+        }
+    }
+
+    // todo create __logger function
+    protected static function core_log_report()
+    {
+
+    }
+
+    /**
+     * Scan Directory
+     * todo: assign configuration to sdf config
+     * @param string $directory
+     * @return false|array
+     */
+    protected static function core_scanDirectory(string $directory = ''): false|array
+    {
+        if (empty($directory)) {
+            return glob('*.{php}', GLOB_BRACE);
+        } else {
+            $files = glob($directory . '/*.{php}', GLOB_BRACE);
+            if (is_array($files)) {
+                $return = [];
+                foreach ($files as $file) {
+                    array_push($return, str_replace($directory . '/', '', $file));
+                }
+                return $return;
+            }
+            return false;
+        }
     }
 
     /**
