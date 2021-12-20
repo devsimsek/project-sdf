@@ -17,12 +17,13 @@
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * Let's begin with routing configuration.
  */
-$config['rc_magicRouting'] = false;
+$config['rc_magicRouting'] = true;
 
 /**
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * Custom Config.
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
+ * Access with prefix app_
  */
 $config['app_version'] = 'v1.0';
 $config['app_title'] = 'My new sdf powered application';

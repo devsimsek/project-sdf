@@ -9,7 +9,7 @@ class Home extends \SDF\Controller
 
     public function index()
     {
-        $this->load->view('example/home', $this);
+        $this->load->view('example/home', $this->get_config());
     }
 
     public function test()

@@ -144,28 +144,21 @@ class Router extends Core
                             $function = 'index';
                         } else {
                             $controller = self::$rConfig['controllersDir'];
+                            sscanf($function, '%[^/]/%s', $controllerClass, $function);
                             if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
                                 $class = ucfirst($class);
                                 require $controller . $class . '.php';
-                                $renderer = [new $class, $function];
-                                if (is_callable($renderer)) {
-                                    call_user_func_array($renderer, $matches);
-                                } else {
-                                    $path_match_found = false;
-                                }
+                            }
+                            if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerClass) . '.php')) {
+                                $classPath = $class . DIRECTORY_SEPARATOR;
+                                $class = ucfirst($controllerClass);
+                                require $controller . $classPath . $class . '.php';
+                            }
+                            $renderer = [new $class, $function];
+                            if (is_callable($renderer)) {
+                                call_user_func_array($renderer, $matches);
                             } else {
-                                sscanf($function, '%[^/]/%s', $controllerclass, $function);
-                                if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerclass) . '.php')) {
-                                    $classPath = $class . DIRECTORY_SEPARATOR;
-                                    $class = ucfirst($controllerclass);
-                                    require $controller . $classPath . $class . '.php';
-                                    $renderer = [new $class, $function];
-                                    if (is_callable($renderer)) {
-                                        call_user_func_array($renderer, $matches);
-                                    } else {
-                                        $path_match_found = false;
-                                    }
-                                }
+                                $path_match_found = false;
                             }
                         }
                     }
@@ -176,7 +169,6 @@ class Router extends Core
                 // Begin magic routing
                 if (self::$rConfig['magicRouting']) {
                     $path_match_found = false;
-                    $route_match_found = false;
                     if (sscanf(substr($path, 1), '%[^/]/%s', $class, $function) !== 2) {
                         $function = 'index';
                     }
@@ -185,26 +177,20 @@ class Router extends Core
                         $route_match_found = true;
                         $class = ucfirst($class);
                         require $controller . $class . '.php';
-                        $renderer = [new $class, $function];
-                        if (is_callable($renderer)) {
-                            $path_match_found = true;
-                            call_user_func_array($renderer, $matches);
-                        }
+                    }
+                    sscanf($function, '%[^/]/%s', $controllerclass, $function);
+                    if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerclass) . '.php')) {
+                        $route_match_found = true;
+                        $classPath = $class . DIRECTORY_SEPARATOR;
+                        $class = ucfirst($controllerclass);
+                        require $controller . $classPath . $class . '.php';
+                    }
+                    $renderer = [new $class, $function];
+                    if (is_callable($renderer)) {
+                        $path_match_found = true;
+                        call_user_func_array($renderer, $matches);
                     } else {
-                        sscanf($function, '%[^/]/%s', $controllerclass, $function);
-                        if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerclass) . '.php')) {
-                            $route_match_found = true;
-                            $classPath = $class . DIRECTORY_SEPARATOR;
-                            $class = ucfirst($controllerclass);
-                            require $controller . $classPath . $class . '.php';
-                            $renderer = [new $class, $function];
-                            if (is_callable($renderer)) {
-                                $path_match_found = true;
-                                call_user_func_array($renderer, $matches);
-                            } else {
-                                $path_match_found = false;
-                            }
-                        }
+                        $path_match_found = false;
                     }
                     break;
                 }
