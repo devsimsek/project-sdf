@@ -24,7 +24,7 @@ class Benchmark extends Core
      *
      * @var array
      */
-    public $marker = array();
+    public array $marker = array();
 
     /**
      * Set a benchmark marker
@@ -60,7 +60,7 @@ class Benchmark extends Core
      * an '{elapsed_string}' if $point1 is empty
      * or an empty string if $point1 is not found.
      */
-    public function elapsed_time($point1 = '', $point2 = '', $decimals = 4)
+    public function elapsed_time($point1 = '', $point2 = '', $decimals = 4): string
     {
         if ($point1 === '') {
             return '{elapsed_time}';
@@ -87,7 +87,7 @@ class Benchmark extends Core
      *
      * @return string '{memory_usage}'
      */
-    public function memory_usage()
+    public function memory_usage(): string
     {
         return '{memory_usage}';
     }

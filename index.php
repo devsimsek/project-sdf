@@ -97,7 +97,7 @@ const SDF_EH_405 = 'eh_methodNotAllowed';
 
 /**
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
- * Benchmark
+ * Benchmarking
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * Do you want to test you application's speed?
  * If you do please set the line true.

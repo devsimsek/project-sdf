@@ -6,9 +6,9 @@ class Loader
 {
 
     protected static array $isLoaded = [];
-    
+
     /**
-     * todo: add documentation
+     * Load view.
      * @param string $name
      * @param array|object $params
      * @param string $directory
@@ -53,7 +53,7 @@ class Loader
     }
 
     /**
-     * todo documentation
+     * Load Model
      * @param string $name
      * @param string $directory
      * @return bool|object
@@ -76,9 +76,9 @@ class Loader
     }
 
     /**
-     * todo documentation
+     * Load Library
      * @param string $name
-     * @param string|null $params
+     * @param array|object $params
      * @param string $directory
      * @return bool|object
      */
@@ -104,12 +104,12 @@ class Loader
     }
 
     /**
-     * todo documentation
+     * Load File
      * @param string $name
      * @param string $directory
      * @return false|mixed
      */
-    public function file(string $name, string $directory = SDF_DIR)
+    public function file(string $name, string $directory = SDF_DIR): mixed
     {
         if (!isset(self::$isLoaded[strtolower($name)]) or !isset(self::$isLoaded[strtolower($name) . '.php'])) {
             if (!str_ends_with($name, '.php')) {
@@ -124,7 +124,7 @@ class Loader
     }
 
     /**
-     * todo documentation
+     * Load Config File
      * @param string $file
      * @param string $directory
      * @return bool|array

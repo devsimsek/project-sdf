@@ -100,7 +100,7 @@ class Core
 
     /**
      * @param string $config
-     * @param string $key
+     * @param string|null $key
      * @return false|mixed
      */
     public static function core_getConfig(string $config, string $key = null): mixed
@@ -120,7 +120,7 @@ class Core
     }
 
     /**
-     * Todo add documentation
+     * Trigger Error
      * @param int $errnum
      * @param string $errmessage
      * @param string|null $errfile
@@ -151,15 +151,8 @@ class Core
         }
     }
 
-    // todo create __logger function
-    protected static function core_log_report()
-    {
-
-    }
-
     /**
      * Scan Directory
-     * todo: assign configuration to sdf config
      * @param string $directory
      * @param string $extension
      * @return false|array

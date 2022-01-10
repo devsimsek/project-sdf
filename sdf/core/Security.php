@@ -105,14 +105,16 @@ class Security
 
     private function securityDebug(mixed $message, string $flag = 'debug', array $details = null): void
     {
-        $template = $this->SecurityConfiguration['logging']['template'];
-        $variables = [
-            '$timestamp' => date(DATE_RFC3339),
-            '$flag' => strtoupper($flag),
-            '$message' => $message,
-            '$details' => $details ?? ''
-        ];
-        error_log(strtr($template, $variables));
-        if ($this->SecurityConfiguration['logging']['logToFile']) file_put_contents($this->SecurityConfiguration['logging']['path'] . $this->SecurityConfiguration['logging']['prefix'] . date(DATE_RFC3339) . '.sdf_log', strtr($template, $variables));
+        if ($this->SecurityConfiguration['logging']['logging']) {
+            $template = 'SECURITY ' . $this->SecurityConfiguration['logging']['template'];
+            $variables = [
+                '$timestamp' => date(DATE_RFC3339),
+                '$flag' => strtoupper($flag),
+                '$message' => $message,
+                '$details' => $details ?? ''
+            ];
+            error_log(strtr($template, $variables));
+            if ($this->SecurityConfiguration['logging']['logToFile']) file_put_contents($this->SecurityConfiguration['logging']['path'] . $this->SecurityConfiguration['logging']['prefix'] . date(DATE_RFC3339) . '.sdf_log', strtr($template, $variables));
+        }
     }
 }

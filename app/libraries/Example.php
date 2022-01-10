@@ -1,6 +1,11 @@
 <?php
 
-class Example extends \SDF\Library
+/**
+ * Example Library.
+ * Remove in production.
+ */
+/*
+class Example extends SDF\Library
 {
 
     public function __construct($val1, $val2)
@@ -13,3 +18,4 @@ class Example extends \SDF\Library
         print_r('hello');
     }
 }
+*/

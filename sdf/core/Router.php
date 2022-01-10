@@ -104,6 +104,12 @@ class Router extends Core
 
     // --------------------------------------------------------------------
 
+    /**
+     * Set Router's Config
+     * @param string $field
+     * @param string $value
+     * @return bool
+     */
     public static function setRConfig(string $field, string $value): bool
     {
         if (array_key_exists($field, self::$rConfig)) {
@@ -120,6 +126,8 @@ class Router extends Core
     /**
      * Ignite router
      * Starts routing class and render's each controller by request
+     * Next version this function will be more readable. Sorry for
+     * the mess.
      * @param string $basePath
      * @return void
      */
