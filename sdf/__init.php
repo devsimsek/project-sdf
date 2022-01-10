@@ -46,6 +46,7 @@ $initializer::core_loadConfigurations();
 // Lets include our error handlers...
 require SDF_APP . 'handlers/errors.php';
 // And Router...
+$security = $initializer::core_loadClass('Security');
 $router = $initializer::core_loadClass('Router');
 // And Model, Controller, Middleware...
 $initializer::core_loadClass('Controller');
@@ -61,7 +62,11 @@ foreach ($initializer::core_getConfig('app') as $config => $value) {
 }
 // Initialize routes configuration
 foreach ($initializer::core_getConfig('routes') as $route => $controller) {
-    $router::add($route, $controller);
+    if (is_array($controller)) {
+        $router::add($route, $controller[0], $controller[1]);
+    } else {
+        $router::add($route, $controller);
+    }
 }
 $bm->mark('__sdf__router__start__');
 $router::ignite();

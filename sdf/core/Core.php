@@ -83,7 +83,7 @@ class Core
      */
     public static function core_loadConfigurations(string $directory = 'config')
     {
-        foreach (array_diff(scandir(SDF_APP . DIRECTORY_SEPARATOR . $directory), array('.', '..')) as $file) {
+        foreach (self::core_scanDirectory(SDF_APP . DIRECTORY_SEPARATOR . $directory) as $file) {
             if (file_exists(SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file)) {
                 require SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file;
                 if (isset($config)) {
@@ -161,14 +161,15 @@ class Core
      * Scan Directory
      * todo: assign configuration to sdf config
      * @param string $directory
+     * @param string $extension
      * @return false|array
      */
-    protected static function core_scanDirectory(string $directory = ''): false|array
+    public static function core_scanDirectory(string $directory = '', string $extension = '.{php}'): false|array
     {
         if (empty($directory)) {
-            return glob('*.{php}', GLOB_BRACE);
+            return glob('*' . $extension, GLOB_BRACE);
         } else {
-            $files = glob($directory . '/*.{php}', GLOB_BRACE);
+            $files = glob($directory . '/*' . $extension, GLOB_BRACE);
             if (is_array($files)) {
                 $return = [];
                 foreach ($files as $file) {

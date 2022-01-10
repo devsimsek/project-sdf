@@ -148,17 +148,20 @@ class Router extends Core
                             if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
                                 $class = ucfirst($class);
                                 require $controller . $class . '.php';
+                                $route_match_found = true;
                             }
                             if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerClass) . '.php')) {
                                 $classPath = $class . DIRECTORY_SEPARATOR;
                                 $class = ucfirst($controllerClass);
                                 require $controller . $classPath . $class . '.php';
+                                $route_match_found = true;
                             }
-                            $renderer = [new $class, $function];
-                            if (is_callable($renderer)) {
-                                call_user_func_array($renderer, $matches);
-                            } else {
-                                $path_match_found = false;
+                            if ($route_match_found) {
+                                if (is_callable($renderer = [new $class, $function])) {
+                                    call_user_func_array($renderer, $matches);
+                                } else {
+                                    $path_match_found = false;
+                                }
                             }
                         }
                     }
@@ -172,27 +175,30 @@ class Router extends Core
                     if (sscanf(substr($path, 1), '%[^/]/%s', $class, $function) !== 2) {
                         $function = 'index';
                     }
-                    $controller = self::$rConfig['controllersDir'] . DIRECTORY_SEPARATOR;
-                    if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
-                        $route_match_found = true;
-                        $class = ucfirst($class);
-                        require $controller . $class . '.php';
+                    if (!empty($class)) {
+                        $controller = self::$rConfig['controllersDir'] . DIRECTORY_SEPARATOR;
+                        if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
+                            $route_match_found = true;
+                            $class = ucfirst($class);
+                            require $controller . $class . '.php';
+                        }
+                        sscanf($function, '%[^/]/%s', $controllerclass, $function);
+                        if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerclass) . '.php')) {
+                            $route_match_found = true;
+                            $classPath = $class . DIRECTORY_SEPARATOR;
+                            $class = ucfirst($controllerclass);
+                            require $controller . $classPath . $class . '.php';
+                        }
+                        if ($route_match_found) {
+                            if (is_callable($renderer = [new $class, $function])) {
+                                $path_match_found = true;
+                                call_user_func_array($renderer, $matches);
+                            } else {
+                                $path_match_found = false;
+                            }
+                        }
+                        break;
                     }
-                    sscanf($function, '%[^/]/%s', $controllerclass, $function);
-                    if (file_exists($controller . $class . DIRECTORY_SEPARATOR . ucfirst($controllerclass) . '.php')) {
-                        $route_match_found = true;
-                        $classPath = $class . DIRECTORY_SEPARATOR;
-                        $class = ucfirst($controllerclass);
-                        require $controller . $classPath . $class . '.php';
-                    }
-                    $renderer = [new $class, $function];
-                    if (is_callable($renderer)) {
-                        $path_match_found = true;
-                        call_user_func_array($renderer, $matches);
-                    } else {
-                        $path_match_found = false;
-                    }
-                    break;
                 }
             }
         }
