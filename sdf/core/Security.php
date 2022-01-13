@@ -17,22 +17,8 @@ class Security
         self::securityDebug('Security Class Initialized.');
     }
 
-<<<<<<< HEAD
-    /**
-     * @return array
-     */
-    private static function openINIFile(): array
-    {
-        if (file_exists(SDF_APP_CONF . 'security.ini')) {
-            return parse_ini_file(SDF_APP_CONF . 'security.ini', true) ?? array('error' => 'Can\'t validate file format.');
-        }
-        return array(
-            'error' => 'Path doesn\'t exists.',
-        );
-=======
     private function igniteSecurity()
     {
->>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
     }
 
     private function checkLogs()
@@ -81,25 +67,6 @@ class Security
         }
     }
 
-<<<<<<< HEAD
-    private function igniteSecurity()
-    {
-    }
-
-    private function securityDebug(mixed $message, string $flag = 'debug', array $details = null): void
-    {
-        if ($this->SecurityConfiguration['logging']['logging']) {
-            $template = 'SECURITY ' . $this->SecurityConfiguration['logging']['template'];
-            $variables = [
-                '$timestamp' => date(DATE_RFC3339),
-                '$flag' => strtoupper($flag),
-                '$message' => $message,
-                '$details' => $details ?? ''
-            ];
-            error_log(strtr($template, $variables));
-            if ($this->SecurityConfiguration['logging']['logToFile']) file_put_contents($this->SecurityConfiguration['logging']['path'] . $this->SecurityConfiguration['logging']['prefix'] . date(DATE_RFC3339) . '.sdf_log', strtr($template, $variables));
-        }
-=======
     /**
      * @return array
      */
@@ -121,7 +88,6 @@ class Security
     public function csrf_setToken()
     {
 
->>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
     }
 
     /**
@@ -132,25 +98,11 @@ class Security
         return "";
     }
 
-<<<<<<< HEAD
-    /**
-     * Put to log file
-     * @return void
-     */
-
-    public function csrf_setToken()
-=======
     public function verify()
->>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
     {
 
     }
 
-<<<<<<< HEAD
-    public function verify()
-    {
-
-=======
     private function securityDebug(mixed $message, string $flag = 'debug', array $details = null): void
     {
         if ($this->SecurityConfiguration['logging']['logging']) {
@@ -164,6 +116,5 @@ class Security
             error_log(strtr($template, $variables));
             if ($this->SecurityConfiguration['logging']['logToFile']) file_put_contents($this->SecurityConfiguration['logging']['path'] . $this->SecurityConfiguration['logging']['prefix'] . date(DATE_RFC3339) . '.sdf_log', strtr($template, $variables));
         }
->>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
     }
 }

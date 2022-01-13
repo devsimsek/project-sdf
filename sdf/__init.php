@@ -19,7 +19,12 @@ if (!defined('SDF') and !SDF) {
 }
 const SDF_VERSION = 1.0;
 
-// Before everything lets check is request static file
+// Check minimum version requirement of this framework.
+if (version_compare(PHP_VERSION, '8.0.0') <= 0) {
+    die('FATAL ERROR: Sdf is designed to work with php 8.0 and upper versions. Please update your php version.');
+}
+
+// Before everything lets check if request static file
 // Is php cli and development? if not the server will
 // process request.
 if (PHP_SAPI == 'cli-server' and SDF_ENV == 'development') {

@@ -2,6 +2,9 @@
 
 /**
  * Example controller.
+ * @warn Consider removing $this->get_config();
+ * to $this->get_config('key_for_wanted_config')
+ * for security reasons.
  */
 class Home extends SDF\Controller
 {

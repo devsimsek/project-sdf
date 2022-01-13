@@ -77,24 +77,6 @@ class Core
     }
 
     /**
-<<<<<<< HEAD
-     * Keeps track of which libraries have been loaded. This function is
-     * called by core_loadClass
-     * @param string $class
-     * @return array
-     */
-    protected static function core_isLoaded(string $class): array
-    {
-        if ($class !== '') {
-            self::$isLoaded[strtolower($class)] = $class;
-        }
-
-        return self::$isLoaded;
-    }
-
-    /**
-=======
->>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
      * Example configuration;
      * $config['config_file']['config_key'];
      * @param string $directory
@@ -117,28 +99,6 @@ class Core
     }
 
     /**
-<<<<<<< HEAD
-     * Scan Directory
-     * @param string $directory
-     * @param string $extension
-     * @return false|array
-     */
-    public static function core_scanDirectory(string $directory = '', string $extension = '.{php}'): false|array
-    {
-        if (empty($directory)) {
-            return glob('*' . $extension, GLOB_BRACE);
-        } else {
-            $files = glob($directory . '/*' . $extension, GLOB_BRACE);
-            if (is_array($files)) {
-                $return = [];
-                foreach ($files as $file) {
-                    array_push($return, str_replace($directory . '/', '', $file));
-                }
-                return $return;
-            }
-            return false;
-        }
-=======
      * @param string $config
      * @param string|null $key
      * @return false|mixed
@@ -157,7 +117,6 @@ class Core
             }
         }
         return false;
->>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
     }
 
     /**
@@ -193,26 +152,6 @@ class Core
     }
 
     /**
-<<<<<<< HEAD
-     * @param string $config
-     * @param string|null $key
-     * @return false|mixed
-     */
-    public static function core_getConfig(string $config, string $key = null): mixed
-    {
-        if (array_key_exists($config, self::$config)) {
-            if (!empty($key)) {
-                if (array_key_exists($key, self::$config[$config])) {
-                    return self::$config[$config][$key];
-                } else {
-                    return false;
-                }
-            } else {
-                return self::$config[$config];
-            }
-        }
-        return false;
-=======
      * Scan Directory
      * @param string $directory
      * @param string $extension
@@ -248,6 +187,5 @@ class Core
         }
 
         return self::$isLoaded;
->>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
     }
 }
