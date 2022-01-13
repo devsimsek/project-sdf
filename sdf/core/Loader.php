@@ -8,6 +8,7 @@ class Loader
     protected static array $isLoaded = [];
 
     /**
+<<<<<<< HEAD
      * @return array
      */
     public static function getIsLoaded(): array
@@ -16,6 +17,8 @@ class Loader
     }
 
     /**
+=======
+>>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
      * Load view.
      * @param string $name
      * @param array|object $params
@@ -41,6 +44,7 @@ class Loader
     }
 
     /**
+<<<<<<< HEAD
      * A function that return's the file is loaded or not.
      * @param string $name
      * @return array
@@ -52,6 +56,8 @@ class Loader
     }
 
     /**
+=======
+>>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
      * Load Helper
      * @param string $name
      * @param string $directory
@@ -159,4 +165,26 @@ class Loader
         }
         return false;
     }
+<<<<<<< HEAD
+=======
+
+    /**
+     * A function that return's the file is loaded or not.
+     * @param string $name
+     * @return array
+     */
+    public function isLoaded(string $name): array
+    {
+        self::$isLoaded[strtolower($name)] = $name;
+        return self::$isLoaded;
+    }
+
+    /**
+     * @return array
+     */
+    public static function getIsLoaded(): array
+    {
+        return self::$isLoaded;
+    }
+>>>>>>> ad3fbf4e43aa048707c7af07cc80200f045a8e4b
 }
