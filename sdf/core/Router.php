@@ -128,6 +128,7 @@ class Router extends Core
      * Starts routing class and render's each controller by request
      * Next version this function will be more readable. Sorry for
      * the mess.
+     * @warn Possible bug in controller expression parser.
      * @param string $basePath
      * @return void
      */
@@ -154,7 +155,7 @@ class Router extends Core
                             $controller = self::$rConfig['controllersDir'];
                             preg_match_all('/(.*)\/(.*)/', $route['controller'], $resolvedRequest);
                             $class = implode('/', $resolvedRequest[1]);
-                            $controllerClass = implode('/', $resolvedRequest[2]);
+                            $controllerClass = implode('/', end($resolvedRequest));
                             if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
                                 $class = ucfirst($class);
                                 require $controller . $class . '.php';
@@ -167,7 +168,9 @@ class Router extends Core
                                 $route_match_found = true;
                             }
                             if ($route_match_found) {
-                                if (is_callable($renderer = [new $class, $function])) {
+                                preg_match_all('/(.*)\/(.*)/', $class, $resolvedRequest);
+                                $resolvedRequest = implode('/', end($resolvedRequest));
+                                if (is_callable($renderer = [new $resolvedRequest, $controllerClass])) {
                                     call_user_func_array($renderer, $matches);
                                 } else {
                                     $path_match_found = false;
