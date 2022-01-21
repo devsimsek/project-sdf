@@ -152,7 +152,9 @@ class Router extends Core
                             $function = 'index';
                         } else {
                             $controller = self::$rConfig['controllersDir'];
-                            sscanf($function, '%[^/]/%s', $controllerClass, $function);
+                            preg_match_all('/(.*)\/(.*)/', $route['controller'], $resolvedRequest);
+                            $class = implode('/', $resolvedRequest[1]);
+                            $controllerClass = implode('/', $resolvedRequest[2]);
                             if (file_exists($controller . ucfirst($class) . '.php') or file_exists($controller . $class . '.php')) {
                                 $class = ucfirst($class);
                                 require $controller . $class . '.php';
