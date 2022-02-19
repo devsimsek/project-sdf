@@ -25,8 +25,10 @@ class Loader
                     $params = get_object_vars($params);
                 }
                 extract($params);
-                $this->isLoaded($name);
-                return require $directory . $name;
+                if (!$this->isLoaded($name)) {
+                    $this->load($name);
+                    return require $directory . $name;
+                }
             }
         }
         return false;
@@ -45,8 +47,10 @@ class Loader
                 $name .= '.php';
             }
             if (file_exists($directory . $name)) {
-                $this->isLoaded($name);
-                return require $directory . $name;
+                if (!$this->isLoaded($name)) {
+                    $this->load($name);
+                    return require $directory . $name;
+                }
             }
         }
         return false;
@@ -65,11 +69,13 @@ class Loader
                 $name .= '.php';
             }
             if (file_exists($directory . $name)) {
-                $this->isLoaded($name);
-                require $directory . $name;
-                $name = strtolower(str_replace('.php', '', $name));
-                $model = ucfirst($name);
-                return $this->$name = new $model;
+                if (!$this->isLoaded($name)) {
+                    $this->load($name);
+                    require $directory . $name;
+                    $name = strtolower(str_replace('.php', '', $name));
+                    $model = ucfirst($name);
+                    return $this->$name = new $model;
+                }
             }
         }
         return false;
@@ -89,14 +95,16 @@ class Loader
                 $name .= '.php';
             }
             if (file_exists($directory . $name)) {
-                $this->isLoaded($name);
-                if (!empty($params) and !is_array($params)) {
-                    $params = get_object_vars($params);
+                if (!$this->isLoaded($name)) {
+                    $this->load($name);
+                    if (!empty($params) and !is_array($params)) {
+                        $params = get_object_vars($params);
+                    }
+                    require $directory . $name;
+                    $name = ucfirst(strtolower(str_replace('.php', '', $name)));
+                    $object = strtolower($name);
+                    return $this->$object = new $name(...$params);
                 }
-                require $directory . $name;
-                $name = ucfirst(strtolower(str_replace('.php', '', $name)));
-                $object = strtolower($name);
-                return $this->$object = new $name(...$params);
             }
         }
         return false;
@@ -115,8 +123,10 @@ class Loader
                 $name .= '.php';
             }
             if (file_exists($directory . $name)) {
-                $this->isLoaded($name);
-                return require $directory . $name;
+                if (!$this->isLoaded($name)) {
+                    $this->load($name);
+                    return require $directory . $name;
+                }
             }
         }
         return false;
@@ -143,12 +153,16 @@ class Loader
     /**
      * A function that return's the file is loaded or not.
      * @param string $name
-     * @return array
+     * @return bool
      */
-    public function isLoaded(string $name): array
+    public function isLoaded(string $name): bool
+    {
+        return array_key_exists($name, self::$isLoaded);
+    }
+
+    private function load(string $name)
     {
         self::$isLoaded[strtolower($name)] = $name;
-        return self::$isLoaded;
     }
 
     /**
