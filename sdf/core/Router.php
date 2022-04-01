@@ -170,6 +170,13 @@ class Router extends Core
                             require $search_path . '/' . $controller . '.php';
                             $route_match_found = true;
                         }
+                        str_replace($controllerDir, '', $search_path);
+                        $controller = $request[count($request) - 2];
+                        $search_path = $controllerDir . join('/', array_slice($request, 0, -2));
+                        if (file_exists($search_path . '/' . $controller . '.php') or file_exists($search_path . '/' . ucfirst($controller) . '.php')) {
+                            require $search_path . '/' . $controller . '.php';
+                            $route_match_found = true;
+                        }
                         if ($route_match_found) {
                             if (is_callable($renderer = [new $controller, 'index'])) {
                                 call_user_func_array($renderer, $routeMatches);
