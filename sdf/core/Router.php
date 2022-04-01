@@ -147,7 +147,7 @@ class Router extends Core
                     array_shift($routeMatches);
                     if (is_callable($route['controller'])) call_user_func_array($route['controller'], $routeMatches);
                     $request = explode('/', $route['controller']);
-                    if (count($request) > 2) {
+                    if (count($request) >= 2) {
                         $possible_method = $request[count($request) - 1];
                         $possible_controller = $request[count($request) - 2];
                         $search_path = $controllerDir . join('/', array_slice($request, 0, -2));
@@ -166,13 +166,6 @@ class Router extends Core
                     } else {
                         $controller = $request[count($request) - 1];
                         $search_path = $controllerDir . join('/', array_slice($request, 0, -1));
-                        if (file_exists($search_path . '/' . $controller . '.php') or file_exists($search_path . '/' . ucfirst($controller) . '.php')) {
-                            require $search_path . '/' . $controller . '.php';
-                            $route_match_found = true;
-                        }
-                        str_replace($controllerDir, '', $search_path);
-                        $controller = $request[count($request) - 2];
-                        $search_path = $controllerDir . join('/', array_slice($request, 0, -2));
                         if (file_exists($search_path . '/' . $controller . '.php') or file_exists($search_path . '/' . ucfirst($controller) . '.php')) {
                             require $search_path . '/' . $controller . '.php';
                             $route_match_found = true;
