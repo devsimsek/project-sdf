@@ -5,7 +5,7 @@
  * Copyright devsimsek
  * @package     SDF
  * @file        __init.php
- * @version     v1.0.0 Early-Alpha Release
+ * @version     v1.0.1 Early-Alpha Release
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
@@ -51,7 +51,6 @@ $initializer::core_loadConfigurations();
 // Lets include our error handlers...
 require SDF_APP . 'handlers/errors.php';
 // And Router...
-$security = $initializer::core_loadClass('Security');
 $router = $initializer::core_loadClass('Router');
 // And Model, Controller, Middleware...
 $initializer::core_loadClass('Controller');
