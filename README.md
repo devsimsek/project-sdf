@@ -4,6 +4,8 @@ Only Pre Releases Are Shown Here.
 Please Do Not Use In Production.
 
 # Update v1.0.1 Early Alpha
+v1.0.1 Early Alpha has been released!!! Go check it at v1.0-alpha branch.
+
 I still support sdf! Sorry for inactive month (had to enter exams :()
 
 So I did some improvements and optimizations for router. 
