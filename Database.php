@@ -4,14 +4,14 @@
  * smskSoft Database Library
  * This file is taken from the project spf (Closed Source)
  * Copyright smskSoft, mtnsmsk, devsimsek, Metin Şimşek.
- * @package     spf Library Dist
+ * @package     SDF Library Dist
  * @subpackage  Database
  * @file        Database.php
  * @version     v1.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2021, smskSoft, mtnsmsk
  * @license     https://opensource.org/licenses/MIT	MIT License
- * @link        https://github.com/devsimsek/phpRest/blob/main/app/libraries/Database.php
+ * @link        https://github.com/devsimsek/project-sdf/blob/libraries/Database.php
  * @since       Version 1.0
  * @filesource
  */
