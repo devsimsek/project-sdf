@@ -151,8 +151,12 @@ class Router extends Core
                         $possible_method = $request[count($request) - 1];
                         $possible_controller = $request[count($request) - 2];
                         $search_path = $controllerDir . join('/', array_slice($request, 0, -2));
-                        if (file_exists($search_path . '/' . $possible_controller . '.php') or file_exists($search_path . '/' . ucfirst($possible_controller) . '.php')) {
+                        if (file_exists($search_path . '/' . $possible_controller . '.php')) {
                             require $search_path . '/' . $possible_controller . '.php';
+                            $route_match_found = true;
+                        }
+                        if (file_exists($search_path . '/' . ucfirst($possible_controller) . '.php')) {
+                            require $search_path . '/' . ucfirst($possible_controller) . '.php';
                             $route_match_found = true;
                         }
                         if ($route_match_found) {
@@ -166,8 +170,12 @@ class Router extends Core
                     } else {
                         $controller = $request[count($request) - 1];
                         $search_path = $controllerDir . join('/', array_slice($request, 0, -1));
-                        if (file_exists($search_path . '/' . $controller . '.php') or file_exists($search_path . '/' . ucfirst($controller) . '.php')) {
+                        if (file_exists($search_path . '/' . $controller . '.php')) {
                             require $search_path . '/' . $controller . '.php';
+                            $route_match_found = true;
+                        }
+                        if (file_exists($search_path . '/' . ucfirst($controller) . '.php')) {
+                            require $search_path . '/' . ucfirst($controller) . '.php';
                             $route_match_found = true;
                         }
                         if ($route_match_found) {
@@ -189,8 +197,12 @@ class Router extends Core
                 $possible_method = $request[count($request) - 1];
                 $possible_controller = $request[count($request) - 2];
                 $search_path = $controllerDir . join('/', array_slice($request, 0, -2));
-                if (file_exists($search_path . '/' . $possible_controller . '.php') or file_exists($search_path . '/' . ucfirst($possible_controller) . '.php')) {
+                if (file_exists($search_path . '/' . $possible_controller . '.php')) {
                     require $search_path . '/' . $possible_controller . '.php';
+                    $route_match_found = true;
+                }
+                if (file_exists($search_path . '/' . ucfirst($possible_controller) . '.php')) {
+                    require $search_path . '/' . ucfirst($possible_controller) . '.php';
                     $route_match_found = true;
                 }
                 if ($route_match_found) {
@@ -204,8 +216,12 @@ class Router extends Core
             } else {
                 $controller = $request[count($request) - 1];
                 $search_path = $controllerDir . join('/', array_slice($request, 0, -1));
-                if (file_exists($search_path . '/' . $controller . '.php') or file_exists($search_path . '/' . ucfirst($controller) . '.php')) {
+                if (file_exists($search_path . '/' . $controller . '.php')) {
                     require $search_path . '/' . $controller . '.php';
+                    $route_match_found = true;
+                }
+                if (file_exists($search_path . '/' . ucfirst($controller) . '.php')) {
+                    require $search_path . '/' . ucfirst($controller) . '.php';
                     $route_match_found = true;
                 }
                 if ($route_match_found) {
