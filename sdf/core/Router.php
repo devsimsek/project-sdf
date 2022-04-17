@@ -151,6 +151,10 @@ class Router extends Core
                         $possible_method = $request[count($request) - 1];
                         $possible_controller = $request[count($request) - 2];
                         $search_path = $controllerDir . join('/', array_slice($request, 0, -2));
+                        // Simple Workaround. May Cause Problems In Future.
+                        if (!file_exists($search_path)) {
+                            $search_path = $controllerDir . join('/', array_slice(array_map('ucfirst', $request), 0, -2));
+                        }
                         if (file_exists($search_path . '/' . $possible_controller . '.php')) {
                             if (!isset($foundController)) {
                                 require $search_path . '/' . $possible_controller . '.php';
@@ -176,6 +180,10 @@ class Router extends Core
                     } else {
                         $controller = $request[count($request) - 1];
                         $search_path = $controllerDir . join('/', array_slice($request, 0, -1));
+                        // Simple Workaround. May Cause Problems In Future.
+                        if (!file_exists($search_path)) {
+                            $search_path = $controllerDir . join('/', array_slice(array_map('ucfirst', $request), 0, -2));
+                        }
                         if (file_exists($search_path . '/' . $controller . '.php')) {
                             if (!isset($foundController)) {
                                 require $search_path . '/' . $controller . '.php';
@@ -209,6 +217,10 @@ class Router extends Core
                 $possible_method = $request[count($request) - 1];
                 $possible_controller = $request[count($request) - 2];
                 $search_path = $controllerDir . join('/', array_slice($request, 0, -2));
+                // Simple Workaround. May Cause Problems In Future.
+                if (!file_exists($search_path)) {
+                    $search_path = $controllerDir . join('/', array_slice(array_map('ucfirst', $request), 0, -2));
+                }
                 if (file_exists($search_path . '/' . $possible_controller . '.php')) {
                     if (!isset($foundController)) {
                         require $search_path . '/' . $possible_controller . '.php';
@@ -234,6 +246,10 @@ class Router extends Core
             } else {
                 $controller = $request[count($request) - 1];
                 $search_path = $controllerDir . join('/', array_slice($request, 0, -1));
+                // Simple Workaround. May Cause Problems In Future.
+                if (!file_exists($search_path)) {
+                    $search_path = $controllerDir . join('/', array_slice(array_map('ucfirst', $request), 0, -2));
+                }
                 if (file_exists($search_path . '/' . $controller . '.php')) {
                     if (!isset($foundController)) {
                         require $search_path . '/' . $controller . '.php';
