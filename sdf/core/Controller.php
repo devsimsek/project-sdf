@@ -28,4 +28,15 @@ class Controller extends Core
         return self::core_getConfig('app', $key);
     }
 
+    /**
+     * Loads custom configuration
+     * @param string $config
+     * @param string|null $key
+     * @return array
+     */
+    public function load_config(string $config, string $key = null): array
+    {
+        return self::core_getConfig($config, $key);
+    }
+
 }
