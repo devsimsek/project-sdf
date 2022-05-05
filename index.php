@@ -123,6 +123,13 @@ const SDF_Benchmark = true;
  */
 
 const SDF_STATIC_MIMES = [
+    '.ttf' => 'font/ttf',
+    '.woff' => 'font/woff',
+    '.woff2' => 'font/woff2',
+    '.svg' => 'image/svg+xml',
+    '.png' => 'image/png',
+    '.jpg' => 'image/jpg',
+    '.jpeg' => 'image/jpeg',
     '.css' => 'text/css',
     '.js' => 'text/javascript',
 ];
@@ -145,7 +152,7 @@ define("SDF_APP_HELP", SDF_APP . $SDF_APP_HELP . DIRECTORY_SEPARATOR);
 define("SDF_APP_LIB", SDF_APP . $SDF_APP_LIB . DIRECTORY_SEPARATOR);
 define("SDF_APP_MODL", SDF_APP . $SDF_APP_MODL . DIRECTORY_SEPARATOR);
 define("SDF_APP_MIDD", SDF_APP . $SDF_APP_MIDD . DIRECTORY_SEPARATOR);
-define("SDF_ROOT", getenv('PWD'));
+define("SDF_ROOT", pathinfo(__FILE__, PATHINFO_DIRNAME));
 if (!file_exists($SDF_DIR)) {
     define("SDF_DIR", 'sdf/');
 } else {
