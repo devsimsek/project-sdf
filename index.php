@@ -144,7 +144,8 @@ const SDF_STATIC_MIMES = [
  * Initialize SDF
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  */
-define("SDF_APP", $SDF_APP . DIRECTORY_SEPARATOR);
+define("SDF_ROOT", pathinfo(__FILE__, PATHINFO_DIRNAME));
+define("SDF_APP", SDF_ROOT . DIRECTORY_SEPARATOR . $SDF_APP . DIRECTORY_SEPARATOR);
 define("SDF_APP_CONF", SDF_APP . $SDF_APP_CONF . DIRECTORY_SEPARATOR);
 define("SDF_APP_CONT", SDF_APP . $SDF_APP_CONT . DIRECTORY_SEPARATOR);
 define("SDF_APP_VIEW", SDF_APP . $SDF_APP_VIEW . DIRECTORY_SEPARATOR);
@@ -152,9 +153,12 @@ define("SDF_APP_HELP", SDF_APP . $SDF_APP_HELP . DIRECTORY_SEPARATOR);
 define("SDF_APP_LIB", SDF_APP . $SDF_APP_LIB . DIRECTORY_SEPARATOR);
 define("SDF_APP_MODL", SDF_APP . $SDF_APP_MODL . DIRECTORY_SEPARATOR);
 define("SDF_APP_MIDD", SDF_APP . $SDF_APP_MIDD . DIRECTORY_SEPARATOR);
-define("SDF_ROOT", pathinfo(__FILE__, PATHINFO_DIRNAME));
 if (!file_exists($SDF_DIR)) {
-    define("SDF_DIR", 'sdf/');
+    if (file_exists(SDF_ROOT . '/sdf/')) {
+        define("SDF_DIR", SDF_ROOT . '/sdf/');
+    } else {
+        die(print_r('Sdf directory not found.'));
+    }
 } else {
     define("SDF_DIR", $SDF_DIR);
 }
