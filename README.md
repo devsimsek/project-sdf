@@ -1,7 +1,6 @@
 # project-sdf
 Project sdf, php 8 software development framework.
 Only Pre Releases Are Shown Here.
-Please Do Not Use In Production.
 
 # Update v1.0.1 Early Alpha
 v1.0.1 Early Alpha has been released!!! Go check it at v1.0-alpha branch.
