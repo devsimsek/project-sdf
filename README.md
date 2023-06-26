@@ -1,5 +1,5 @@
 
-# Project Title
+# Project SDF
 
 Project sdf is a project development framework created for php enthusiasts.The framework itself is compact, easy to maintain and improvable.
 
