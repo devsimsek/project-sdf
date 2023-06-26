@@ -1,18 +1,47 @@
-# project-sdf
-Project sdf, php 8 software development framework.
-Only Pre Releases Are Shown Here.
 
-# Update v1.0.1 Early Alpha
-v1.0.1 Early Alpha has been released!!! Go check it at v1.0-alpha branch.
+# Project Title
 
-I still support sdf! Sorry for inactive month (had to enter exams :()
+Project sdf is a project development framework created for php enthusiasts.The framework itself is compact, easy to maintain and improvable.
 
-So I did some improvements and optimizations for router. 
 
-Removed security library (will be added in v2, but still it is secure.)
+![Version](https://img.shields.io/badge/version-v1.0-blue)
 
-Optimized some imports and so.
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/devsimsek/project-sdf)
 
-Like every repo I develop, please do notify me if you find any leak, bug or if you have a feature for my projects.
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://devsimsek.mit-license.org)
 
-*\- devsimsek*
+## Features
+
+- MVC Pattern
+- Namespaces Support
+- Extendable
+- Compact
+- Secure
+- Easy to Integrate
+- Optimized
+- Built-in Libraries (Database, Sessions...)
+
+
+## Tech Stack
+
+**Php:** 8.0 - Latest
+## Installation
+
+Install source by using git;
+```bash
+  git clone https://github.com/devsimsek/project-sdf.git
+```
+## Feedback
+
+If you have any feedback, please reach out to me at devsimsek@outlook.com
+
+
+## Contributing
+
+Contributions are always welcome!
+
+
+## Authors
+
+- [@devsimsek](https://www.github.com/devsimsek)
+

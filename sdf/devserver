@@ -1,0 +1,33 @@
+#!/bin/zsh
+# Create basic logger.
+
+echo "------------------------------------------------------"
+sleep 0.2
+echo '| Copyright (C)devsimsek. SDF devserver.             |'
+sleep 0.2
+echo '| Do not use in production.                          |'
+sleep 0.2
+echo "------------------------------------------------------"
+sleep 0.2
+
+if [ -z "$1" ]
+then
+  port=8080
+else
+  port=$1
+fi
+
+echo "Starting sdf development server in $port port"
+sleep 0.2
+echo "------------------------------------------------------"
+sleep 0.2
+php -S localhost:$port index.php
+echo
+sleep 0.2
+echo "------------------------------------------------------"
+sleep 0.2
+echo '| Copyright (C)devsimsek. SDF devserver.             |'
+sleep 0.2
+echo '| Do not use in production.                          |'
+sleep 0.2
+echo "------------------------------------------------------"
