@@ -15,6 +15,23 @@
  */
 const SDF = true;
 
+
+// -----------------------------------------------
+
+/**
+ * ------- ~ ------- ~ ------- ~ ------- ~ -------
+ * Fuse View Engine
+ * ------- ~ ------- ~ ------- ~ ------- ~ -------
+ * Project SDF has its own view engine like its
+ * competitors laravel, codeigniter.
+ * You can check the details from our
+ * webpage later.
+ * Source: https://sdf.smsk.me/docs/fuse
+ */
+const USE_FUSE = true;
+
+// -----------------------------------------------
+
 /**
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * Directory Setup
@@ -123,15 +140,15 @@ const SDF_Benchmark = true;
  */
 
 const SDF_STATIC_MIMES = [
-    '.ttf' => 'font/ttf',
-    '.woff' => 'font/woff',
-    '.woff2' => 'font/woff2',
-    '.svg' => 'image/svg+xml',
-    '.png' => 'image/png',
-    '.jpg' => 'image/jpg',
-    '.jpeg' => 'image/jpeg',
-    '.css' => 'text/css',
-    '.js' => 'text/javascript',
+  '.ttf' => 'font/ttf',
+  '.woff' => 'font/woff',
+  '.woff2' => 'font/woff2',
+  '.svg' => 'image/svg+xml',
+  '.png' => 'image/png',
+  '.jpg' => 'image/jpg',
+  '.jpeg' => 'image/jpeg',
+  '.css' => 'text/css',
+  '.js' => 'text/javascript',
 ];
 
 // -----------------------------------------------
@@ -154,13 +171,13 @@ define("SDF_APP_LIB", SDF_APP . $SDF_APP_LIB . DIRECTORY_SEPARATOR);
 define("SDF_APP_MODL", SDF_APP . $SDF_APP_MODL . DIRECTORY_SEPARATOR);
 define("SDF_APP_MIDD", SDF_APP . $SDF_APP_MIDD . DIRECTORY_SEPARATOR);
 if (!file_exists($SDF_DIR)) {
-    if (file_exists(SDF_ROOT . '/sdf/')) {
-        define("SDF_DIR", SDF_ROOT . '/sdf/');
-    } else {
-        die(print_r('Sdf directory not found.'));
-    }
+  if (file_exists(SDF_ROOT . '/sdf/')) {
+    define("SDF_DIR", SDF_ROOT . '/sdf/');
+  } else {
+    die(print_r('Sdf directory not found.'));
+  }
 } else {
-    define("SDF_DIR", $SDF_DIR);
+  define("SDF_DIR", $SDF_DIR);
 }
 // And pass the flag :)
 // Please do not forget to configure your
