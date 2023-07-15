@@ -56,7 +56,6 @@ $router = $initializer::core_loadClass('Router');
 $initializer::core_loadClass('Controller');
 $initializer::core_loadClass('Library');
 $initializer::core_loadClass('Model');
-if (USE_FUSE) $initializer::core_loadClass('Fuse');
 $router::pathNotFound(SDF_EH_404);
 $router::methodNotAllowed(SDF_EH_405);
 // Set Routing Configuration (Class config not the routes.)
