@@ -62,7 +62,7 @@ class Fuse
     $content = file_get_contents($directory . $view);
 
     // Parse @if, @elseif, @else, @endif directives in the content.
-    $content = preg_replace_callback('/@if\s*\((.*?)\)(.*?)@endif/s', function ($matches) {
+    $content = preg_replace_callback('/@if\s*\(([^()]*(?:\((?>[^()]+|(?1))*\))[^()]*)\)\s*(.*?)@endif/s', function ($matches) {
       $condition = trim($matches[1]);
       $ifContent = $matches[2];
 
@@ -78,25 +78,26 @@ class Fuse
     }, $content);
 
     // Parse @while directives in the content.
-    $content = preg_replace_callback('/@while\s*\((.*?)\)(.*?)@endwhile/s', function ($matches) {
+    $content = preg_replace_callback('/@while\s*\(([^()]*(?:\((?>[^()]+|(?1))*\))[^()]*)\)\s*(.*?)@endwhile/s', function ($matches) {
       $condition = trim($matches[1]);
       $whileContent = $matches[2];
       return '<?php while (' . $condition . '): ?>' . $whileContent . '<?php endwhile; ?>';
     }, $content);
 
     // Parse @for directives in the content.
-    $content = preg_replace_callback('/@for\s*\((.*?)\)(.*?)@endfor/s', function ($matches) {
+    $content = preg_replace_callback('/@for\s*\(([^()]*(?:\((?>[^()]+|(?1))*\))[^()]*)\)\s*(.*?)@endfor/s', function ($matches) {
       $condition = trim($matches[1]);
       $forContent = $matches[2];
       return '<?php for (' . $condition . '): ?>' . $forContent . '<?php endfor; ?>';
     }, $content);
 
     // Parse @foreach directives in the content.
-    $content = preg_replace_callback('/@foreach\s*\((.*?)\)(.*?)@endforeach/s', function ($matches) {
+    // /@foreach\s*\\(((\?\>[^()]+|\\((?!\\))|\\)(?<!\\())*))\\)(.*?)@endforeach/s
+    $content = preg_replace_callback('/@foreach\s*\(([^()]*(?:\((?>[^()]+|(?1))*\))[^()]*)\)\s*(.*?)@endforeach/s', function ($matches) {
       $variable = trim($matches[1]);
       $loopContent = $matches[2];
 
-      return '<?php foreach (' . $variable . ') { ?>' . $loopContent . '<?php } ?>';
+      return '<?php foreach (' . $variable . '): ?>' . $loopContent . '<?php endforeach; ?>';
     }, $content);
 
     // Parse @var declarations in the content.
