@@ -29,7 +29,7 @@ class Loader
           $this->load($name);
           if (USE_FUSE) {
             $fuse = new Fuse();
-            print_r($fuse->withObject($params)->render($name, $directory));
+            print_r($fuse->with($params)->render($name, $directory));
           } else return require $directory . $name;
         }
       }
