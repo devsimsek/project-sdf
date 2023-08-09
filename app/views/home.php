@@ -15,12 +15,12 @@ You are ready to go!
 Powered By sdf v{{ SDF_VERSION }}.
 <br>
 <small><i>To Check Benchmarking Open Your Browser's Developer Console</i></small>
-@if (USE_FUSE)
+@If (USE_FUSE)
 <br>
 <small><i>View Engine: Fuse!</i></small>
-@else
+@Else
 <small><i>View Engine: plain php and html</i></small>
-@endif
+@endIf
 
 </body>
 </html>
