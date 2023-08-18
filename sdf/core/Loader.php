@@ -8,6 +8,14 @@ class Loader
   protected static array $isLoaded = [];
 
   /**
+   * @return array
+   */
+  public static function getIsLoaded(): array
+  {
+    return self::$isLoaded;
+  }
+
+  /**
    * Load view.
    * @param string $name
    * @param array|object $params
@@ -24,7 +32,7 @@ class Loader
         if (!empty($params) and !is_array($params) and !USE_FUSE) {
           $params = get_object_vars($params);
         }
-        extract($params);
+        if (is_array($params)) extract($params);
         if (!$this->isLoaded($name)) {
           $this->load($name);
           if (USE_FUSE) {
@@ -35,6 +43,21 @@ class Loader
       }
     }
     return false;
+  }
+
+  /**
+   * A function that return's the file is loaded or not.
+   * @param string $name
+   * @return bool
+   */
+  public function isLoaded(string $name): bool
+  {
+    return array_key_exists($name, self::$isLoaded);
+  }
+
+  private function load(string $name)
+  {
+    self::$isLoaded[strtolower($name)] = $name;
   }
 
   /**
@@ -151,28 +174,5 @@ class Loader
       return false;
     }
     return false;
-  }
-
-  /**
-   * A function that return's the file is loaded or not.
-   * @param string $name
-   * @return bool
-   */
-  public function isLoaded(string $name): bool
-  {
-    return array_key_exists($name, self::$isLoaded);
-  }
-
-  private function load(string $name)
-  {
-    self::$isLoaded[strtolower($name)] = $name;
-  }
-
-  /**
-   * @return array
-   */
-  public static function getIsLoaded(): array
-  {
-    return self::$isLoaded;
   }
 }
