@@ -100,7 +100,7 @@ class Loader
           require $directory . $name;
           $name = strtolower(str_replace('.php', '', $name));
           $model = ucfirst($name);
-          return $this->$name = new $model;
+          return @$this->$name = new $model;
         }
       }
     }
@@ -129,7 +129,7 @@ class Loader
           require $directory . $name;
           $name = ucfirst(strtolower(str_replace('.php', '', $name)));
           $object = strtolower($name);
-          return $this->$object = new $name(...$params);
+          return @$this->$object = new $name(...$params);
         }
       }
     }
