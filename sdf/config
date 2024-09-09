@@ -15,3 +15,5 @@ MIGRATION_PREFIX="migration_"
 # Server Configuration
 PORT=8080
 ENVIRONMENT="development"
+
+echo "WILL BE DEPRECATED SOON! Please use cli file instead."

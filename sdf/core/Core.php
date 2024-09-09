@@ -6,20 +6,23 @@ namespace SDF;
  * smskSoft SDF Core
  * Copyright devsimsek
  * @package     SDF
- * @subpackage  SDF
+ * @subpackage  SDF Core
  * @file        Core.php
- * @version     v1.5.0
+ * @version     v1.0.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
- * @url         https://github.com/devsimsek/project-sdf/wiki/core#router
+ * @url         https://github.com/devsimsek/project-sdf/wiki/core
  * @since       Version 1.0
  * @filesource
  */
 class Core
 {
+    // @var array $isLoaded Stores the classes that have been loaded
     private static array $isLoaded = [];
+    // @var array $classes Stores the classes that have been loaded
     private static array $classes = [];
+    // @var array $config Stores the configurations that have been loaded
     private static array $config = [];
 
     /**
@@ -77,8 +80,7 @@ class Core
     }
 
     /**
-     * Example configuration;
-     * $config['config_file']['config_key'];
+     * Load Configurations
      * @param string $directory
      * @return void
      */
@@ -121,6 +123,7 @@ class Core
     }
 
     /**
+     * Get Config Value by Key
      * @param string $config
      * @param string|null $key
      * @return false|mixed
@@ -213,6 +216,7 @@ class Core
     }
 
     /**
+     * Get Loaded Libraries
      * Keeps track of which libraries have been loaded. This function is
      * called by core_loadClass
      * @param string $class

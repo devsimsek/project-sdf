@@ -4,8 +4,7 @@ namespace SDF;
 
 /**
  * Fuse View Engine
- * A custom view Engine
- * for SDF framework.
+ * A custom view Engine for SDF framework.
  *
  * @package     Fuse
  * @file        Fuse.php
@@ -20,7 +19,7 @@ namespace SDF;
 class Fuse
 {
     /**
-     * Data which stores
+     * Data storage.
      * @param array $data
      */
     protected array $data = [];
@@ -34,7 +33,10 @@ class Fuse
     }
 
     /**
-     *
+     * Assign data to the view
+     * @param mixed $data
+     * @param string|null $key
+     * @return $this
      */
     public function with(mixed $data, string $key = null): self
     {
@@ -47,32 +49,19 @@ class Fuse
     }
 
     /**
-     * Render's the view
-     * @return void
-     * @throws error
+     * Render's the view file
+     * @param string $view View file name
+     * @param string $path Directory path of the view file
+     * @return string|false Rendered content or false on failure
+     * @throws \Exception If the view file is not found
      */
     public function render(
         string $view,
         string $path = SDF_APP_VIEW
     ): string|false {
-        if (!str_ends_with($view, ".php")) {
-            if (file_exists($path . $view . ".php")) {
-                $view .= ".php";
-            }
-        }
-        if (!str_ends_with($view, ".fuse")) {
-            if (file_exists($path . $view . ".fuse")) {
-                $view .= ".fuse";
-            }
-        }
+        $view = $this->resolveView($view, $path);
         $content = file_get_contents($path . $view);
-        $content = $this->parseForeach($content);
-        $content = $this->parseIf($content);
-        $content = $this->parseFor($content);
-        $content = $this->parseForeach($content);
-        $content = $this->parseWhile($content);
-        $content = $this->parseVariable($content);
-        $content = $this->parseVar($content);
+        $content = $this->parseContent($content);
 
         extract($this->data);
         ob_start();
@@ -80,89 +69,81 @@ class Fuse
         return ob_get_clean();
     }
 
-    private function parseForeach(string $input): string
+    /**
+     * Resolve the view file
+     * @param string $view View file name
+     * @param string $path Directory path of the view file
+     * @return string|false Resolved view file or false on failure
+     * @throws \Exception If the view file is not found
+     */
+    private function resolveView(string $view, string $path): string|false
     {
-        return preg_replace_callback(
-            "/\@Foreach ?\((.*)\)((.|\n)*)\@endForeach/",
-            function ($matches) {
-                return "<?php foreach ($matches[1]): ?>$matches[2]<?php endforeach; ?>";
-            },
-            $input
-        );
+        $extensions = [".php", ".phtml", ".fuse"];
+        // remove extension from view
+        $view = preg_replace("/\.[a-z]+$/", "", $view);
+        foreach ($extensions as $ext) {
+            if (file_exists($path . $view . $ext)) {
+                return $view . $ext;
+            }
+        }
+        throw new \Exception("View file not found: $view");
     }
 
-    private function parseIf(string $input)
+    /**
+     * Parse the content of the view file
+     * @param string $input Content of the view file
+     * @return string Parsed content
+     */
+    private function parseContent(string $input): string
     {
-        return preg_replace_callback(
-            "/\@If ?\((.*)\)((.|\n)*)\@endIf/",
-            function ($matches) {
-                $matches[2] = preg_replace_callback(
+        $parsers = [
+            // @Foreach directive
+            "/\@Foreach ?\((.*?)\)((.|\n)*?)\@endForeach/" => function (
+                $matches
+            ) {
+                return "<?php foreach ({$matches[1]}): ?>{$matches[2]}<?php endforeach; ?>";
+            },
+
+            // @If directive
+            '/\@If ?\((.*?)\)((.|\n)*?)\@endIf/' => function ($matches) {
+                $content = preg_replace(
                     "/\@Else\b/",
-                    function () {
-                        return "<?php else: ?>";
-                    },
+                    "<?php else: ?>",
                     $matches[2]
                 );
-                $matches[2] = preg_replace_callback(
-                    "/\@ElseIf ?\((.*)\)/",
-                    function ($m) {
-                        return "<?php elseif ($m[1]): ?>";
-                    },
-                    $matches[2]
+                $content = preg_replace(
+                    "/\@ElseIf ?\((.*?)\)/",
+                    "<?php elseif ($1): ?>",
+                    $content
                 );
-                return "<?php if ($matches[1]): ?>$matches[2]<?php endif; ?>";
+                return "<?php if ({$matches[1]}): ?>$content<?php endif; ?>";
             },
-            $input
-        );
-    }
 
-    private function parseFor(string $input)
-    {
-        return preg_replace_callback(
-            "/\@For ?\((.*)\)((.|\n)*)\@endFor/",
-            function ($matches) {
-                return "<?php for ($matches[1]): ?>$matches[2]<?php endfor; ?>";
+            // @For directive
+            "/\@For ?\((.*?)\)((.|\n)*?)\@endFor/" => function ($matches) {
+                return "<?php for ({$matches[1]}): ?>{$matches[2]}<?php endfor; ?>";
             },
-            $input
-        );
-    }
 
-    private function parseWhile(string $input)
-    {
-        return preg_replace_callback(
-            "/\@While ?\((.*)\)((.|\n)*)\@endWhile/",
-            function ($matches) {
-                return "<?php while ($matches[1]): ?>$matches[2]<?php endwhile; ?>";
+            // @While directive
+            "/\@While ?\((.*?)\)((.|\n)*?)\@endWhile/" => function ($matches) {
+                return "<?php while ({$matches[1]}): ?>{$matches[2]}<?php endwhile; ?>";
             },
-            $input
-        );
-    }
 
-    private function parseVariable(string $input)
-    {
-        return preg_replace_callback(
-            "/{{ ?(.*?) ?}}/",
-            function ($matches) {
-                $variable = trim($matches[1]);
-                return "<?php echo htmlspecialchars(" .
-                    $variable .
-                    ", ENT_QUOTES); ?>";
+            // {{ variable }} directive
+            "/{{ ?(.*?) ?}}/" => function ($matches) {
+                return "<?php echo htmlspecialchars({$matches[1]}, ENT_QUOTES); ?>";
             },
-            $input
-        );
-    }
 
-    private function parseVar(string $input)
-    {
-        return preg_replace_callback(
-            "/@var ?(.*);/",
-            function ($matches) {
-                $variable = trim($matches[1]);
-                $value = trim($matches[2]);
-
-                return "<?php " . $variable . " = " . $value . "; ?>";
+            // @var directive
+            "/@var ?(.*);/" => function ($matches) {
+                return "<?php {$matches[1]}; ?>";
             },
-            $input
-        );
+        ];
+
+        foreach ($parsers as $pattern => $replacement) {
+            $input = preg_replace_callback($pattern, $replacement, $input);
+        }
+
+        return $input;
     }
 }

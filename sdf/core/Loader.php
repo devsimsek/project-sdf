@@ -2,8 +2,26 @@
 
 namespace SDF;
 
+/**
+ * smskSoft SDF Loader
+ * Copyright devsimsek
+ * @package     SDF
+ * @subpackage  SDF Core
+ * @file        Loader.php
+ * @version     v1.5.0
+ * @author      devsimsek
+ * @copyright   Copyright (c) 2024, smskSoft, devsimsek
+ * @license     https://opensource.org/licenses/MIT	MIT License
+ * @url         https://github.com/devsimsek/project-sdf/wiki/core#loader
+ * @since       Version 1.0
+ * @filesource
+ */
 class Loader
 {
+    /**
+     * List of loaded files.
+     * @var array
+     */
     protected static array $isLoaded = [];
 
     /**
