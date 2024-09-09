@@ -1,0 +1,144 @@
+#!/bin/zsh
+
+# This script handles ORM operations for the SDF project
+# Copyright (c) 2024 devsimsek
+
+# include config
+source ./sdf/config
+
+# Display the usage information
+print_help() {
+    echo "Usage: $0 {migrate|rollback|create-migration} [migration_name]"
+    echo
+    echo "Commands:"
+    echo "  migrate            Run all pending migrations"
+    echo "  rollback           Revert the last migration"
+    echo "  create-migration   Create a new migration file"
+}
+
+# Run all pending migrations
+migrate() {
+    echo "Running migrations..."
+    for migration_file in $MIGRATIONS_DIR/*.php; do
+        if [[ -f $migration_file ]]; then
+            echo "Running $(basename "$migration_file")..."
+            php "$migration_file"
+        else
+            echo "No migration files found."
+        fi
+    done
+}
+
+# Rollback the last migration
+rollback() {
+    echo "Rolling back the last migration..."
+    migration_files=($(ls -t "$MIGRATIONS_DIR"/*.php))
+
+    if [[ ${#migration_files[@]} -gt 0 ]]; then
+        last_migration="${migration_files[0]}"
+        echo "Rolling back $(basename "$last_migration")..."
+        php "$last_migration" rollback
+    else
+        echo "No migrations to rollback."
+    fi
+}
+
+# Create a new migration file
+create_migration() {
+    if [[ -z $1 ]]; then
+        echo "Error: Migration name is required."
+        print_help
+        exit 1
+    fi
+
+    timestamp=$(date +"%Y%m%d%H%M%S")
+    migration_file="$MIGRATIONS_DIR/${MIGRATION_PREFIX}${timestamp}_$1.php"
+    model_name="$1"
+
+    cat <<EOF > "$migration_file"
+<?php
+// required for SORM
+require "sdf/core/Sorm.php";
+
+// Migration file created by SORM script
+// Timestamp: $timestamp
+
+class $model_name extends SDF\Sorm\Model
+{
+    // Override the table name if necessary
+    public static function tableName(): string
+    {
+        return "$model_name";
+    }
+}
+
+/**
+ * Migration for $model_name table
+ */
+class Migration extends SDF\Sorm\Migration
+{
+    public function up(): void
+    {
+        // Write the migration logic here
+    }
+
+    public function down(): void
+    {
+        // Write the rollback logic here
+    }
+}
+
+\$pdo = new PDO(
+    "mysql:host=$DATABASE_HOST;dbname=$DATABASE_NAME;charset=utf8",
+    "$DATABASE_USER",
+    "$DATABASE_PASSWORD"
+);
+
+// Set database for model
+\$sorm = new SDF\Sorm("$DATABASE_HOST", "$DATABASE_NAME", "$DATABASE_USER", "$DATABASE_PASSWORD", "$model_name");
+$model_name::setDatabase(\$sorm);
+
+class Seeder extends SDF\Sorm\Seeder
+{
+    public function run(): void
+    {
+        // Write the seeding logic here
+    }
+}
+
+// Run migrations
+\$migration = new Migration(\$pdo, "$model_name");
+\$migration->up();
+
+// Seed database
+\$seeder = new Seeder(\$pdo, "$model_name");
+\$seeder->run();
+EOF
+
+    echo "Created new migration file: $migration_file"
+}
+
+# Main script execution
+if [[ $# -lt 1 ]]; then
+    print_help
+    exit 1
+fi
+
+command=$1
+shift
+
+case $command in
+    migrate)
+        migrate
+        ;;
+    rollback)
+        rollback
+        ;;
+    create-migration)
+        create_migration "$@"
+        ;;
+    *)
+        print_help
+        exit 1
+        ;;
+esac
