@@ -10,7 +10,7 @@ use PDOException;
  * Sorm (Simple Object Relational Mapping) is a simple ORM for projekt Sdf.
  *
  * @package Sorm
- * @version 1.0
+ * @version     v1.0.0
  * @author  Sorm
  * @license devsimsek.mit-license.org
  * @link

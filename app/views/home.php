@@ -5,7 +5,7 @@
   <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Welcome to {{ $app_title ?? "sdf" }} {{ $app_version ?? "v" . SDF_VERSION }}</title>
+  <title>Welcome to {{ $app_title ?? "sdf" }} {{ $app_version }}</title>
 </head>
 <body>
 You set all necessary things if you can see this page without any errors. To begin developing your application visit sdf

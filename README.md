@@ -5,7 +5,7 @@ Project SDF is a project development framework created for PHP enthusiasts. The 
 > This version of the framework is not recommended for production use. It is still under development.\nEven though it is not recommended for production use, you can still use it for your personal projects.
 > This version also includes a new orm library built-in, and has integrated code with Model class. Use \SDF\Sorm\Model instead of \SDF\Model.
 
-![Version](https://img.shields.io/badge/version-v1.5-blue)
+![* @version     v1.5.0](https://img.shields.io/badge/* @version v1.5.0-v1.5-blue)
 
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/devsimsek/project-sdf)
 
@@ -22,12 +22,12 @@ Project SDF is a project development framework created for PHP enthusiasts. The 
 - Optimized
 - Built-in Libraries (Database, Sessions...)
 - ORM Support (under development)
-- New Code Generation Scripts
-- Improved Loader
+- Backward Compatibility
+- Code Generators
 
 ## Tech Stack
 
-**PHP:** 8.0 - Latest
+**PHP:** 8 - Latest
 
 ## Installation
 
