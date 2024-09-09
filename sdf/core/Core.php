@@ -18,7 +18,6 @@ namespace SDF;
  */
 class Core
 {
-
     private static array $isLoaded = [];
     private static array $classes = [];
     private static array $config = [];
@@ -35,8 +34,11 @@ class Core
      * @param array|null $param
      * @return object
      */
-    public static function &core_loadClass(string $class, string $directory = 'core', array $param = null): object
-    {
+    public static function &core_loadClass(
+        string $class,
+        string $directory = "core",
+        array $param = null
+    ): object {
         $_classes = self::$classes;
         // Does the class exist? If so, we're done...
         if (isset($_classes[$class])) {
@@ -45,34 +47,32 @@ class Core
         $name = false;
         // Look for the class first in the local application/libraries folder
         // then in the native system/libraries folder
-        foreach (array(SDF_APP, SDF_DIR) as $path) {
-            if (file_exists($path . $directory . '/' . $class . '.php')) {
+        foreach ([SDF_APP, SDF_DIR] as $path) {
+            if (file_exists($path . $directory . "/" . $class . ".php")) {
                 $name = $class;
                 if (class_exists($name, false) === false) {
-                    require_once($path . $directory . '/' . $class . '.php');
+                    require_once $path . $directory . "/" . $class . ".php";
                 }
                 break;
             }
         }
         // Is the request a class extension? If so we load it too
-        if (file_exists(SDF_APP . $directory . '/' . $class . '.php')) {
+        if (file_exists(SDF_APP . $directory . "/" . $class . ".php")) {
             $name = $class;
             if (class_exists($name, false) === false) {
-                require_once(SDF_APP . $directory . '/' . $name . '.php');
+                require_once SDF_APP . $directory . "/" . $name . ".php";
             }
         }
         // Did we find the class?
         if ($name === false) {
-            header('HTTP/1.0 503 Service Unavailable', true, 503);
-            echo 'Unable to locate the specified class: ' . $class . '.php';
+            header("HTTP/1.0 503 Service Unavailable", true, 503);
+            echo "Unable to locate the specified class: " . $class . ".php";
             exit(5);
         }
         // Keep track of what we just loaded
-        $name = '\\SDF\\' . $name;
+        $name = "\\SDF\\" . $name;
         self::core_isLoaded($class);
-        $_classes[$class] = isset($param)
-            ? new $name($param)
-            : new $name();
+        $_classes[$class] = isset($param) ? new $name($param) : new $name();
         return $_classes[$class];
     }
 
@@ -80,17 +80,39 @@ class Core
      * Example configuration;
      * $config['config_file']['config_key'];
      * @param string $directory
+     * @return void
      */
-    public static function core_loadConfigurations(string $directory = 'config')
-    {
-        foreach (self::core_scanDirectory(SDF_APP . DIRECTORY_SEPARATOR . $directory) as $file) {
-            if (file_exists(SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file)) {
-                require SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file;
+    public static function core_loadConfigurations(
+        string $directory = "config"
+    ): void {
+        foreach (
+            self::core_scanDirectory(SDF_APP . DIRECTORY_SEPARATOR . $directory)
+            as $file
+        ) {
+            if (
+                file_exists(
+                    SDF_APP .
+                        DIRECTORY_SEPARATOR .
+                        $directory .
+                        DIRECTORY_SEPARATOR .
+                        $file
+                )
+            ) {
+                require SDF_APP .
+                    DIRECTORY_SEPARATOR .
+                    $directory .
+                    DIRECTORY_SEPARATOR .
+                    $file;
                 if (isset($config)) {
-                    if (isset(self::$config[str_replace('.php', '', $file)])) {
-                        self::$config[str_replace('.php', '', $file)] = array_merge(self::$config[str_replace('.php', '', $file)], $config);
+                    if (isset(self::$config[str_replace(".php", "", $file)])) {
+                        self::$config[
+                            str_replace(".php", "", $file)
+                        ] = array_merge(
+                            self::$config[str_replace(".php", "", $file)],
+                            $config
+                        );
                     } else {
-                        self::$config[str_replace('.php', '', $file)] = $config;
+                        self::$config[str_replace(".php", "", $file)] = $config;
                     }
                 }
             }
@@ -103,8 +125,10 @@ class Core
      * @param string|null $key
      * @return false|mixed
      */
-    public static function core_getConfig(string $config, string $key = null): mixed
-    {
+    public static function core_getConfig(
+        string $config,
+        string $key = null
+    ): mixed {
         if (array_key_exists($config, self::$config)) {
             if (!empty($key)) {
                 if (array_key_exists($key, self::$config[$config])) {
@@ -127,27 +151,36 @@ class Core
      * @param int $errline
      * @return void
      */
-    public static function core_triggerError(int $errnum, string $errmessage, string $errfile = null, int $errline = 0): void
-    {
-        if (!self::core_getConfig('app', 'eh_errorHandler')) {
+    public static function core_triggerError(
+        int $errnum,
+        string $errmessage,
+        string $errfile = null,
+        int $errline = 0
+    ): void {
+        if (!self::core_getConfig("app", "eh_errorHandler")) {
             $input = [
                 "errnum" => $errnum,
                 "errmessage" => $errmessage,
                 "errfile" => $errfile,
                 "errline" => $errline,
             ];
-            call_user_func_array(self::core_getConfig('app', 'eh_errorHandler'), $input);
+            call_user_func_array(
+                self::core_getConfig("app", "eh_errorHandler"),
+                $input
+            );
         }
-        if (function_exists('eh_errorHandler')) {
+        if (function_exists("eh_errorHandler")) {
             $input = [
                 "errnum" => $errnum,
                 "errmessage" => $errmessage,
                 "errfile" => $errfile,
                 "errline" => $errline,
             ];
-            call_user_func_array('eh_errorHandler', $input);
+            call_user_func_array("eh_errorHandler", $input);
         } else {
-            die("(E_eh404) Error. SDF can't find errorHandler function. Maybe it does not exists?");
+            die(
+                "(E_eh404) Error. SDF can't find errorHandler function. Maybe it does not exists?"
+            );
         }
     }
 
@@ -157,16 +190,21 @@ class Core
      * @param string $extension
      * @return false|array
      */
-    public static function core_scanDirectory(string $directory = '', string $extension = '.{php}'): false|array
-    {
+    public static function core_scanDirectory(
+        string $directory = "",
+        string $extension = ".{php}"
+    ): false|array {
         if (empty($directory)) {
-            return glob('*' . $extension, GLOB_BRACE);
+            return glob("*" . $extension, GLOB_BRACE);
         } else {
-            $files = glob($directory . '/*' . $extension, GLOB_BRACE);
+            $files = glob($directory . "/*" . $extension, GLOB_BRACE);
             if (is_array($files)) {
                 $return = [];
                 foreach ($files as $file) {
-                    array_push($return, str_replace($directory . '/', '', $file));
+                    array_push(
+                        $return,
+                        str_replace($directory . "/", "", $file)
+                    );
                 }
                 return $return;
             }
@@ -182,7 +220,7 @@ class Core
      */
     protected static function core_isLoaded(string $class): array
     {
-        if ($class !== '') {
+        if ($class !== "") {
             self::$isLoaded[strtolower($class)] = $class;
         }
 
