@@ -9,6 +9,7 @@
  * Welcome to your sdf powered application!
  * Configure your file and add custom configs
  * using $config variable.
+ * @var array $config
  */
 
 /**
