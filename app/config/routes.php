@@ -7,5 +7,6 @@
  * or
  * $config['path/{pattern}'] = ['controller/method', 'request_type'];
  * request_type = User request type. such as post, get and delete.
+ * @var array $config
  */
-$config['/'] = 'home';
+$config["/"] = "home";

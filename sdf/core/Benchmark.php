@@ -8,7 +8,7 @@ namespace SDF;
  * @package     SDF
  * @subpackage  SDF Core
  * @file        Benchmark.php
- * @version     v1.5.0
+ * @version     v1.0.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License

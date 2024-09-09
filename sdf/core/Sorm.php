@@ -4,16 +4,21 @@ namespace SDF;
 use PDO;
 use PDOException;
 
-// checkpoint, allow phpcli to run this file
-
 /**
- * Sorm (Simple Object Relational Mapping) is a simple ORM for projekt Sdf.
- *
- * @package Sorm
+ * smskSoft SDF Sorm
+ * Simple Object Relational Mapping
+ * A simple ORM for project Sdf.
+ * Copyright devsimsek
+ * @package     SDF
+ * @subpackage  SDF Core
+ * @file        Sorm.php
  * @version     v1.0.0
- * @author  Sorm
- * @license devsimsek.mit-license.org
- * @link
+ * @author      devsimsek
+ * @copyright   Copyright (c) 2024, smskSoft, devsimsek
+ * @license     https://opensource.org/licenses/MIT	MIT License
+ * @url         https://github.com/devsimsek/project-sdf/wiki/sorm
+ * @since       Version 1.0
+ * @filesource
  */
 class Sorm
 {
