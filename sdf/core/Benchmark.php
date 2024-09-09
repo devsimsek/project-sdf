@@ -8,23 +8,22 @@ namespace SDF;
  * @package     SDF
  * @subpackage  SDF Core
  * @file        Benchmark.php
- * @version     v1.0.1 Early-Alpha Release
+ * @version     v1.5.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
  * @url         https://github.com/devsimsek/project-sdf/wiki/core#benchmark
- * @since       Version 1.0
+ * @since       v1.0
  * @filesource
  */
 class Benchmark extends Core
 {
-
     /**
      * List of all benchmark markers
      *
      * @var array
      */
-    public array $marker = array();
+    public array $marker = [];
 
     /**
      * Set a benchmark marker
@@ -37,7 +36,7 @@ class Benchmark extends Core
      */
     public function mark($name)
     {
-        $this->marker[$name] = microtime(TRUE);
+        $this->marker[$name] = microtime(true);
     }
 
     // --------------------------------------------------------------------
@@ -60,18 +59,24 @@ class Benchmark extends Core
      * an '{elapsed_string}' if $point1 is empty
      * or an empty string if $point1 is not found.
      */
-    public function elapsed_time($point1 = '', $point2 = '', $decimals = 4): string
-    {
-        if ($point1 === '') {
-            return '{elapsed_time}';
+    public function elapsed_time(
+        $point1 = "",
+        $point2 = "",
+        $decimals = 4
+    ): string {
+        if ($point1 === "") {
+            return "{elapsed_time}";
         }
         if (!isset($this->marker[$point1])) {
-            return '';
+            return "";
         }
         if (!isset($this->marker[$point2])) {
-            $this->marker[$point2] = microtime(TRUE);
+            $this->marker[$point2] = microtime(true);
         }
-        return number_format($this->marker[$point2] - $this->marker[$point1], $decimals);
+        return number_format(
+            $this->marker[$point2] - $this->marker[$point1],
+            $decimals
+        );
     }
 
     // --------------------------------------------------------------------
@@ -89,7 +94,6 @@ class Benchmark extends Core
      */
     public function memory_usage(): string
     {
-        return '{memory_usage}';
+        return "{memory_usage}";
     }
-
 }

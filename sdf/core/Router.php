@@ -8,12 +8,12 @@ namespace SDF;
  * @package     SDF
  * @subpackage  SDF Core
  * @file        Router.php
- * @version     v1.0.1 Early-Alpha Release
+ * @version     v1.5.0     v1.0.1 Early-Alpha Release
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
  * @url         https://github.com/devsimsek/project-sdf/wiki/core#router
- * @since       Version 1.0
+ * @since       v1.0
  * @filesource
  */
 class Router extends Core

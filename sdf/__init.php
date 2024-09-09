@@ -5,12 +5,12 @@
  * Copyright devsimsek
  * @package     SDF
  * @file        __init.php
- * @version     v1.0.1 Early-Alpha Release
+ * @version     v1.5.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
  * @url         https://github.com/devsimsek/project-sdf/
- * @since       Version 1.0
+ * @since       v1.0
  * @filesource
  */
 if (!defined("SDF") and !SDF) {

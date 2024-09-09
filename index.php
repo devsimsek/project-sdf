@@ -5,16 +5,15 @@
  * Copyright devsimsek
  * @package     SDF
  * @file        index.php
- * @version     v1.0.1 Early-Alpha Release
+ * @version     v1.5.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
  * @url         https://github.com/devsimsek/project-sdf/
- * @since       Version 1.0
+ * @since       v1.0
  * @filesource
  */
 const SDF = true;
-
 
 // -----------------------------------------------
 
@@ -71,15 +70,15 @@ const USE_FUSE = true;
  * SDF_APP_MIDD: the middlewares directory for
  * your sdf application.
  */
-$SDF_DIR = '';
-$SDF_APP = 'app';
-$SDF_APP_CONF = 'config';
-$SDF_APP_CONT = 'controllers';
-$SDF_APP_VIEW = 'views';
-$SDF_APP_HELP = 'helpers';
-$SDF_APP_LIB = 'libraries';
-$SDF_APP_MODL = 'models';
-$SDF_APP_MIDD = 'middlewares';
+$SDF_DIR = "";
+$SDF_APP = "app";
+$SDF_APP_CONF = "config";
+$SDF_APP_CONT = "controllers";
+$SDF_APP_VIEW = "views";
+$SDF_APP_HELP = "helpers";
+$SDF_APP_LIB = "libraries";
+$SDF_APP_MODL = "models";
+$SDF_APP_MIDD = "middlewares";
 
 // -----------------------------------------------
 
@@ -88,7 +87,7 @@ $SDF_APP_MIDD = 'middlewares';
  * Environment
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  */
-const SDF_ENV = 'development';
+const SDF_ENV = "development";
 
 // -----------------------------------------------
 
@@ -107,8 +106,8 @@ const SDF_ENV = 'development';
  * SDF_EH_404: Handles 404 (path not found) error.
  * SDF_EH_405: Handles 405 (method not allowed).
  */
-const SDF_EH_404 = 'eh_pathNotFound';
-const SDF_EH_405 = 'eh_methodNotAllowed';
+const SDF_EH_404 = "eh_pathNotFound";
+const SDF_EH_405 = "eh_methodNotAllowed";
 
 // -----------------------------------------------
 
@@ -140,15 +139,15 @@ const SDF_Benchmark = true;
  */
 
 const SDF_STATIC_MIMES = [
-  '.ttf' => 'font/ttf',
-  '.woff' => 'font/woff',
-  '.woff2' => 'font/woff2',
-  '.svg' => 'image/svg+xml',
-  '.png' => 'image/png',
-  '.jpg' => 'image/jpg',
-  '.jpeg' => 'image/jpeg',
-  '.css' => 'text/css',
-  '.js' => 'text/javascript',
+    ".ttf" => "font/ttf",
+    ".woff" => "font/woff",
+    ".woff2" => "font/woff2",
+    ".svg" => "image/svg+xml",
+    ".png" => "image/png",
+    ".jpg" => "image/jpg",
+    ".jpeg" => "image/jpeg",
+    ".css" => "text/css",
+    ".js" => "text/javascript",
 ];
 
 // -----------------------------------------------
@@ -162,7 +161,10 @@ const SDF_STATIC_MIMES = [
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  */
 define("SDF_ROOT", pathinfo(__FILE__, PATHINFO_DIRNAME));
-define("SDF_APP", SDF_ROOT . DIRECTORY_SEPARATOR . $SDF_APP . DIRECTORY_SEPARATOR);
+define(
+    "SDF_APP",
+    SDF_ROOT . DIRECTORY_SEPARATOR . $SDF_APP . DIRECTORY_SEPARATOR
+);
 define("SDF_APP_CONF", SDF_APP . $SDF_APP_CONF . DIRECTORY_SEPARATOR);
 define("SDF_APP_CONT", SDF_APP . $SDF_APP_CONT . DIRECTORY_SEPARATOR);
 define("SDF_APP_VIEW", SDF_APP . $SDF_APP_VIEW . DIRECTORY_SEPARATOR);
@@ -171,15 +173,15 @@ define("SDF_APP_LIB", SDF_APP . $SDF_APP_LIB . DIRECTORY_SEPARATOR);
 define("SDF_APP_MODL", SDF_APP . $SDF_APP_MODL . DIRECTORY_SEPARATOR);
 define("SDF_APP_MIDD", SDF_APP . $SDF_APP_MIDD . DIRECTORY_SEPARATOR);
 if (!file_exists($SDF_DIR)) {
-  if (file_exists(SDF_ROOT . '/sdf/')) {
-    define("SDF_DIR", SDF_ROOT . '/sdf/');
-  } else {
-    die(print_r('Sdf directory not found.'));
-  }
+    if (file_exists(SDF_ROOT . "/sdf/")) {
+        define("SDF_DIR", SDF_ROOT . "/sdf/");
+    } else {
+        die(print_r("Sdf directory not found."));
+    }
 } else {
-  define("SDF_DIR", $SDF_DIR);
+    define("SDF_DIR", $SDF_DIR);
 }
 // And pass the flag :)
 // Please do not forget to configure your
 // application in config directory.
-require SDF_DIR . '__init.php';
+require SDF_DIR . "__init.php";
