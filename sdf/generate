@@ -1,0 +1,132 @@
+#!/bin/zsh
+
+# This script is used to generate new components for sdf project.
+# Copyright (c) 2024 devsimsek
+
+# @arg type, possible values: config, controller, model, view, helper, route
+ARG_TYPE=$1
+
+# @arg name
+ARG_NAME=$2
+
+print_help() {
+    echo "Usage: ./sdf/generate [type] [name]"
+    echo "Possible values for type: config, controller, model, view, helper, route"
+}
+
+# switch case for type
+case $ARG_TYPE in
+    config)
+        echo "Creating new config file..."
+        touch "app/config/$ARG_NAME.php"
+        echo "<?php" >> "app/config/$ARG_NAME.php"
+        echo "/**" >> "app/config/$ARG_NAME.php"
+        echo "* $ARG_NAME Configuration" >> "app/config/$ARG_NAME.php"
+        echo "* load this file using load_config('$ARG_NAME', '{{  config_name }}');" >> "app/config/$ARG_NAME.php"
+        echo "*/" >> "app/config/$ARG_NAME.php"
+        echo "if (!defined(\"SDF\")) {" >> "app/config/$ARG_NAME.php"
+        echo "    die('Security warning. You can\'t view this page.');" >> "app/config/$ARG_NAME.php"
+        echo "}" >> "app/config/$ARG_NAME.php"
+        echo "// @var array \$config" >> "app/config/$ARG_NAME.php"
+        echo "\$config[\"$ARG_NAME\"] = [" >> "app/config/$ARG_NAME.php"
+        echo "    \"key\" => \"value\"" >> "app/config/$ARG_NAME.php"
+        echo "];" >> "app/config/$ARG_NAME.php"
+        echo "Config file created successfully.\n You can load this file using \`load_config('$ARG_NAME', '{{  config_name }}');\` helper function."
+        ;;
+    controller)
+        echo "Creating new controller file..."
+
+        # Check if user provided a path rather than a name
+        # If so, create the directory and the file
+
+        if [[ $ARG_NAME == */* ]]; then
+            mkdir -p "app/controllers/$(dirname $ARG_NAME)"
+            echo "Warning. You may need to update the controller names in the file."
+        fi
+
+        touch "app/controllers/$ARG_NAME.php"
+        echo "<?php" >> "app/controllers/$ARG_NAME.php"
+        echo "/**" >> "app/controllers/$ARG_NAME.php"
+        echo "* $ARG_NAME Controller." >> "app/controllers/$ARG_NAME.php"
+        echo "*/" >> "app/controllers/$ARG_NAME.php"
+        echo "" >> "app/controllers/$ARG_NAME.php"
+        echo "class $ARG_NAME extends SDF\Controller" >> "app/controllers/$ARG_NAME.php"
+        echo "{" >> "app/controllers/$ARG_NAME.php"
+        echo "  public function __construct()" >> "app/controllers/$ARG_NAME.php"
+        echo "  {" >> "app/controllers/$ARG_NAME.php"
+        echo "    parent::__construct();" >> "app/controllers/$ARG_NAME.php"
+        echo "  }" >> "app/controllers/$ARG_NAME.php"
+        echo "" >> "app/controllers/$ARG_NAME.php"
+        echo "  public function index()" >> "app/controllers/$ARG_NAME.php"
+        echo "  {" >> "app/controllers/$ARG_NAME.php"
+        echo "    echo \"Welcome home!\";" >> "app/controllers/$ARG_NAME.php"
+        echo "  }" >> "app/controllers/$ARG_NAME.php"
+        echo "}" >> "app/controllers/$ARG_NAME.php"
+        echo "Controller file created successfully."
+        ;;
+    model)
+        if [ -z "$ARG_NAME" ]; then
+            echo "Model name can't be empty."
+            echo -n "Model name : " ; read ARG_NAME
+        fi
+
+        echo -n "Want to use SORM model? [y/n, default:n] : " ; read MODEL_EXTEND
+
+        # check if model_extend=y if true SDF\Sorm\Model else SDF\SORM
+        if [ "$MODEL_EXTEND" = "y" ]; then
+            MODEL_EXTEND="SDF\Sorm\Model"
+            NEW_LINE="require_once \"app/libraries/SORM.php\";\n"
+        else
+            MODEL_EXTEND="SDF\Model"
+            NEW_LINE=""
+        fi
+
+        echo "Creating new model file..."
+        touch "app/models/$ARG_NAME.php"
+        echo "<?php" >> "app/models/$ARG_NAME.php"
+        echo "$NEW_LINE" >> "app/models/$ARG_NAME.php"
+        echo "class $ARG_NAME extends $MODEL_EXTEND" >> "app/models/$ARG_NAME.php"
+        echo "{" >> "app/models/$ARG_NAME.php"
+        echo "    public function __construct()" >> "app/models/$ARG_NAME.php"
+        echo "    {" >> "app/models/$ARG_NAME.php"
+        echo "        parent::__construct();" >> "app/models/$ARG_NAME.php"
+        echo "        error_log(\"Loaded model: $ARG_NAME\");" >> "app/models/$ARG_NAME.php"
+        echo "    }" >> "app/models/$ARG_NAME.php"
+        echo "}" >> "app/models/$ARG_NAME.php"
+        echo "Model file created successfully."
+        ;;
+    view)
+        # Check if user provided a path rather than a name
+        # If so, create the directory and the file
+
+        if [[ $ARG_NAME == */* ]]; then
+            mkdir -p "app/controllers/$(dirname $ARG_NAME)"
+        fi
+        echo "Creating new view file..."
+        touch "app/views/$ARG_NAME.php"
+        echo "<h1>$ARG_NAME works!</h1>" >> "app/views/$ARG_NAME.php"
+        echo "View file created successfully."
+        ;;
+    helper)
+        echo "Creating new helper file..."
+        touch "app/helpers/$ARG_NAME.php"
+        echo "Helper file created successfully."
+        ;;
+    route)
+        echo -n "Enter controller/method: (use slash to separate controller and method) : " ; read CONTROLLER_METHOD
+
+        echo -n "Enter request type: [default: GET] : " ; read REQUEST_TYPE
+
+        if [ -z "$REQUEST_TYPE" ]; then
+            REQUEST_TYPE="GET"
+        fi
+
+        echo "Creating new route..."
+        echo "\$config['/$ARG_NAME'] = ['$CONTROLLER_METHOD', '$REQUEST_TYPE'];" >> "app/config/routes.php"
+        ;;
+    *)
+        print_help
+        ;;
+esac
+
+exit 0
