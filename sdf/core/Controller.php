@@ -12,49 +12,64 @@ namespace SDF;
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
- * @url         https://github.com/devsimsek/project-sdf/wiki/core#router
+ * @url         https://github.com/devsimsek/project-sdf/wiki/core.md#controller
  * @since       Version 1.0
  * @filesource
  */
 class Controller extends Core
 {
-    /**
-     * Loader class instance
-     * @var Loader
-     */
-    public object $load;
-    /**
-     * Fuse, A brand new View Engine
-     * @var mixed|object
-     */
-    private Fuse $fuse;
+  /**
+   * Loader class instance
+   * @var Loader
+   */
+  public Loader $load;
 
-    public function __construct()
-    {
-        // To access loaded models,
-        // libraries and so.
-        $this->load = &self::core_loadClass("Loader");
-        $this->fuse = &self::core_loadClass("Fuse");
-    }
+  /**
+   * Fuse, A brand new View Engine
+   * @var mixed|object
+   */
+  private Fuse $fuse;
 
-    /**
-     * Returns Application's configuration.
-     * @param string|null $key
-     * @return false|mixed
-     */
-    public function get_config(string $key = null): mixed
-    {
-        return self::core_getConfig("app", $key);
-    }
+  /**
+   * Request class instance
+   * @var Request
+   */
+  public Request $request;
 
-    /**
-     * Loads custom configuration
-     * @param string $config
-     * @param string|null $key
-     * @return array
-     */
-    public function load_config(string $config, string $key = null): array
-    {
-        return self::core_getConfig($config, $key);
-    }
+  /**
+   * Response class instance
+   * @var Response
+   */
+  public Response $response;
+
+  public function __construct()
+  {
+    // To access loaded models,
+    // libraries and so.
+    $this->load = &self::core_loadClass("Loader");
+    $this->fuse = &self::core_loadClass("Fuse");
+    $this->request = &self::core_loadClass("Request");
+    $this->response = &self::core_loadClass("Response");
+  }
+
+  /**
+   * Returns Application's configuration.
+   * @param string|null $key
+   * @return false|mixed
+   */
+  public function get_config(string $key = null): mixed
+  {
+    return self::core_getConfig("app", $key);
+  }
+
+  /**
+   * Loads custom configuration
+   * @param string $config
+   * @param string|null $key
+   * @return array
+   */
+  public function load_config(string $config, string $key = null): array
+  {
+    return self::core_getConfig($config, $key);
+  }
 }

@@ -12,7 +12,7 @@ namespace SDF;
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
- * @url         https://github.com/devsimsek/project-sdf/wiki/core#benchmark
+ * @url         https://github.com/devsimsek/project-sdf/wiki/core.md#benchmark
  * @since       v1.0
  * @filesource
  */

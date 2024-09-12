@@ -3,10 +3,10 @@
 # This file has a purpose of only storing configuration.
 
 # Database configuration
-DATABASE_NAME=""
-DATABASE_USER=""
+DATABASE_NAME="booksmaster"
+DATABASE_USER="root"
 DATABASE_PASSWORD=""
-DATABASE_HOST=""
+DATABASE_HOST="localhost"
 
 # Migration configuration
 MIGRATIONS_DIR="app/migrations"
