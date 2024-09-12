@@ -6,8 +6,6 @@ Project SDF is a project development framework created for PHP enthusiasts. The 
 
 > This version includes new cli! go try it with `./sdf/cli` command.
 
-> Warning, migrationing is not stable when using cli itself. Consider using ./sdf/migrate instead.
-
 ![version v1.5.0](https://img.shields.io/badge/version-v1.5-blue)
 
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/devsimsek/project-sdf)
