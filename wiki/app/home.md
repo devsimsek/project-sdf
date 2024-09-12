@@ -8,12 +8,12 @@ This is the home page of the app documentation. Here you can find all the inform
 # Navigation
 
 - [App](app/home.md)
-  - [Tutorials](app/tutorials/home.md)
-  - [Configuration](app/config.md) <!-- Done -->
-  - [Controllers](app/controllers.md) <!-- Done -->
-  - [Handlers](app/handlers.md) <!-- Done -->
-  - [Helpers](app/helpers.md) <!-- Done -->
-  - [Libraries](app/libraries.md) <!-- Done -->
-  - [Models](app/models.md) <!-- Done -->
-  - [Routes](app/routes.md) <!-- Done -->
-  - [Views](app/views.md) <!-- Done -->
+  - [Tutorials](tutorials/home.md)
+  - [Configuration](config.md)
+  - [Controllers](controllers.md)
+  - [Handlers](handlers.md)
+  - [Helpers](helpers.md)
+  - [Libraries](libraries.md)
+  - [Models](models.md)
+  - [Routes](routes.md)
+  - [Views](views.md)

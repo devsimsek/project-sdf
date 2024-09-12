@@ -10,7 +10,7 @@ This is the home page of the wiki, where you can find all the information you ne
 
 # Navigation
 
-- [Home](home.md) <!-- Done -->
+- [Home](home.md)
 - [App](app/home.md)
   - [Tutorials](app/tutorials/home.md)
   - [Configuration](app/config.md)
@@ -26,7 +26,7 @@ This is the home page of the wiki, where you can find all the information you ne
   - [Controller](sdf/core.md#controller)
   - [Router](sdf/core.md#router)
   - [Loader](sdf/core.md#loader)
-- [CLI](sdf/cli.md) <!-- Done -->
+- [CLI](sdf/cli.md)
   - [Commands](sdf/cli.md#commands)
   - [Usage](sdf/cli.md#usage)
 - [Libraries](libraries/home.md)
