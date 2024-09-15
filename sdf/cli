@@ -307,7 +307,7 @@ class $name extends Controller
 
     echo "Creating new route...";
     $controllerMethod = $this->argv[4] ?? "Controller/method";
-    $requestType = $this->argv[6] ?? "GET";
+    $requestType = $this->argv[5] ?? "GET";
     file_put_contents(
       "app/config/routes.php",
       "
