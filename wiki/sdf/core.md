@@ -90,20 +90,34 @@ The router has a few methods that help it route the requests. These methods are:
 
 - `add` - This method is used to add a route. It returns true if the route is added. It is used to add a route to the
   router.
-  Also, it accepts regex patterns. The supported patterns are:
+  Also, it accepts regex patterns with template variables. The template variables are:
   - `{url}` - Matches any character except `/`.
   - `{id}` - Matches any number.
   - `{num}` - Matches any number.
   - `{all}` - Matches any character.
-- `pathNotFound` - This method is used to set the path not found handler. It uses the helper function that user defined
-  earlier in the helpers/errors file.
-- `methodNotAllowed` - This method is used to set the method not allowed handler. It uses the helper function that user
-  defined earlier in the helpers/errors file.
-- `_getRoutes` - This method is used to get the routes. It returns the routes.
-- `setRConfig` - This method is used to set a router configuration. It returns true if the key exists in the router
-  configuration.
-  This is done to prevent setting a non-existing key.
-- `ignite` - This method is used to ignite the router. It passes the request to the correct controller.
+- `_getRoutes` - This method is used to get the routes. It returns the routes. It is used to get the routes from the
+  router.
+- `pathNotFound` - This method is used to handle the path not found error. It returns the path not found error. It is
+  used to handle the path not found error.
+- `methodNotAllowed` - This method is used to handle the method not allowed error. It returns the method not allowed
+  error. It is used to handle the method not allowed error.
+- `setRConfig` - This method is used to set the router configuration. It returns the router configuration. It is used to
+  set the router configuration.
+- `ignite` - This method is used to ignite the router. It returns the router. It is used to ignite the router.
+- `handleController` - This method is used to handle the controller. It returns the controller. It is used to handle the
+  controller.
+- `handleMagicRouting` - This method is used to handle the magic routing. It returns the magic routing. It is used to
+  handle the magic routing.
+- `adjustSearchPath` - This method is used to adjust the search path. It returns the search path. It is used to adjust
+  the search path.
+- `requireControllerFile` - This method is used to require the controller file. It returns the controller file. It is
+  used to require the controller file.
+- `callControllerMethod` - This method is used to call the controller method. It returns the controller method. It is
+  used to call the controller method.
+- `handleNotFound` - This method is used to handle the not found error. It returns the not found error. It is used to
+  handle the not found error.
+- `internalInvoker` - This method is used to invoke the controller and the method, used in magic routing and call
+  controller method. It returns the invoked controller and method. It is used to invoke the controller and the method.
 
 ## Controller
 
