@@ -1,6 +1,9 @@
 <?php
 
 namespace SDF;
+
+// Warning, To be deprecated, use Sorm\Model instead
+
 /**
  * Model Boilerplate.
  * Add your custom model codes to this file
@@ -12,6 +15,6 @@ class Model extends Core
 
     public function __construct()
     {
-        $this->load =& self::core_loadClass('Loader');
+        $this->load = &self::core_loadClass("Loader");
     }
 }
