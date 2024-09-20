@@ -9,13 +9,6 @@
 
 class Home extends SDF\Controller
 {
-  /**
-   * Not necessary to add, but
-   * it feels kinda nice to
-   * control all variables
-   * flowing through
-   * controller.
-   */
   public function __construct()
   {
     parent::__construct();
@@ -24,9 +17,11 @@ class Home extends SDF\Controller
   /**
    * Index view
    * @return void
+   * @throws Exception
    */
-  public function index()
+  public function index(): void
   {
-    $this->load->view('home', $this->get_config());
+    $this->load->view("home", $this->get_config());
   }
+
 }

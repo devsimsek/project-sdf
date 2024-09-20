@@ -2,177 +2,212 @@
 
 namespace SDF;
 
+/**
+ * smskSoft SDF Loader
+ * Copyright devsimsek
+ * @package     SDF
+ * @subpackage  SDF Core
+ * @file        Loader.php
+ * @version     v1.5.0
+ * @author      devsimsek
+ * @copyright   Copyright (c) 2024, smskSoft, devsimsek
+ * @license     https://opensource.org/licenses/MIT	MIT License
+ * @url         https://github.com/devsimsek/project-sdf/wiki/core.md#loader
+ * @since       Version 1.0
+ * @filesource
+ */
 class Loader
 {
-
+  /**
+   * List of loaded files.
+   * @var array
+   */
   protected static array $isLoaded = [];
 
   /**
-   * @return array
-   */
-  public static function getIsLoaded(): array
-  {
-    return self::$isLoaded;
-  }
-
-  /**
-   * Load view.
+   * Load a view file.
    * @param string $name
    * @param array|object $params
    * @param string $directory
-   * @return bool|null
+   * @return bool
+   * @throws \Exception
    */
-  public function view(string $name, array|object $params = [], string $directory = SDF_APP_VIEW): bool|object
+  public function view(
+    string       $name,
+    array|object $params = [],
+    string       $directory = SDF_APP_VIEW
+  ): bool
   {
-    if (!isset(self::$isLoaded[strtolower($name)]) or !isset(self::$isLoaded[strtolower($name) . '.php'])) {
-      if (!str_ends_with($name, '.php')) {
-        $name .= '.php';
+    $name = $this->normalizeFilename($name);
+
+    if (!$this->isLoaded($name) && file_exists($directory . $name)) {
+      if (is_object($params) && !USE_FUSE) {
+        $params = get_object_vars($params);
       }
-      if (file_exists($directory . $name)) {
-        if (!empty($params) and !is_array($params) and !USE_FUSE) {
-          $params = get_object_vars($params);
-        }
-        if (is_array($params)) extract($params);
-        if (!$this->isLoaded($name)) {
-          $this->load($name);
-          if (USE_FUSE) {
-            $fuse = new Fuse();
-            print_r($fuse->with($params)->render($name, $directory));
-          } else return require $directory . $name;
-        }
+      if (is_array($params)) {
+        extract($params);
       }
+
+      $this->load($name);
+
+      if (USE_FUSE) {
+        $fuse = new Fuse();
+        echo $fuse->with($params)->render($name, $directory);
+      } else {
+        require $directory . $name;
+      }
+      // checkpoint: Maybe i need to rollback to returning view content, and supporting view chaining
+      return true;
     }
+
     return false;
   }
 
   /**
-   * A function that return's the file is loaded or not.
+   * Check if a file is loaded.
    * @param string $name
    * @return bool
    */
   public function isLoaded(string $name): bool
   {
-    return array_key_exists($name, self::$isLoaded);
-  }
-
-  private function load(string $name)
-  {
-    self::$isLoaded[strtolower($name)] = $name;
+    return isset(self::$isLoaded[strtolower($name)]);
   }
 
   /**
-   * Load Helper
+   * Mark a file as loaded.
+   * @param string $name
+   */
+  private function load(string $name): void
+  {
+    self::$isLoaded[strtolower($name)] = true;
+  }
+
+  /**
+   * Load a helper file.
    * @param string $name
    * @param string $directory
-   * @return bool|null
+   * @return bool
    */
-  public function helper(string $name, string $directory = SDF_APP_HELP): bool|object
+  public function helper(string $name, string $directory = SDF_APP_HELP): bool
   {
-    if (!isset(self::$isLoaded[strtolower($name)]) or !isset(self::$isLoaded[strtolower($name) . '.php'])) {
-      if (!str_ends_with($name, '.php')) {
-        $name .= '.php';
-      }
-      if (file_exists($directory . $name)) {
-        if (!$this->isLoaded($name)) {
-          $this->load($name);
-          return require $directory . $name;
-        }
-      }
+    return $this->loadFile($name, $directory);
+  }
+
+  /**
+   * Load a model file and instantiate the model class.
+   * @param string $name
+   * @param string $directory
+   * @return object|bool
+   */
+  public function model(
+    string $name,
+    string $directory = SDF_APP_MODL
+  ): object|bool
+  {
+    $name = $this->normalizeFilename($name);
+
+    if (!$this->isLoaded($name) && file_exists($directory . $name)) {
+      $this->load($name);
+      require_once $directory . $name;
+
+      $className = ucfirst(str_replace(".php", "", $name));
+      return new $className();
     }
+
     return false;
   }
 
   /**
-   * Load Model
-   * @param string $name
-   * @param string $directory
-   * @return bool|object
-   */
-  public function model(string $name, string $directory = SDF_APP_MODL): bool|object
-  {
-    if (!isset(self::$isLoaded[strtolower($name)]) or !isset(self::$isLoaded[strtolower($name) . '.php'])) {
-      if (!str_ends_with($name, '.php')) {
-        $name .= '.php';
-      }
-      if (file_exists($directory . $name)) {
-        if (!$this->isLoaded($name)) {
-          $this->load($name);
-          require $directory . $name;
-          $name = strtolower(str_replace('.php', '', $name));
-          $model = ucfirst($name);
-          return @$this->$name = new $model;
-        }
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Load Library
+   * Load a library file and instantiate the library class.
    * @param string $name
    * @param array|object $params
    * @param string $directory
-   * @return bool|object
+   * @return object|bool
    */
-  public function library(string $name, array|object $params = [], string $directory = SDF_APP_LIB): bool|object
+  public function library(
+    string       $name,
+    array|object $params = [],
+    string       $directory = SDF_APP_LIB
+  ): object|bool
   {
-    if (!isset(self::$isLoaded[strtolower($name)]) or !isset(self::$isLoaded[strtolower($name) . '.php'])) {
-      if (!str_ends_with($name, '.php')) {
-        $name .= '.php';
-      }
-      if (file_exists($directory . $name)) {
-        if (!$this->isLoaded($name)) {
-          $this->load($name);
-          if (!empty($params) and !is_array($params)) {
-            $params = get_object_vars($params);
-          }
-          require $directory . $name;
-          $name = ucfirst(strtolower(str_replace('.php', '', $name)));
-          $object = strtolower($name);
-          return @$this->$object = new $name(...$params);
-        }
-      }
+    $name = $this->normalizeFilename($name);
+
+    if (!$this->isLoaded($name) && file_exists($directory . $name)) {
+      $this->load($name);
+      require_once $directory . $name;
+
+      $className = ucfirst(str_replace(".php", "", strtolower($name)));
+      // checkpoint: maybe I need to rollback $this->$name dynamic instantiation
+      // surpressing depreciation warning with @
+      return new $className(...(array)$params);
     }
+
     return false;
   }
 
   /**
-   * Load File
+   * Load a file.
    * @param string $name
    * @param string $directory
-   * @return false|mixed
+   * @return mixed
    */
   public function file(string $name, string $directory = SDF_DIR): mixed
   {
-    if (!isset(self::$isLoaded[strtolower($name)]) or !isset(self::$isLoaded[strtolower($name) . '.php'])) {
-      if (!str_ends_with($name, '.php')) {
-        $name .= '.php';
-      }
-      if (file_exists($directory . $name)) {
-        if (!$this->isLoaded($name)) {
-          $this->load($name);
-          return require $directory . $name;
-        }
-      }
-    }
-    return false;
+    return $this->loadFile($name, $directory);
   }
 
   /**
-   * Load Config File
+   * Load a config file.
    * @param string $file
    * @param string $directory
    * @return bool|array
    */
-  public function config(string $file, string $directory = SDF_APP_CONF): bool|array
+  public function config(
+    string $file,
+    string $directory = SDF_APP_CONF
+  ): bool|array
   {
-    if (file_exists(SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file)) {
-      require SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file;
-      if (isset($config)) {
-        return $config;
-      }
-      return false;
+    $filePath =
+      SDF_APP .
+      DIRECTORY_SEPARATOR .
+      $directory .
+      DIRECTORY_SEPARATOR .
+      $file;
+
+    if (file_exists($filePath)) {
+      require_once $filePath;
+      // @var array $config
+      return $config ?? false;
     }
+
+    return false;
+  }
+
+  /**
+   * Normalize the filename to ensure it has the correct extension.
+   * @param string $name
+   * @return string
+   */
+  private function normalizeFilename(string $name): string
+  {
+    return str_ends_with($name, ".php") ? $name : $name . ".php";
+  }
+
+  /**
+   * Load a file and mark it as loaded.
+   * @param string $name
+   * @param string $directory
+   * @return mixed
+   */
+  private function loadFile(string $name, string $directory): mixed
+  {
+    $name = $this->normalizeFilename($name);
+
+    if (!$this->isLoaded($name) && file_exists($directory . $name)) {
+      $this->load($name);
+      return require_once $directory . $name;
+    }
+
     return false;
   }
 }

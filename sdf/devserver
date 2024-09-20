@@ -1,33 +1,73 @@
 #!/bin/zsh
-# Create basic logger.
 
-echo "------------------------------------------------------"
-sleep 0.2
-echo '| Copyright (C)devsimsek. SDF devserver.             |'
-sleep 0.2
-echo '| Do not use in production.                          |'
-sleep 0.2
-echo "------------------------------------------------------"
-sleep 0.2
+# Colors
+RESET="\033[0m"
+RED="\033[31m"
+GREEN="\033[32m"
+YELLOW="\033[33m"
+CYAN="\033[36m"
+MAGENTA="\033[35m"
 
-if [ -z "$1" ]
-then
-  port=8080
-else
-  port=$1
+# Basic logger
+log_info() {
+    echo -e "${CYAN}[INFO]${RESET} $1"
+}
+
+log_warning() {
+    echo -e "${YELLOW}[WARNING]${RESET} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${RESET} $1"
+}
+
+# Banner function
+show_banner() {
+    echo -e "${MAGENTA}------------------------------------------------------${RESET}"
+    sleep 0.1
+    echo -e "${MAGENTA}| Copyright (C)devsimsek. SDF devserver.             |${RESET}"
+    sleep 0.1
+    echo -e "${MAGENTA}| Do not use in production.                          |${RESET}"
+    sleep 0.1
+    echo -e "${MAGENTA}------------------------------------------------------${RESET}"
+    sleep 0.1
+}
+
+# Handle -q flag for suppressing display
+quiet_mode=false
+if [ "$1" = "-q" ]; then
+    quiet_mode=true
+    shift # Remove -q from arguments
 fi
 
-echo "Starting sdf development server in $port port"
-sleep 0.2
-echo "------------------------------------------------------"
-sleep 0.2
+# Determine port
+if [ -z "$1" ]; then
+    port=8080
+else
+    port=$1
+fi
+
+# Show banner unless in quiet mode
+if [ "$quiet_mode" = false ]; then
+    show_banner
+    log_info "Starting SDF development server on port $port..."
+    echo -e "${MAGENTA}------------------------------------------------------${RESET}"
+    sleep 0.2
+fi
+
+# Check if port is in use
+if lsof -i:$port >/dev/null; then
+    log_error "Port $port is already in use. Please choose another port."
+    exit 1
+fi
+
+# Start server
 php -S localhost:$port index.php
-echo
-sleep 0.2
-echo "------------------------------------------------------"
-sleep 0.2
-echo '| Copyright (C)devsimsek. SDF devserver.             |'
-sleep 0.2
-echo '| Do not use in production.                          |'
-sleep 0.2
-echo "------------------------------------------------------"
+
+# Show closing banner unless in quiet mode
+if [ "$quiet_mode" = false ]; then
+    echo -e "${MAGENTA}------------------------------------------------------${RESET}"
+    sleep 0.2
+    log_info "Development server stopped."
+    show_banner
+fi

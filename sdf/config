@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+# This file has a purpose of only storing configuration.
+
+# Database configuration
+DATABASE_NAME=""
+DATABASE_USER=""
+DATABASE_PASSWORD=""
+DATABASE_HOST=""
+
+# Migration configuration
+MIGRATIONS_DIR="app/migrations"
+MIGRATION_PREFIX="migration_"
+
+# Server Configuration
+PORT=8080
+ENVIRONMENT="development"
+
+echo "WILL BE DEPRECATED SOON! Please use cli file instead."
