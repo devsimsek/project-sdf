@@ -60,13 +60,6 @@ class Core
         break;
       }
     }
-    // Is the request a class extension? If so we load it too
-    if (file_exists(SDF_APP . $directory . "/" . $class . ".php")) {
-      $name = $class;
-      if (class_exists($name, false) === false) {
-        require_once SDF_APP . $directory . "/" . $name . ".php";
-      }
-    }
     // Did we find the class?
     if ($name === false) {
       header("HTTP/1.0 503 Service Unavailable", true, 503);
