@@ -1,5 +1,8 @@
 <?php
 
+// DEPRECATION NOTICE!
+// Sorm will be deprecated within sdf 2.0
+
 namespace SDF;
 
 use PDO;

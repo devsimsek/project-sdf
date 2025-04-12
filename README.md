@@ -1,8 +1,10 @@
 # Project SDF
 
-Project SDF is a project development framework created for PHP enthusiasts. The framework itself is compact, easy to maintain, and improvable.
+Project SDF is a project development framework created for PHP enthusiasts. The framework itself is compact, easy to
+maintain, and improvable.
 
-> This version of the framework is not recommended for production use. It is still under development.<br>Even though it is not recommended for production use, you can still use it for your personal projects.
+> This version of the framework is not recommended for production use. It is still under development.<br>Even though it
+> is not recommended for production use, you can still use it for your personal projects.
 
 > This version includes new cli! go try it with `./sdf/cli` command.
 
@@ -28,13 +30,24 @@ Project SDF is a project development framework created for PHP enthusiasts. The 
 
 ## Announcements
 
-I've been working on a new version of the framework. The new version will be more compact, secure, and optimized. It will also include new features and libraries. Stay tuned!
+SDF 2.0 is in the way, it will have;
 
-Also, with the version v1.5.0, I will start to create a documentation for the framework. The documentation will be available on the docs folder as well as the wiki tab.
+- Services
+- Middlewares
+- Guards
+- Better routing
+- Better configuration (also json support)
+- **Deprecation of Sorm and sdf-cli (will be rewritten from scratch)**
+- Database libraries will be bundled with the next releases of the framework.
+- QueryBuilder, and PDO instances will be provided within a global basis.
+- Composer (it will still work without composer.)
+- Scopes! (Organize your application into distinct contexts such as Controller, Helper, Global, System, and View scopes
+  for better modularity and maintainability.)
+- 8.4! (Core will be rewritten based on php 8.4)
 
 ## Tech Stack
 
-**PHP:** Latest version of PHP is used in this project.
+**PHP:** 8.3 of PHP is used in this project.
 
 ## Installation
 
