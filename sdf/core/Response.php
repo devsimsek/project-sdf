@@ -81,7 +81,7 @@ class Response extends Core
    * @param int|null $httpCode
    * @return void
    */
-  public function json(mixed $object, int $httpCode = null): void
+  public function json(mixed $object, ?int $httpCode = null): void
   {
     // Add the content type header for JSON
     $this->addHeader("Content-Type: application/json");
@@ -108,7 +108,7 @@ class Response extends Core
    * @param int|null $httpCode
    * @return void
    */
-  public function text(string $message, int $httpCode = null): void
+  public function text(string $message, ?int $httpCode = null): void
   {
     // Add the content type header for plain text
     $this->addHeader("Content-Type: text/plain");
@@ -132,7 +132,7 @@ class Response extends Core
    * @param int|null $httpCode
    * @return void
    */
-  public function html(string $html, int $httpCode = null): void
+  public function html(string $html, ?int $httpCode = null): void
   {
     // Add the content type header for HTML
     $this->addHeader("Content-Type: text/html");
