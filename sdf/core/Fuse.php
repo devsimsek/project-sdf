@@ -38,7 +38,7 @@ class Fuse
      * @param string|null $key
      * @return $this
      */
-    public function with(mixed $data, string $key = null): self
+    public function with(mixed $data, ?string $key = null): self
     {
         if (!empty($key)) {
             $this->data[$key] = $data;
