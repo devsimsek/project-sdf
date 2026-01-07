@@ -57,7 +57,7 @@ class Controller extends Core
    * @param string|null $key
    * @return false|mixed
    */
-  public function get_config(string $key = null): mixed
+  public function get_config(?string $key = null): mixed
   {
     return self::core_getConfig("app", $key);
   }
@@ -68,7 +68,7 @@ class Controller extends Core
    * @param string|null $key
    * @return array
    */
-  public function load_config(string $config, string $key = null): array
+  public function load_config(string $config, ?string $key = null): array
   {
     return self::core_getConfig($config, $key);
   }

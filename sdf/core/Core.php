@@ -40,7 +40,7 @@ class Core
   public static function &core_loadClass(
     string $class,
     string $directory = "core",
-    array  $param = null
+    ?array $param = null
   ): object
   {
     $_classes = self::$classes;
@@ -123,7 +123,7 @@ class Core
    */
   public static function core_getConfig(
     string $config,
-    string $key = null
+    ?string $key = null
   ): mixed
   {
     if (array_key_exists($config, self::$config)) {
@@ -151,7 +151,7 @@ class Core
   public static function core_triggerError(
     int    $errnum,
     string $errmessage,
-    string $errfile = null,
+    ?string $errfile = null,
     int    $errline = 0
   ): void
   {
