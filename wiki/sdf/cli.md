@@ -7,7 +7,7 @@
 
 sdf/cli is a command line interface that allows you to generate code for your application as well as run the application
 in development mode.
-It requires the php 8 installed on your machine as well as the PATH environment variable set to the php executable.
+It requires php 8.5 or higher installed on your machine as well as the PATH environment variable set to the php executable.
 
 > You can always use the zsh scripts to run commands. Be aware that the scripts may be outdated thus it is recommended
 > to use the php cli.

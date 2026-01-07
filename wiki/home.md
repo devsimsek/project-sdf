@@ -49,7 +49,7 @@ This is the home page of the wiki, where you can find all the information you ne
 
 To use the framework, you need to have the following installed:
 
-- [Php 8](https://www.php.net/)
+- [Php 8.5](https://www.php.net/)
   - Enable the following extensions:
     - `pdo`
     - `sqlite3`
