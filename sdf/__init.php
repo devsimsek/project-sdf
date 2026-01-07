@@ -22,10 +22,10 @@ if (!defined("SDF") and !SDF) {
 const SDF_VERSION = 1.5;
 
 // Check minimum version requirement of this framework.
-// PHP 8.5 is required for this version of the framework
-if (version_compare(PHP_VERSION, "8.5.0") < 0) {
+// PHP 8.0 or higher is required, framework is tested and compatible up to PHP 8.5
+if (version_compare(PHP_VERSION, "8.0.0") < 0) {
     die(
-        "FATAL ERROR: Sdf is designed to work with php 8.5 and upper versions. Please update your php version."
+        "FATAL ERROR: Sdf is designed to work with php 8.0 and upper versions. Please update your php version."
     );
 }
 

@@ -43,11 +43,11 @@ SDF 2.0 is in the way, it will have;
 - Composer (it will still work without composer.)
 - Scopes! (Organize your application into distinct contexts such as Controller, Helper, Global, System, and View scopes
   for better modularity and maintainability.)
-- 8.5! (Core has been upgraded to php 8.5)
+- 8.5! (Core has been upgraded and tested for compatibility with php 8.5 while maintaining backward compatibility with PHP 8.0+)
 
 ## Tech Stack
 
-**PHP:** 8.5 of PHP is required for this project.
+**PHP:** 8.0 or higher is required for this project. The framework is tested and compatible up to PHP 8.5.
 
 ## Installation
 
