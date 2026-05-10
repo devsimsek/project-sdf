@@ -6,7 +6,6 @@ namespace SDF;
 require_once __DIR__ . '/core/Spark.php';
 
 use PDO;
-use SDF\Spark;
 
 /**
  * Class CLI
@@ -37,10 +36,10 @@ class CLI
     define("SDF_ROOT", dirname(__DIR__));
     define("SDF_APP", SDF_ROOT . "/app/");
     define("SDF_DIR", SDF_ROOT . "/sdf/");
-    
+
     require_once SDF_DIR . "core/Core.php";
     Core::core_loadConfigurations();
-    
+
     $this->config = Core::core_getConfig("database") ?: [];
   }
 
@@ -162,10 +161,10 @@ class CLI
 
     @mkdir("app/models", 0755, true);
     $file = "app/models/$name.php";
-    file_put_contents($file, <<<PHP
-<?php
+    file_put_contents($file, <<<'PHP'
+    <?php
 
-use SDF\Spark\Model;
+    use SDF\Spark\Model;
 
 /**
  * Model $name
@@ -196,14 +195,14 @@ PHP);
     $className = "{$name}_{$timestamp}";
     $file = "app/migrations/{$className}.php";
 
-    file_put_contents($file, <<<PHP
-<?php
+    file_put_contents($file, <<<'PHP'
+    <?php
 
-/**
- * Migration: $name
- * Created: $timestamp
- */
-use SDF\Spark\Migration;
+    /**
+     * Migration: $name
+     * Created: $timestamp
+     */
+    use SDF\Spark\Migration;
 
 class $className extends Migration
 {
@@ -249,10 +248,10 @@ PHP);
 
     @mkdir(dirname("app/controllers/$name.php"), 0755, true);
     $file = "app/controllers/$name.php";
-    file_put_contents($file, <<<PHP
-<?php
+    file_put_contents($file, <<<'PHP'
+    <?php
 
-use SDF\Controller;
+    use SDF\Controller;
 
 /**
  * Controller $name
@@ -266,7 +265,7 @@ class $name extends Controller
     {
         // Example of rendering a view:
         // $this->view('$name/index', ['title' => 'Welcome']);
-        
+
         echo "Welcome to $name Controller";
     }
 }
@@ -329,15 +328,15 @@ PHP);
 
     @mkdir("app/config", 0755, true);
     $file = "app/config/$name.php";
-    file_put_contents($file, <<<PHP
-<?php
+    file_put_contents($file, <<<'PHP'
+    <?php
 
-/**
- * $name Configuration
- * Load using: load_config('$name');
- * @var array \$config
- */
-if (!defined('SDF')) die('Security warning.');
+    /**
+     * $name Configuration
+     * Load using: load_config('$name');
+     * @var array \$config
+     */
+    if (!defined('SDF')) die('Security warning.');
 
 \$config['$name'] = [
     'key' => 'value',
@@ -378,13 +377,13 @@ PHP);
 
     @mkdir("app/seeds", 0755, true);
     $file = "app/seeds/$name.php";
-    file_put_contents($file, <<<PHP
-<?php
+    file_put_contents($file, <<<'PHP'
+    <?php
 
-/**
- * Seeder: $name
- */
-use SDF\Spark\Seeder;
+    /**
+     * Seeder: $name
+     */
+    use SDF\Spark\Seeder;
 
 class $name extends Seeder
 {
@@ -421,13 +420,13 @@ PHP);
 
     @mkdir("app/middlewares", 0755, true);
     $file = "app/middlewares/$name.php";
-    file_put_contents($file, <<<PHP
-<?php
+    file_put_contents($file, <<<'PHP'
+    <?php
 
-namespace App\Middlewares;
+    namespace App\Middlewares;
 
-use SDF\Middleware;
-use SDF\Request;
+    use SDF\Middleware;
+    use SDF\Request;
 
 /**
  * Middleware $name
@@ -436,7 +435,7 @@ class $name implements Middleware
 {
     /**
      * Handle the incoming request.
-     * 
+     *
      * @param Request  \$request
      * @param \Closure \$next
      * @return mixed
@@ -470,13 +469,13 @@ PHP);
 
     @mkdir("app/guards", 0755, true);
     $file = "app/guards/$name.php";
-    file_put_contents($file, <<<PHP
-<?php
+    file_put_contents($file, <<<'PHP'
+    <?php
 
-namespace App\Guards;
+    namespace App\Guards;
 
-use SDF\Guard;
-use SDF\Request;
+    use SDF\Guard;
+    use SDF\Request;
 
 /**
  * Guard $name
@@ -485,7 +484,7 @@ class $name extends Guard
 {
     /**
      * Determine if the request is authorized.
-     * 
+     *
      * @param Request \$request
      * @return bool
      */
@@ -493,7 +492,7 @@ class $name extends Guard
     {
         // Example:
         // return isset(\$_SESSION['user_id']);
-        
+
         return true;
     }
 }
@@ -864,7 +863,7 @@ PHP);
     $this->ensureMigrationTable($pdo);
 
     $batches = $pdo->query("SELECT DISTINCT batch FROM migrations ORDER BY batch DESC")->fetchAll(PDO::FETCH_COLUMN);
-    
+
     if (empty($batches)) {
         echo "No migrations found to rollback.\n";
     } else {
