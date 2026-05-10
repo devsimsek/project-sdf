@@ -1,2 +1,38 @@
-.idea
-tests
+# SDF Framework .gitignore
+
+# ─── Dependencies ─────────────────────────────────────────────────────────────
+/vendor/
+composer.lock
+
+# ─── IDE ──────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Runtime cache ────────────────────────────────────────────────────────────
+sdf_routes.cache
+sdf_config.cache
+/tmp/fuse_cache/
+
+# ─── Secrets / environment ────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+/logs/
+
+# ─── Build output ─────────────────────────────────────────────────────────────
+/dist/
+/build/
+
+# ─── Test artifacts (source tracked, outputs ignored) ─────────────────────────
+/.phpunit.cache/
+/.phpunit.result.cache
+/coverage/

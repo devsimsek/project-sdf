@@ -19,7 +19,7 @@ if (!defined("SDF") and !SDF) {
     );
     exit(1);
 }
-const SDF_VERSION = 1.5;
+const SDF_VERSION = '2.0.0';
 
 // Check minimum version requirement of this framework.
 // PHP 8.0 or higher is required, framework is tested and compatible up to PHP 8.5

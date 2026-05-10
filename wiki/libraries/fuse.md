@@ -1,212 +1,146 @@
-# SDF Fuse View Engine Documentation
+# Fuse View Engine
 
-## Overview
+Fuse is the SDF template engine. **v2.0.0 removes `eval()`** — templates compile to PHP files cached on disk. Secure, fast, zero-overhead after first render.
 
-The **Fuse** class is a custom view engine for the SDF framework, designed to handle the rendering of view files and
-manage view data. It supports custom directives like `@Foreach`, `@If`, `@For`, and `@While` as well as variable
-interpolation using `{{ variable }}` syntax.
+## Rendering a View
 
-## Class: `Fuse`
+From a controller:
 
-This class is part of the SDF framework and is used to assign data to views, render views, and parse template content.
+```php
+$this->fuse->render('home');                   // renders app/views/home.php
+$this->fuse->render('dashboard/index');        // subdirectory
+$this->fuse->with(['user' => $user])->render('profile');
+```
 
-> Fuse is handled by the core and does not need to be loaded or used directly in controllers.
-> We do not recommend using this class directly unless you are extending the core/renderer functionality.
+## Passing Data
 
-### Properties
+```php
+// Single key
+$this->fuse->with('title', 'My Blog')->render('blog/index');
 
-- **`$data`** (array): Stores the data passed to the view for rendering.
+// Array merge
+$this->fuse
+    ->with(['posts' => $posts, 'total' => count($posts)])
+    ->render('blog/index');
+```
 
-### Methods
+In the view, data is available as extracted PHP variables:
 
-#### `__construct()`
+```html
+<h1>{{ $title }}</h1>
+<p>{{ $total }} posts found.</p>
+```
 
-Initializes the Fuse engine and defines the `SDF` and `SDF_APP_VIEW` constants if they are not already set.
+## Variable Interpolation
 
-- **Returns:** `void`
+`{{ $var }}` — escaped via `htmlspecialchars`. Safe by default.
 
-- **Example:**
-  ```php
-  $fuse = new Fuse();
-  ```
+```html
+<p>Welcome, {{ $user['name'] }}!</p>
+<p>Email: {{ $user['email'] }}</p>
+```
 
-#### `with(mixed $data, string $key = null): self`
+## Directives
 
-Assigns data to the view. If a key is provided, the data will be stored under that key; otherwise, it merges the new
-data with the existing data array.
+### `@If / @ElseIf / @Else / @endIf`
 
-- **Parameters:**
-  - `mixed $data`: The data to assign to the view.
-  - `string|null $key`: Optional key to store the data under.
+```html
+@If($user['role'] === 'admin')
+  <a href="/admin">Admin Panel</a>
+@ElseIf($user['role'] === 'editor')
+  <a href="/editor">Editor Panel</a>
+@Else
+  <p>Welcome, {{ $user['name'] }}</p>
+@endIf
+```
 
-- **Returns:** `self`
+### `@Foreach / @endForeach`
 
-- **Example:**
-  ```php
-  $fuse->with(['name' => 'John']);
-  $fuse->with('John', 'name');
-  ```
+```html
+<ul>
+@Foreach($posts as $post)
+  <li>
+    <a href="/post/{{ $post['id'] }}">{{ $post['title'] }}</a>
+    <small>by {{ $post['author'] }}</small>
+  </li>
+@endForeach
+</ul>
+```
 
-#### `render(string $view, string $path = SDF_APP_VIEW): string|false`
+### `@For / @endFor`
 
-Renders the view file. It resolves the view file, reads its content, parses it, and then extracts the data for
-rendering. The output is captured and returned.
+```html
+@For($i = 1; $i <= 5; $i++)
+  <span class="star">★</span>
+@endFor
+```
 
-- **Parameters:**
-  - `string $view`: The view file name (without extension).
-  - `string $path`: Optional directory path to the view files (defaults to `SDF_APP_VIEW`).
+### `@While / @endWhile`
 
-- **Returns:** `string|false`: Rendered content as a string or `false` on failure.
+```html
+@var $n = 0;
+@While($n < 3)
+  <p>Item {{ $n }}</p>
+  @var $n++;
+@endWhile
+```
 
-- **Throws:**
-  - `\Exception` if the view file is not found.
+### `@var` — Inline PHP assignment
 
-- **Example:**
-  ```php
-  echo $fuse->render('homepage');
-  ```
+```html
+@var $greeting = 'Hello, ' . $user['name'] . '!';
+<h1>{{ $greeting }}</h1>
+```
 
-#### `resolveView(string $view, string $path): string|false`
+## Real-World Template Example
 
-Resolves the correct view file by checking for supported extensions (`.php`, `.phtml`, `.fuse`). It throws an exception
-if the view file is not found.
+`app/views/blog/index.php`:
 
-- **Parameters:**
-  - `string $view`: The view file name.
-  - `string $path`: Directory path of the view file.
-
-- **Returns:** `string|false`: The resolved view file name or `false` if not found.
-
-- **Throws:**
-  - `\Exception` if the view file does not exist.
-
-- **Example:**
-  ```php
-  $resolvedView = $fuse->resolveView('homepage', '/path/to/views/');
-  ```
-
-#### `parseContent(string $input): string`
-
-Parses the content of the view file, converting custom template directives into PHP code. Supported directives
-include `@Foreach`, `@If`, `@For`, `@While`, and variable interpolation with `{{ variable }}`.
-
-- **Parameters:**
-  - `string $input`: The raw content of the view file.
-
-- **Returns:** `string`: The parsed content with PHP directives.
-
-- **Example:**
-  ```php
-  $parsedContent = $fuse->parseContent($rawViewContent);
-  ```
-
-### Custom Directives
-
-#### `@Foreach`
-
-Converts `@Foreach` directives to PHP `foreach` loops.
-
-- **Syntax:**
-  ```php
-  @Foreach($array as $item)
-    <p>{{ $item }}</p>
-  @endForeach
-  ```
-
-- **Equivalent PHP:**
-  ```php
-  <?php foreach ($array as $item): ?>
-    <p><?php echo htmlspecialchars($item, ENT_QUOTES); ?></p>
-  <?php endforeach; ?>
-  ```
-
-#### `@If` / `@Else` / `@ElseIf`
-
-Handles conditional logic within the view template.
-
-- **Syntax:**
-  ```php
-  @If($condition)
-    <p>Condition is true</p>
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <title>{{ $title ?? 'Blog' }}</title>
+</head>
+<body>
+<header>
+  @If(isset($user))
+    <p>Logged in as {{ $user['name'] }}</p>
   @Else
-    <p>Condition is false</p>
+    <a href="/login">Login</a>
   @endIf
-  ```
+</header>
 
-- **Equivalent PHP:**
-  ```php
-  <?php if ($condition): ?>
-    <p>Condition is true</p>
-  <?php else: ?>
-    <p>Condition is false</p>
-  <?php endif; ?>
-  ```
+<main>
+  @If(empty($posts))
+    <p>No posts yet.</p>
+  @Else
+    @Foreach($posts as $post)
+      <article>
+        <h2><a href="/post/{{ $post['id'] }}">{{ $post['title'] }}</a></h2>
+        <p>{{ $post['excerpt'] }}</p>
+        <time>{{ $post['created_at'] }}</time>
+      </article>
+    @endForeach
+  @endIf
+</main>
+</body>
+</html>
+```
 
-#### `@For`
+## Cache Behaviour (v2.0.0)
 
-Converts `@For` directives to PHP `for` loops.
+- First render: template compiled → written to `SDF_APP_CACHE/views/` (or `/tmp/fuse_cache/`)
+- Subsequent renders: compiled file used directly — no parsing overhead
+- Cache invalidated automatically when source file `mtime` changes
 
-- **Syntax:**
-  ```php
-  @For($i = 0; $i < 10; $i++)
-    <p>{{ $i }}</p>
-  @endFor
-  ```
+## Supported Extensions
 
-- **Equivalent PHP:**
-  ```php
-  <?php for ($i = 0; $i < 10; $i++): ?>
-    <p><?php echo htmlspecialchars($i, ENT_QUOTES); ?></p>
-  <?php endfor; ?>
-  ```
+Fuse resolves view files in this order: `.php` → `.phtml` → `.fuse`
 
-#### `@While`
-
-Converts `@While` directives to PHP `while` loops.
-
-- **Syntax:**
-  ```php
-  @While($condition)
-    <p>Looping...</p>
-  @endWhile
-  ```
-
-- **Equivalent PHP:**
-  ```php
-  <?php while ($condition): ?>
-    <p>Looping...</p>
-  <?php endwhile; ?>
-  ```
-
-#### `{{ variable }}`
-
-Interpolates PHP variables into the template with automatic escaping for security.
-
-- **Syntax:**
-  ```php
-  <p>{{ $name }}</p>
-  ```
-
-- **Equivalent PHP:**
-  ```php
-  <p><?php echo htmlspecialchars($name, ENT_QUOTES); ?></p>
-  ```
-
-#### `@var`
-
-Allows direct PHP variable assignment in the template.
-
-- **Syntax:**
-  ```php
-  @var $count = 10;
-  ```
-
-- **Equivalent PHP:**
-  ```php
-  <?php $count = 10; ?>
-  ```
-
-### Error Handling
-
-The `Fuse` class throws exceptions if a view file is not found or cannot be resolved. This ensures that the developer is
-notified of missing files during rendering.
+```php
+$this->fuse->render('home');
+// looks for: app/views/home.php
+//            app/views/home.phtml
+//            app/views/home.fuse
+```
