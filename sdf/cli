@@ -53,6 +53,9 @@ class CLI
       case "devserver":
         $this->handleDevServer();
         break;
+      case "cache":
+        $this->handleCache();
+        break;
       default:
         $this->printUsage();
         break;
@@ -410,10 +413,14 @@ PHP);
       ? $this->argv[array_search("-p", $this->argv) + 1]
       : 8080;
     $quiet = in_array("-q", $this->argv);
+    $live = in_array("--live", $this->argv);
 
     if (!$quiet) {
       $this->showBanner();
       echo "[INFO] Starting SDF development server on port $port...\n";
+      if ($live) {
+        echo "[INFO] Live mode enabled. Watching for changes...\n";
+      }
     }
 
     if ($this->isPortInUse($port)) {
@@ -421,11 +428,114 @@ PHP);
       exit(1);
     }
 
+    if ($live) {
+      $this->startWatcher();
+    }
+
     passthru("php -S localhost:$port index.php");
 
     if (!$quiet) {
       echo "[INFO] Development server stopped.\n";
     }
+  }
+
+  /**
+   * Spawn a background process to watch files and clear cache.
+   */
+  private function startWatcher(): void
+  {
+    $cmd = "php " . $this->argv[0] . " cache watch > /dev/null 2>&1 &";
+    exec($cmd);
+  }
+
+  /**
+   * Handle cache management commands.
+   */
+  private function handleCache(): void
+  {
+    $subCommand = $this->argv[2] ?? null;
+
+    switch ($subCommand) {
+      case "clear":
+      case "flush":
+        $this->clearCache();
+        break;
+      case "watch":
+        $this->watchAndClear();
+        break;
+      default:
+        echo "Usage: php sdf/cli cache [clear|watch]\n";
+        break;
+    }
+  }
+
+  /**
+   * Clear all framework caches.
+   */
+  private function clearCache(bool $silent = false): void
+  {
+    $temp = sys_get_temp_dir();
+    $files = [
+      $temp . '/sdf_routes.cache',
+      $temp . '/sdf_config.cache'
+    ];
+
+    $count = 0;
+    foreach ($files as $file) {
+      if (file_exists($file)) {
+        unlink($file);
+        $count++;
+      }
+    }
+
+    // Clear fuse cache
+    $fuseCache = $temp . '/fuse_cache';
+    if (is_dir($fuseCache)) {
+      foreach (glob("$fuseCache/*") as $f) {
+        if (is_file($f)) unlink($f);
+      }
+      $count++;
+    }
+
+    if (!$silent) {
+      echo "[SUCCESS] Cache cleared ($count items removed).\n";
+    }
+  }
+
+  /**
+   * Internal loop to watch files and clear cache.
+   */
+  private function watchAndClear(): void
+  {
+    $lastHash = $this->getProjectHash();
+
+    while (true) {
+      sleep(1);
+      $currentHash = $this->getProjectHash();
+      if ($currentHash !== $lastHash) {
+        $this->clearCache(true);
+        $lastHash = $currentHash;
+      }
+    }
+  }
+
+  /**
+   * Get a hash of all source file mtimes.
+   */
+  private function getProjectHash(): string
+  {
+    $dirs = ['app', 'sdf'];
+    $mtimes = "";
+    foreach ($dirs as $dir) {
+      if (!is_dir($dir)) continue;
+      $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
+      foreach ($it as $file) {
+        if ($file->isFile()) {
+          $mtimes .= $file->getMTime();
+        }
+      }
+    }
+    return md5($mtimes);
   }
 
   // ─── Utilities ────────────────────────────────────────────────────────────
@@ -440,7 +550,7 @@ PHP);
   private function showBanner(): void
   {
     echo "------------------------------------------------------\n";
-    echo "| SDF Framework v2.0.0  (c) devsimsek               |\n";
+    echo "| SDF Framework v2.0.0  (c) devsimsek                |\n";
     echo "| Do not use devserver in production.                |\n";
     echo "------------------------------------------------------\n";
   }
@@ -465,7 +575,10 @@ PHP);
     echo "    seed                      Seed the database\n";
     echo "    reset                     Migrate + seed\n";
     echo "\n";
-    echo "  serve|devserver [-p port] [-q]   Start dev server (default port 8080)\n";
+    echo "  serve|devserver [-p port] [-q] [--live] Start dev server\n";
+    echo "\n";
+    echo "  cache [action]              Cache management\n";
+    echo "    clear                     Clear all framework caches\n";
   }
 }
 

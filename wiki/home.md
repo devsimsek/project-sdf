@@ -120,7 +120,10 @@ Database:
   db reset                     # rollback + migrate + seed
 
 Dev server:
-  serve [-p 8080] [-q]
+  serve [-p 8080] [-q] [--live]
+
+Cache:
+  cache clear                  # flush all framework caches
 ```
 
 ---
