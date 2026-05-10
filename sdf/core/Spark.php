@@ -347,16 +347,23 @@ abstract class Model
 
     /**
      * Magic getter for attributes.
+     *
+     * @param string $name
+     * @return mixed
      */
-    public function __get($name)
+    public function __get(string $name): mixed
     {
         return $this->attributes[$name] ?? null;
     }
 
     /**
      * Magic setter for attributes.
+     *
+     * @param string $name
+     * @param mixed $value
+     * @return void
      */
-    public function __set($name, $value)
+    public function __set(string $name, mixed $value): void
     {
         $this->attributes[$name] = $value;
     }
@@ -496,6 +503,9 @@ abstract class Model
 
     /**
      * Create and save a new model instance.
+     *
+     * @param array $data
+     * @return static|null
      */
     public static function create(array $data): ?static
     {
@@ -505,6 +515,9 @@ abstract class Model
 
     /**
      * Destroy records by criteria (Static).
+     *
+     * @param array $where
+     * @return bool
      */
     public static function destroy(array $where): bool
     {
