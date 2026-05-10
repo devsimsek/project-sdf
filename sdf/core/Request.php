@@ -166,4 +166,16 @@ class Request extends Core
     $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
     return (bool)preg_match('/(GoogleBot|Slurp)/i', $userAgent);
   }
+
+  /**
+   * Get a header value.
+   * 
+   * @param string $name
+   * @return string|null
+   */
+  public function header(string $name): ?string
+  {
+    $name = 'HTTP_' . str_replace('-', '_', strtoupper($name));
+    return $_SERVER[$name] ?? null;
+  }
 }

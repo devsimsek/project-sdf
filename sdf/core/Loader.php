@@ -1,6 +1,7 @@
 <?php
 
 namespace SDF;
+use Exception;
 
 /**
  * smskSoft SDF Loader
@@ -30,7 +31,7 @@ class Loader
    * @param array|object $params
    * @param string $directory
    * @return bool
-   * @throws \Exception
+   * @throws Exception
    */
   public function view(
     string       $name,
@@ -138,7 +139,7 @@ class Loader
 
       $className = ucfirst(str_replace(".php", "", strtolower($name)));
       // checkpoint: maybe I need to rollback $this->$name dynamic instantiation
-      // surpressing depreciation warning with @
+      // suppressing depreciation warning with @
       return new $className(...(array)$params);
     }
 

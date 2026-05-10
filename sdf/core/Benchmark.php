@@ -34,7 +34,7 @@ class Benchmark extends Core
      * @param string $name Marker name
      * @return void
      */
-    public function mark($name)
+    public function mark(string $name): void
     {
         $this->marker[$name] = microtime(true);
     }
@@ -60,9 +60,9 @@ class Benchmark extends Core
      * or an empty string if $point1 is not found.
      */
     public function elapsed_time(
-        $point1 = "",
-        $point2 = "",
-        $decimals = 4
+      string $point1 = "",
+      string $point2 = "",
+      int $decimals = 4
     ): string {
         if ($point1 === "") {
             return "{elapsed_time}";
