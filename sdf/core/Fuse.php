@@ -8,7 +8,8 @@ namespace SDF;
  *
  * @package     Fuse
  * @file        Fuse.php
- * @version     v1.5.0
+ * @version     v2.0.0
+ * @changelog   v2.0.0 - Removed eval(). Templates compile to cached PHP files. XSS escaping added.
  * @author      devsimsek
  * @copyright   Copyright (C) 2023 smskSoft and devsimsek
  * @license     https://devsimsek.mit-license.org
@@ -59,13 +60,24 @@ class Fuse
         string $view,
         string $path = SDF_APP_VIEW
     ): string|false {
-        $view = $this->resolveView($view, $path);
-        $content = file_get_contents($path . $view);
-        $content = $this->parseContent($content);
+        $viewFile = $this->resolveView($view, $path);
+        $cacheDir = defined('SDF_APP_CACHE') ? SDF_APP_CACHE . 'views/' : sys_get_temp_dir() . '/fuse_cache/';
+        
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0777, true);
+        }
+
+        $cacheFile = $cacheDir . md5($path . $viewFile) . '.php';
+
+        if (!file_exists($cacheFile) || filemtime($path . $viewFile) > filemtime($cacheFile)) {
+            $content = file_get_contents($path . $viewFile);
+            $content = $this->parseContent($content);
+            file_put_contents($cacheFile, $content);
+        }
 
         extract($this->data);
         ob_start();
-        eval("?>" . $content);
+        require $cacheFile;
         return ob_get_clean();
     }
 

@@ -1,18 +1,11 @@
-# Welcome to the wiki!
+# SDF Framework Documentation
 
-This is the home page of the wiki, where you can find all the information you need to get started.
+> **v2.0.0** — Fast · Secure · PHP-native
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
-
-> Completion status: 100% (18/18) (Except tutorials)
-> Tutorials status: 0% (0/5)
-
-# Navigation
+## Navigation
 
 - [Home](home.md)
-- [App](app/home.md)
-  - [Tutorials](app/tutorials/home.md)
+- **App**
   - [Configuration](app/config.md)
   - [Controllers](app/controllers.md)
   - [Handlers](app/handlers.md)
@@ -21,96 +14,118 @@ This is the home page of the wiki, where you can find all the information you ne
   - [Models](app/models.md)
   - [Routes](app/routes.md)
   - [Views](app/views.md)
-- [Core](sdf/home.md)
-  - [Router](sdf/core.md#router)
-  - [Controller](sdf/core.md#controller)
-  - [Router](sdf/core.md#router)
-  - [Loader](sdf/core.md#loader)
-- [CLI](sdf/cli.md)
-  - [Commands](sdf/cli.md#commands)
-  - [Usage](sdf/cli.md#usage)
-- [Libraries](libraries/home.md)
-  - [Benchmark](libraries/benchmark.md)
+- **Core**
+  - [Core internals](sdf/core.md)
+  - [CLI reference](sdf/cli.md)
+- **Libraries**
+  - [Fuse — View Engine](libraries/fuse.md)
+  - [Spark ORM](libraries/spark.md)
+  - [Middleware & Guards](libraries/middleware.md)
   - [Request](libraries/request.md)
   - [Response](libraries/response.md)
-  - [Fuse](libraries/fuse.md)
-  - [Sorm](libraries/sorm.md)
-- [Getting started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Configuration](#configuration)
-  - [Using CLI to generate code](#using-cli-to-generate-code)
-  - [Running the application in development mode](#running-the-application-in-development-mode)
-  - [Contributing](#contributing)
+  - [Benchmark](libraries/benchmark.md)
 
-## Getting started
+---
+
+## Getting Started
 
 ### Prerequisites
 
-To use the framework, you need to have the following installed:
-
-- [Php 8.0 or higher](https://www.php.net/) (Framework is tested and compatible up to PHP 8.5)
-  - Enable the following extensions:
-    - `pdo`
-    - `sqlite3`
+- PHP **8.0+** (tested up to PHP 8.5)
+- Extensions: `pdo`, `pdo_mysql` or `pdo_sqlite`
+- Composer (optional, required for Spark ORM and testing)
 
 ### Installation
-
-To install the framework, you need to clone the repository.
 
 ```bash
 git clone https://github.com/devsimsek/project-sdf
 cd project-sdf
+composer install   # installs Spark ORM, swagger-php, PHPUnit
 ```
 
-### Configuration
+### Project Structure
 
-To configure the framework, navigate into index.php and app/config/app.php.
+```
+project-sdf/
+├── app/
+│   ├── config/         # Configuration files (.php or .json)
+│   ├── controllers/    # Controller classes
+│   ├── models/         # Spark ORM model classes
+│   ├── views/          # Fuse templates
+│   ├── helpers/        # Global helper functions
+│   └── migrations/     # Database migration files
+├── sdf/
+│   ├── core/           # Framework core (Router, Fuse, Spark, ...)
+│   └── cli             # CLI entrypoint
+├── tests/              # PHPUnit test suite
+└── index.php           # Application entrypoint
+```
 
-### Using CLI to generate code
+### Quick Start — Hello World
 
-With version v1.5 you can use the CLI to generate code.
+**1. Create a route** in `app/config/routes.php`:
 
-> CLI requires php to be installed on your system and added to the PATH.
+```php
+<?php
+$config['/hello/{name}'] = 'Hello/greet';
+```
 
-To generate a controller, run the following command:
+**2. Create the controller** `app/controllers/Hello.php`:
+
+```php
+<?php
+
+class Hello extends SDF\Controller
+{
+    public function greet(string $name): void
+    {
+        $this->fuse
+            ->with(['name' => htmlspecialchars($name)])
+            ->render('hello');
+    }
+}
+```
+
+**3. Create the view** `app/views/hello.php`:
+
+```html
+<h1>Hello, {{ $name }}!</h1>
+```
+
+**4. Run the server:**
 
 ```bash
-./sdf/cli g controller <controller_name>
+php sdf/cli serve -p 8000
+# Visit: http://localhost:8000/hello/World
 ```
 
-To generate a model, run the following command:
+---
 
-> Version v1.5 uses Sorm\Model as the default model class. You can change this by removing use SDF\Sorm\Model and adding
-> use SDF\Model.
+## CLI Reference
 
-```bash
-./sdf/cli g model <model_name>
+```
+php sdf/cli [command] [subcommand] [name]
+
+Generate:
+  g model UserProfile          # Spark ORM model
+  g controller Api/UserController
+  g migration create_users_table
+  g view dashboard/index
+  g helper string_helpers
+  g config mail
+
+Database:
+  db migrate                   # run all migrations
+  db rollback                  # revert last migration
+  db reset                     # rollback + migrate + seed
+
+Dev server:
+  serve [-p 8080] [-q]
 ```
 
-To generate a migration, run the following command:
-
-```bash
-./sdf/cli g migration <migration_name>
-```
-
-> You can use ```./sdf/cli g migration <migration_name> from-model``` to generate a migration from a model. Migration
-> name needs to be the same as the model name.
-
-### Running the application in development mode
-
-To run the application in development mode, you can use the built-in PHP server.
-
-```bash
-php -S localhost:8000
-```
-
-or you can use the following command to run the application in development mode:
-
-```bash
-./sdf/cli serve
-```
+---
 
 ## Contributing
 
-To contribute to the project, you can fork the repository and create a pull request.
+Fork → branch off `v2.0.0-dev` → PR with tests.
+Follow PSR-12. Every new feature needs unit tests in `tests/`.

@@ -1,139 +1,126 @@
-# Core Documentation
+# Core Internals
 
-This is the core documentation of the SDF framework. Here you can find all the information you need to start developing
-with the SDF core framework.
+## Boot Sequence
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+```
+index.php
+  └─ sdf/__init.php
+       ├─ Define constants (SDF_VERSION, SDF_ROOT, SDF_APP, ...)
+       ├─ Core::core_loadConfigurations()   ← config cache hit? return. else load + cache.
+       ├─ Benchmark::start()
+       ├─ Router::setRConfig()
+       ├─ Router::add() × N                 ← register routes from routes.php
+       └─ Router::ignite()                  ← route cache hit? skip prep. else compile + cache.
+            └─ Controller::method($params)
+```
 
-## Ignition of the Core
+## Core Methods
 
-The ignition of the core is done by the `__init.php` file in the sdf directory. This file is responsible for loading the
-core classes and configurations. It is the second file that is executed when the framework is loaded.
+### `core_loadConfigurations(string $dir = 'config')`
 
-The process of ignition is as follows:
+Scans `app/config/` for `.php` and `.json` files. Merges into `Core::$config`. Result cached to `/tmp/sdf_config.cache`.
 
-1. The `index.php` file is executed.
-2. The `__init.php` file is executed.
-3. Constants are defined.
-4. Check if running from CLI.
-5. Load Core.
-6. Load Benchmark and mark the start time.
-7. Load Configurations.
-8. Load Router.
-9. Load Controller/Library/Model.
-10. Load Sorm (can be disabled).
-11. Set error handlers from the helpers.
-12. Load router configurations.
-13. Load the routes.
-14. Mark router start time.
-15. Ignite the router.
-16. Mark total execution time.
+```php
+// Internal usage — called automatically at boot.
+// Access config in controllers:
+$mailHost = $this->get_config('mail', 'host');
+```
 
-This is the process of ignition of the core. The core is responsible for loading the classes and configurations. It also
-loads the router and the controller/library/model classes.
+### `core_getConfig(string $file, string $key = null)`
 
-This process happens within microseconds and the framework is ready to serve requests in no time.
+```php
+$all  = Core::core_getConfig('app');           // full app config array
+$name = Core::core_getConfig('app', 'name');   // single value
+```
 
-## Provided Core Methods
+### `core_scanDirectory(string $path, string $pattern = '.php')`
 
-> For detailed documentation of the code, navigate the `sdf/core/Core.php` file.
+Returns filenames matching `$pattern` from a directory. Used internally for config and migration loading.
 
-The core has a few methods that help sdf ignite itself. These methods are:
+### `core_triggerError(string $handler, ...)`
 
-- `core_loadClass` - This method is used to load a class from the `core/classes` directory. Also it supports passing
-  arguments to the class constructor. It keeps track of the loaded classes and returns the instance of the class if it
-  is already loaded.
-- `core_loadConfigurations` - This method is used to load the configurations from the `core/config` directory. It keeps
-  track of the loaded configurations and returns the configuration if it is already loaded.
-- `core_getConfig` - This method is used to get a configuration from the loaded configurations. It returns the
-  configuration if it is loaded. Can be used to get a specific key from a specific configuration.
-- `core_triggerError` - This method is used to trigger an error with a user defined helper. It is used to throw an error
-  with a custom message. (reference: [Helpers documentation](app/helpers.md))
-- `core_scanDirectory` - This method is used to scan a directory and return the files in it. It is used to load all the
-  files in a directory. It returns an array of the files in the directory.
-- `core_isLoaded` - This method is used to check if a class or a configuration is already loaded. It returns a boolean
-  value.
-
-These are the core methods that are provided by the SDF core framework. They are used to ignite the framework and keep
-track of the loaded classes and configurations.
-
-## Loader
-
-The loader is responsible for loading the classes and configurations. It is the first class that is loaded when the
-framework is ignited. The loader is responsible for loading the core classes and configurations. It is the heart of the
-framework.
-
-The loader has a few methods that help it load the classes and configurations. These methods are:
-
-- `isLoaded` - This method is used to check if a class or a configuration is already loaded. It returns a boolean value.
-- `load` - This method is used to keep track of the loaded classes and configurations. It returns true if the class or
-  configuration is loaded. (private)
-- `normalizeFilename` - This method is used to normalize the filename. It returns the normalized filename. (private)
-- `loadFile` - This method is used to load a file. It returns the file content. (private)
-- `view` - This method is used to load a view. It returns the view content.
-- `helper` - This method is used to load a helper. It returns the helper content.
-- `model` - This method is used to load a model. It returns the model content.
-- `library` - This method is used to load a library. It returns the library content.
-- `file` - This method is used to load a file. It returns the file content.
-- `config` - This method is used to load a configuration. It returns the configuration content.
-
-These are the methods that are provided by the loader class. They are used to load the classes and configurations. The
-loader is the heart of the SDF framework.
+Calls a user-defined error handler function (defined in `app/helpers/`). See [Handlers](../app/handlers.md).
 
 ## Router
 
-The router is responsible for routing the requests to the correct controller. It is the second class that is loaded when
-the framework is ignited. The router is responsible for routing the requests to the correct controller.
+### Adding Routes (internal)
 
-The router has a few methods that help it route the requests. These methods are:
+```php
+// Called automatically by routes.php via __init.php
+Router::add('/post/{id}', 'Blog/show', 'GET');
+```
 
-- `add` - This method is used to add a route. It returns true if the route is added. It is used to add a route to the
-  router.
-  Also, it accepts regex patterns with template variables. The template variables are:
-  - `{url}` - Matches any character except `/`.
-  - `{id}` - Matches any number.
-  - `{num}` - Matches any number.
-  - `{all}` - Matches any character.
-- `_getRoutes` - This method is used to get the routes. It returns the routes. It is used to get the routes from the
-  router.
-- `pathNotFound` - This method is used to handle the path not found error. It returns the path not found error. It is
-  used to handle the path not found error.
-- `methodNotAllowed` - This method is used to handle the method not allowed error. It returns the method not allowed
-  error. It is used to handle the method not allowed error.
-- `setRConfig` - This method is used to set the router configuration. It returns the router configuration. It is used to
-  set the router configuration.
-- `ignite` - This method is used to ignite the router. It returns the router. It is used to ignite the router.
-- `handleController` - This method is used to handle the controller. It returns the controller. It is used to handle the
-  controller.
-- `handleMagicRouting` - This method is used to handle the magic routing. It returns the magic routing. It is used to
-  handle the magic routing.
-- `adjustSearchPath` - This method is used to adjust the search path. It returns the search path. It is used to adjust
-  the search path.
-- `requireControllerFile` - This method is used to require the controller file. It returns the controller file. It is
-  used to require the controller file.
-- `callControllerMethod` - This method is used to call the controller method. It returns the controller method. It is
-  used to call the controller method.
-- `handleNotFound` - This method is used to handle the not found error. It returns the not found error. It is used to
-  handle the not found error.
-- `internalInvoker` - This method is used to invoke the controller and the method, used in magic routing and call
-  controller method. It returns the invoked controller and method. It is used to invoke the controller and the method.
+### `Router::ignite(string $basepath, string $controllerDir)`
 
-## Controller
+Main dispatch method. On first call: prepares regex expressions and caches to `/tmp/sdf_routes.cache`.
+On subsequent calls: loads compiled cache directly (no regex recompilation).
 
-The controller is responsible for handling the requests. It does this while providing required modules/libraries to the
-controller itself.
+### Route Cache Invalidation
 
-The controller has a few methods that help it handle the requests. These methods are:
+```bash
+rm /tmp/sdf_routes.cache   # force rebuild
+```
 
-- `load` - represents the loader class. It is used to load models, libraries, views, and more.
-- `fuse` - represents the fuse view engine class. It is used to render views.
-- `request` - represents the request class. It is used to get the request data.
-- `response` - represents the response class. It is used to send the response.
-- `get_config` - represents the configuration class. It is used to get the configuration. When provided with a key, it
-  returns the value of the key.
-- `load_config` - represents the configuration class. It is used to load the configuration. It returns the
-  configuration.
+Or enable debug mode in `app/config/routes.php`:
 
-These are the methods that are provided by the controller class. They are used to handle the requests and provide the
-required modules/libraries to the controller.
+```php
+SDF\Router::setRConfig(['debug' => true]);
+```
+
+## Loader
+
+Accessed via `$this->load` in controllers.
+
+```php
+$this->load->view('dashboard/index');        // render a view
+$this->load->model('User');                  // require app/models/User.php
+$this->load->helper('string_helpers');       // require app/helpers/string_helpers.php
+$this->load->library('CsvExporter');         // require app/libraries/CsvExporter.php
+$this->load->config('mail');                 // load app/config/mail.php
+```
+
+## Controller Base
+
+All controllers extend `SDF\Controller`. Properties auto-injected:
+
+```php
+class Example extends SDF\Controller
+{
+    public function demo(): void
+    {
+        // Request
+        $id   = $this->request->get('id');
+        $body = $this->request->body();       // parsed JSON body
+
+        // Response
+        $this->response->status(200)->json(['ok' => true]);
+
+        // Config
+        $appName = $this->get_config('app', 'name');
+
+        // Fuse
+        $this->fuse->with(compact('id'))->render('demo');
+
+        // Loader
+        $this->load->model('Product');
+    }
+}
+```
+
+## Application Scopes (v2.0.0)
+
+`SDF\Scope` defines constants for context classification:
+
+| Constant | Value | Usage |
+|---|---|---|
+| `Scope::Controller` | `'controller'` | Controller logic context |
+| `Scope::Helper` | `'helper'` | Helper function context |
+| `Scope::Global` | `'global'` | Global app context |
+| `Scope::System` | `'system'` | Core framework context |
+| `Scope::View` | `'view'` | View/template context |
+
+```php
+use SDF\Scope;
+
+$context = Scope::Controller;   // 'controller'
+```

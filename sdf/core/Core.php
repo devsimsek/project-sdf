@@ -8,7 +8,8 @@ namespace SDF;
  * @package     SDF
  * @subpackage  SDF Core
  * @file        Core.php
- * @version     v1.0.0
+ * @version     v2.0.0
+ * @changelog   v2.0.0 - Config caching added. JSON config support added.
  * @author      devsimsek
  * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
@@ -82,37 +83,38 @@ class Core
     string $directory = "config"
   ): void
   {
+    $cacheFile = sys_get_temp_dir() . '/sdf_config.cache';
+    if (file_exists($cacheFile)) {
+        self::$config = require $cacheFile;
+        return;
+    }
+
     foreach (
-      self::core_scanDirectory(SDF_APP . DIRECTORY_SEPARATOR . $directory)
+      self::core_scanDirectory(SDF_APP . DIRECTORY_SEPARATOR . $directory, ".{php,json}")
       as $file
     ) {
-      if (
-        file_exists(
-          SDF_APP .
-          DIRECTORY_SEPARATOR .
-          $directory .
-          DIRECTORY_SEPARATOR .
-          $file
-        )
-      ) {
-        require SDF_APP .
-          DIRECTORY_SEPARATOR .
-          $directory .
-          DIRECTORY_SEPARATOR .
-          $file;
+      $filePath = SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file;
+      if (file_exists($filePath)) {
+        if (str_ends_with($file, '.json')) {
+            $config = json_decode(file_get_contents($filePath), true);
+        } else {
+            require $filePath;
+        }
         if (isset($config)) {
-          if (isset(self::$config[str_replace(".php", "", $file)])) {
-            self::$config[str_replace(".php", "", $file)] = array_merge(
-              self::$config[str_replace(".php", "", $file)],
+          $key = str_replace([".php", ".json"], "", $file);
+          if (isset(self::$config[$key])) {
+            self::$config[$key] = array_merge(
+              self::$config[$key],
               $config
             );
           } else {
-            self::$config[str_replace(".php", "", $file)] = $config;
+            self::$config[$key] = $config;
           }
         }
       }
       $config = null;
     }
+    file_put_contents($cacheFile, '<?php return ' . var_export(self::$config, true) . ';');
   }
 
   /**
