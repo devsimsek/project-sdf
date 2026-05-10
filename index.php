@@ -5,9 +5,9 @@
  * Copyright devsimsek
  * @package     SDF
  * @file        index.php
- * @version     v1.5.0
+ * @version     v2.0.0
  * @author      devsimsek
- * @copyright   Copyright (c) 2022, smskSoft, devsimsek
+ * @copyright   Copyright (c) 2022 - 2026, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
  * @url         https://github.com/devsimsek/project-sdf/
  * @since       v1.0
@@ -25,7 +25,7 @@ const SDF = true;
  * competitors laravel, codeigniter.
  * You can check the details from our
  * webpage later.
- * Source: https://sdf.smsk.me/docs/fuse
+ * Source: https://sdf.smsk.dev/docs/fuse
  */
 const USE_FUSE = true;
 
@@ -61,13 +61,14 @@ const USE_FUSE = true;
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * SDF_APP_LIB: the libraries directory for your
  * sdf application.
- * (Official libraries developed by
- * sdf team: https://github.com/smsksoft/sdf-libs)
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * SDF_APP_MODL: the models directory for your sdf
  * application.
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * SDF_APP_MIDD: the middlewares directory for
+ * your sdf application.
+ * ------- ~ ------- ~ ------- ~ ------- ~ -------
+ * SDF_APP_CACHE: the cache directory for
  * your sdf application.
  */
 $SDF_DIR = "";
@@ -79,6 +80,7 @@ $SDF_APP_HELP = "helpers";
 $SDF_APP_LIB = "libraries";
 $SDF_APP_MODL = "models";
 $SDF_APP_MIDD = "middlewares";
+$SDF_APP_CACHE = "cache";
 
 // -----------------------------------------------
 
@@ -172,15 +174,18 @@ define("SDF_APP_HELP", SDF_APP . $SDF_APP_HELP . DIRECTORY_SEPARATOR);
 define("SDF_APP_LIB", SDF_APP . $SDF_APP_LIB . DIRECTORY_SEPARATOR);
 define("SDF_APP_MODL", SDF_APP . $SDF_APP_MODL . DIRECTORY_SEPARATOR);
 define("SDF_APP_MIDD", SDF_APP . $SDF_APP_MIDD . DIRECTORY_SEPARATOR);
+define("SDF_APP_CACHE", SDF_APP . $SDF_APP_CACHE . DIRECTORY_SEPARATOR);
 if (!file_exists($SDF_DIR)) {
     if (file_exists(SDF_ROOT . "/sdf/")) {
         define("SDF_DIR", SDF_ROOT . "/sdf/");
     } else {
-        die(print_r("Sdf directory not found."));
+        print_r("Sdf directory not found.");
+        exit(1);
     }
 } else {
     define("SDF_DIR", $SDF_DIR);
 }
+
 // And pass the flag :)
 // Please do not forget to configure your
 // application in config directory.

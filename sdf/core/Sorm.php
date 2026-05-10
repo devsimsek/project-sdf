@@ -5,6 +5,7 @@
 
 namespace SDF;
 
+use mysql_xdevapi\Exception;
 use PDO;
 use PDOException;
 
@@ -47,6 +48,8 @@ class Sorm
     string $table
   ): self
   {
+    error_log("Sorm is deprecated and will be removed in v2.1 use Spark instead.");
+
     try {
       $this->pdo = new PDO(
         "mysql:host=$host;dbname=$dbname;charset=utf8",

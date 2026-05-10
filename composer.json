@@ -4,7 +4,8 @@
     "type": "project",
     "require": {
         "php": ">=8.0",
-        "zircote/swagger-php": "^4.0"
+        "zircote/swagger-php": "^4.0",
+      "ext-pdo": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"
@@ -19,7 +20,7 @@
     },
     "authors": [
         {
-            "name": "Metin Şimşek",
+            "name": "devsimsek",
             "email": "75851971+devsimsek@users.noreply.github.com"
         }
     ]

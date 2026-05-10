@@ -2,8 +2,7 @@
 
 This is the documentation for the libraries in the app. Here you can find all the information you need to get started.
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+> Libraries are reusable components that live under `app/libraries/`. This page explains how to author libraries that integrate with the SDF lifecycle, how to load them from controllers, and how to write unit tests for library code. Example libraries and usage patterns are included.
 
 ## Basic Library
 
