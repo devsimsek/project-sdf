@@ -78,6 +78,14 @@ $initializer = new SDF\Core();
 $bm = $initializer::core_loadClass("Benchmark");
 // And Here We Start Benchmarking...
 $bm->mark("__sdf__init__start__");
+
+// Initialize Logger early so we can write debug marks
+require_once SDF_DIR . 'core/Logger.php';
+// Use configuration if present (do not crash if not)
+$loggerConfig = $initializer::core_getConfig('logger') ?: [];
+$logger = SDF\Logger::getInstance($loggerConfig);
+$logger->log(Level::DEBUG, 'sdf init start');
+
 $initializer::core_loadConfigurations();
 // Lets include our error handlers...
 require SDF_APP . "handlers/errors.php";
@@ -95,6 +103,7 @@ $initializer::core_loadClass("Guard");
 $dbConfig = $initializer::core_getConfig("database", "database");
 try {
   if ($dbConfig) {
+    $logger->log(Level::DEBUG, 'Initializing database connection', ['driver' => $dbConfig['driver'] ?? null]);
     switch ($dbConfig["driver"]) {
       case "mysql":
         \SDF\Spark::connect("mysql:host=" . $dbConfig["host"] . ";dbname=" . $dbConfig["name"] . ";port=" . ($dbConfig["port"] ?? "3306") . ";charset=" . ($dbConfig["charset"] ?? "utf8mb4"),
@@ -134,9 +143,11 @@ try {
       default:
         throw new Exception("Unsupported database driver: " . $dbConfig["driver"]);
     }
+    $logger->log(Level::DEBUG, 'Database initialized');
   }
 } catch (Exception $e) {
-  error_log("[FATAL, Database] " . $e->getMessage());
+  // use logger to report fatal DB errors
+  $logger->log(Level::FATAL, 'Database connection failed: ' . $e->getMessage(), ['exception' => $e]);
   exit(1);
 }
 
@@ -156,8 +167,10 @@ foreach ($initializer::core_getConfig("routes") as $route => $controller) {
     $router::add($route, $controller);
   }
 }
+$logger->log(Level::DEBUG, 'Router: preparing to ignite');
 $bm->mark("__sdf__router__start__");
 $router::ignite();
+$logger->log(Level::DEBUG, 'Router: ignite completed', ['elapsed_ms' => $bm->elapsed_time("__sdf__router__start__")]);
 if (SDF_Benchmark) {
   print_r(
     '<script>console.log("SDF RENDERER DEBUG: Total Benchmark Result: ' .
