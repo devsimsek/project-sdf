@@ -1,73 +1,103 @@
-# Routes Documentation
+# Routes
 
-This is the documentation for the routes in the app. Here you can find all the information you need to get started.
-
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+Routes map URLs to controller methods. Defined in `app/config/routes.php`.
 
 ## Basic Route
 
-A basic route in SDF looks like this:
-
 ```php
 <?php
+// calls Home::index()
 $config['/'] = 'Home';
-```
 
-Let's break down the route:
-
-- `/` - This is the URL of the route, you can name it whatever you want.
-- `Home` - This is the controller of the route, you can name it whatever you want. If the method is left empty, it will
-  default to `Home/index`.
-
-## Defining Method Based Routes
-
-You can define method based routes like this:
-
-```php
-<?php
-$config['/'] = 'Home/index';
+// calls Home::about()
 $config['/about'] = 'Home/about';
-$config['/get'] = ['Home/get', 'GET'];
-$config['/post'] = ['Home/post', 'POST'];
-$config['/put'] = ['Home/put', 'PUT'];
-$config['/delete'] = ['Home/delete', 'DELETE'];
 ```
 
-In this example, we defined a route for each method. The first two routes are for `GET` requests, the third route is for
-`POST` requests, the fourth route is for `PUT` requests, and the last route is for `DELETE` requests.
-
-## Defining Dynamic Routes
-
-You can define dynamic routes like this:
+## HTTP Method Constraints
 
 ```php
 <?php
-$config['/user/{id}'] = 'User/get';
+$config['/api/users']        = ['Api/UserController/index', 'GET'];
+$config['/api/users']        = ['Api/UserController/store', 'POST'];
+$config['/api/users/{id}']   = ['Api/UserController/show',  'GET'];
+$config['/api/users/{id}']   = ['Api/UserController/update','PUT'];
+$config['/api/users/{id}']   = ['Api/UserController/destroy','DELETE'];
 ```
 
-In this example, we defined a dynamic route for the `User/get` method. The `{id}` part is a placeholder for the user ID.
+## Dynamic Segments
 
-Method get from the User controller will be called with the user ID as a parameter. Therefor, the method signature
-should
-look like this:
+| Placeholder | Matches |
+|---|---|
+| `{id}` | Numeric only (`[0-9]+`) |
+| `{url}` | Any path segment (`[a-zA-Z0-9_-]+`) |
+| `{all}` | Everything (`.+`) |
+| `{num}` | Numeric (alias of `{id}`) |
+
+```php
+<?php
+$config['/post/{id}']              = 'Blog/show';      // /post/42
+$config['/category/{url}']         = 'Blog/category';  // /category/tech
+$config['/files/{all}']            = 'File/serve';     // /files/2024/report.pdf
+```
+
+## Real-World Blog Example
+
+```php
+<?php
+// app/config/routes.php
+
+$config['/']                   = 'Blog/index';
+$config['/post/{id}']          = ['Blog/show',   'GET'];
+$config['/post']               = ['Blog/create', 'POST'];
+$config['/post/{id}/edit']     = ['Blog/edit',   'GET'];
+$config['/post/{id}']          = ['Blog/update', 'PUT'];
+$config['/post/{id}']          = ['Blog/delete', 'DELETE'];
+$config['/tag/{url}']          = 'Blog/tag';
+$config['/search']             = ['Blog/search', 'GET'];
+```
+
+Matching controller:
 
 ```php
 <?php
 
-class User extends SDF\Controller
+class Blog extends SDF\Controller
 {
-
-    // ...
-
-    public function get($id)
+    public function index(): void
     {
-        // Do something with the user ID
+        $posts = Post::all();
+        $this->fuse->with(compact('posts'))->render('blog/index');
+    }
+
+    public function show(int $id): void
+    {
+        $post = Post::query()->where('id', '=', $id)->get()[0] ?? null;
+        if (!$post) {
+            $this->response->status(404)->text('Post not found');
+            return;
+        }
+        $this->fuse->with(compact('post'))->render('blog/show');
+    }
+
+    public function create(): void
+    {
+        $data = $this->request->body();
+        Post::query()->insert([
+            'title'   => $data['title'],
+            'content' => $data['content'],
+        ]);
+        $this->response->status(201)->json(['created' => true]);
     }
 }
 ```
 
-## Conclusion
+## Route Caching (v2.0.0)
 
-In this documentation, we learned how to define routes in SDF. We covered basic routes, method based routes, and dynamic
-routes. Routes are a great way to define the structure of your application and handle different types of requests.
+Routes compile to `/tmp/sdf_routes.cache` on first request.
+Disable caching for development by setting `debug = true` in router config:
+
+```php
+<?php
+// app/config/routes.php (top of file)
+SDF\Router::setRConfig(['debug' => true]);
+```

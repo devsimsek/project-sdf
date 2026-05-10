@@ -1,52 +1,35 @@
 #!/usr/bin/env php
-<?php namespace SDF;
-require_once "sdf/core/Sorm.php";
+<?php
+
+namespace SDF;
+
+require_once __DIR__ . '/core/Spark.php';
 
 use PDO;
-use SDF\Sorm\Migrator;
+use SDF\Spark;
 
-class Cli
+/**
+ * Class CLI
+ * The SDF command-line interface. Handles code generation, database operations, and dev server.
+ */
+class CLI
 {
-  private $argv;
+  /** @var array $argv Command-line arguments. */
+  private array $argv;
+
+  /** @var array $config Key-value env/config store. */
   private array $config = [];
 
   /**
-   * @param string $filePath
-   * @return void
-   * @throws \Exception
+   * @param array $argv
    */
-  function extractConfig(string $filePath): void
-  {
-    if (!file_exists($filePath)) {
-      throw new \Exception("File not found: $filePath");
-    }
-    $lines = file($filePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-    foreach ($lines as $line) {
-      $line = trim($line);
-      if (str_starts_with($line, '#') || !str_contains($line, '=')) {
-        continue; // Skip comments and invalid lines
-      }
-      [$key, $value] = explode('=', $line, 2);
-
-      $key = trim($key);
-      $value = trim($value, ' "');
-
-      $this->config[$key] = $value;
-    }
-  }
-
-  /**
-   * @param mixed $argv
-   */
-  public function __construct(mixed $argv)
+  public function __construct(array $argv)
   {
     $this->argv = $argv;
-    $this->extractConfig("sdf/config");
   }
 
   /**
-   * @return void
+   * Main dispatcher.
    */
   public function handle(): void
   {
@@ -76,8 +59,10 @@ class Cli
     }
   }
 
+  // ─── Generators ──────────────────────────────────────────────────────────
+
   /**
-   * @return void
+   * Route to sub-generator based on argv[2].
    */
   private function handleGenerate(): void
   {
@@ -125,7 +110,205 @@ class Cli
   }
 
   /**
-   * @return void
+   * Generate a Spark ORM model file.
+   *
+   * @param string|null $name
+   */
+  private function generateModel(?string $name): void
+  {
+    if (!$name) {
+      echo "Model name can't be empty.\n";
+      $name = readline("Enter model name: ");
+    }
+
+    @mkdir("app/models", 0755, true);
+    $file = "app/models/$name.php";
+    file_put_contents($file, <<<PHP
+<?php
+
+use SDF\Spark\Model;
+
+/**
+ * Model $name
+ */
+class $name extends Model
+{
+    // Override table name if needed:
+    // protected static string \$table = '{$name}s';
+}
+PHP);
+    echo "Model '$name' created at $file\n";
+  }
+
+  /**
+   * Generate a migration stub using Spark ORM.
+   *
+   * @param string|null $name
+   */
+  private function generateMigration(?string $name): void
+  {
+    if (!$name) {
+      echo "Migration name can't be empty.\n";
+      $name = readline("Enter migration name: ");
+    }
+
+    @mkdir("app/migrations", 0755, true);
+    $timestamp = date("YmdHis");
+    $className = "{$name}_{$timestamp}";
+    $file = "app/migrations/{$className}.php";
+
+    file_put_contents($file, <<<PHP
+<?php
+
+/**
+ * Migration: $name
+ * Created: $timestamp
+ */
+class $className
+{
+    public function up(\PDO \$pdo): void
+    {
+        // Write migration SQL here
+        // \$pdo->exec("CREATE TABLE ...");
+    }
+
+    public function down(\PDO \$pdo): void
+    {
+        // Write rollback SQL here
+        // \$pdo->exec("DROP TABLE ...");
+    }
+}
+PHP);
+    echo "Migration '$className' created at $file\n";
+  }
+
+  /**
+   * Generate a controller file.
+   *
+   * @param string|null $name
+   */
+  private function generateController(?string $name): void
+  {
+    if (!$name) {
+      echo "Controller name can't be empty.\n";
+      $name = readline("Enter controller name: ");
+    }
+
+    @mkdir(dirname("app/controllers/$name.php"), 0755, true);
+    $file = "app/controllers/$name.php";
+    file_put_contents($file, <<<PHP
+<?php
+
+use SDF\Controller;
+
+/**
+ * Controller $name
+ */
+class $name extends Controller
+{
+    public function index(): void
+    {
+        echo "Welcome to $name";
+    }
+}
+PHP);
+    echo "Controller '$name' created at $file\n";
+  }
+
+  /**
+   * Append a new route to routes config.
+   *
+   * @param string|null $name
+   */
+  private function generateRoute(?string $name): void
+  {
+    if (!$name) {
+      echo "Route name can't be empty.\n";
+      $name = readline("Enter route name: ");
+    }
+
+    $controllerMethod = $this->argv[4] ?? "Controller/method";
+    $requestType = $this->argv[5] ?? "GET";
+
+    file_put_contents(
+      "app/config/routes.php",
+      "\n\$config['/$name'] = ['$controllerMethod', '$requestType'];",
+      FILE_APPEND
+    );
+    echo "Route '/$name' appended to app/config/routes.php\n";
+  }
+
+  /**
+   * Generate a helper file.
+   *
+   * @param string|null $name
+   */
+  private function generateHelper(?string $name): void
+  {
+    if (!$name) {
+      echo "Helper name can't be empty.\n";
+      $name = readline("Enter helper name: ");
+    }
+
+    @mkdir("app/helpers", 0755, true);
+    $file = "app/helpers/$name.php";
+    file_put_contents($file, "<?php\n\n// Helper: $name\n");
+    echo "Helper '$name' created at $file\n";
+  }
+
+  /**
+   * Generate a config file.
+   *
+   * @param string|null $name
+   */
+  private function generateConfig(?string $name): void
+  {
+    if (!$name) {
+      echo "Config name can't be empty.\n";
+      exit(1);
+    }
+
+    @mkdir("app/config", 0755, true);
+    $file = "app/config/$name.php";
+    file_put_contents($file, <<<PHP
+<?php
+
+/**
+ * $name Configuration
+ * Load using: load_config('$name');
+ * @var array \$config
+ */
+if (!defined('SDF')) die('Security warning.');
+
+\$config['$name'] = [
+    'key' => 'value',
+];
+PHP);
+    echo "Config '$name' created at $file\n";
+  }
+
+  /**
+   * Generate a view file.
+   *
+   * @param string|null $name
+   */
+  private function generateView(?string $name): void
+  {
+    if (!$name) {
+      echo "View name can't be empty.\n";
+      exit(1);
+    }
+
+    @mkdir(dirname("app/views/$name.php"), 0755, true);
+    $file = "app/views/$name.php";
+    file_put_contents($file, "<h1>$name works!</h1>\n");
+    echo "View '$name' created at $file\n";
+  }
+
+  // ─── Database ─────────────────────────────────────────────────────────────
+
+  /**
+   * Route to database sub-commands.
    */
   private function handleDatabase(): void
   {
@@ -134,9 +317,7 @@ class Cli
       exit(1);
     }
 
-    $subCommand = $this->argv[2];
-
-    switch ($subCommand) {
+    switch ($this->argv[2]) {
       case "migrate":
         $this->migrate();
         break;
@@ -147,7 +328,8 @@ class Cli
         $this->seed();
         break;
       case "reset":
-        $this->reset();
+        $this->migrate();
+        $this->seed();
         break;
       default:
         $this->printUsage();
@@ -156,399 +338,134 @@ class Cli
   }
 
   /**
-   * @return void
+   * Run all pending migrations using raw PDO.
+   */
+  private function migrate(): void
+  {
+    $pdo = $this->getPdo();
+    echo "Running migrations...\n";
+    foreach (glob("app/migrations/*.php") as $file) {
+      echo "  → " . basename($file) . "\n";
+      require_once $file;
+      $className = pathinfo($file, PATHINFO_FILENAME);
+      $migration = new $className();
+      $migration->up($pdo);
+    }
+    echo "All migrations complete.\n";
+  }
+
+  /**
+   * Rollback the last migration.
+   */
+  private function rollback(): void
+  {
+    $pdo = $this->getPdo();
+    $files = glob("app/migrations/*.php");
+    if (empty($files)) {
+      echo "No migrations to rollback.\n";
+      return;
+    }
+    $last = end($files);
+    echo "Rolling back " . basename($last) . "...\n";
+    require_once $last;
+    $className = pathinfo($last, PATHINFO_FILENAME);
+    $migration = new $className();
+    $migration->down($pdo);
+    echo "Rollback complete.\n";
+  }
+
+  /**
+   * Run seed classes (stub for future implementation).
+   */
+  private function seed(): void
+  {
+    echo "Seeding... (implement Seeder classes in app/seeds/)\n";
+  }
+
+  /**
+   * Build a PDO instance from environment/.env config.
+   *
+   * @return PDO
+   */
+  private function getPdo(): PDO
+  {
+    $host = $this->config['DATABASE_HOST'] ?? '127.0.0.1';
+    $name = $this->config['DATABASE_NAME'] ?? '';
+    $user = $this->config['DATABASE_USER'] ?? 'root';
+    $pass = $this->config['DATABASE_PASSWORD'] ?? '';
+
+    return new PDO("mysql:host=$host;dbname=$name;charset=utf8", $user, $pass, [
+      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    ]);
+  }
+
+  // ─── Dev Server ───────────────────────────────────────────────────────────
+
+  /**
+   * Start PHP built-in dev server.
    */
   private function handleDevServer(): void
   {
-    $port = in_array("-p", $this->argv) ? $this->argv[array_search("-p", $this->argv) + 1] : 8080;
-    $quietMode = in_array("-q", $this->argv);
+    $port = in_array("-p", $this->argv)
+      ? $this->argv[array_search("-p", $this->argv) + 1]
+      : 8080;
+    $quiet = in_array("-q", $this->argv);
 
-    if (!$quietMode) {
+    if (!$quiet) {
       $this->showBanner();
-      echo "Starting SDF development server on port $port...";
+      echo "[INFO] Starting SDF development server on port $port...\n";
     }
 
     if ($this->isPortInUse($port)) {
-      echo "Port $port is already in use. Please choose another port.\n";
+      echo "[ERROR] Port $port already in use.\n";
       exit(1);
     }
 
     passthru("php -S localhost:$port index.php");
 
-    if (!$quietMode) {
-      echo "Development server stopped.\n";
-      $this->showBanner();
+    if (!$quiet) {
+      echo "[INFO] Development server stopped.\n";
     }
   }
 
-  /**
-   * @param mixed $name
-   * @return void
-   */
-  private function generateModel($name): void
+  // ─── Utilities ────────────────────────────────────────────────────────────
+
+  /** @param int $port @return bool */
+  private function isPortInUse(int $port): bool
   {
-    if (!$name) {
-      echo "Model name can't be empty.\n";
-      $name = readline("Enter model name: ");
-    }
-
-    echo "Creating new model file...";
-    $modelFile = "app/models/$name.php";
-    file_put_contents(
-      $modelFile,
-      "<?php
-use SDF\Sorm\Model;
-
-class $name extends Model
-{
-    public function __construct()
-    {
-        parent::__construct();
-        error_log(\"Loaded model: $name\");
-    }
-}
-"
-    );
-    echo "Model file created successfully.\n";
+    return !empty(shell_exec("lsof -i:$port"));
   }
 
-  /**
-   * @param mixed $name
-   * @return void
-   */
-  private function generateMigration(mixed $name): void
-  {
-    if (!$name) {
-      echo "Migration name can't be empty.\n";
-      $name = readline("Enter migration name: ");
-    }
-
-    if ($this->argv[4] === "from-model") {
-      $this->generateMigrationFromModel($name);
-      return;
-    }
-
-    if (!file_exists("app/migrations")) {
-      mkdir("app/migrations");
-    }
-
-    echo "Creating new migration file...\n";
-    $timestamp = date("YmdHis");
-    $migrationFile = "app/migrations/{$name}_$timestamp.php";
-    file_put_contents(
-      $migrationFile,
-      "<?php
-// Required for Sorm
-require_once \"sdf/core/Sorm.php\";
-
-class {$name}_$timestamp extends SDF\Sorm\Migration
-{
-  public function up(): void
-  {
-    // Migration logic here
-  }
-
-  public function down(): void
-  {
-    // Rollback logic here
-  }
-}
-"
-    );
-    echo "Migration file created successfully.\n";
-  }
-
-  /**
-   * @param mixed $name
-   * @return void
-   */
-  private function generateController(mixed $name): void
-  {
-    if (!$name) {
-      echo "Controller name can't be empty.\n";
-      $name = readline("Enter controller name: ");
-    }
-
-    echo "Creating new controller file...";
-    $controllerFile = "app/controllers/$name.php";
-    file_put_contents(
-      $controllerFile,
-      "<?php
-
-use SDF\Controller;
-
-class $name extends Controller
-{
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    public function index()
-    {
-        echo \"Welcome to $name\";
-    }
-}
-"
-    );
-    echo "Controller file created successfully.\n";
-  }
-
-  /**
-   * @param mixed $name
-   * @return void
-   */
-  private function generateRoute($name): void
-  {
-    if (!$name) {
-      echo "Route name can't be empty.\n";
-      $name = readline("Enter route name: ");
-    }
-
-    echo "Creating new route...";
-    $controllerMethod = $this->argv[4] ?? "Controller/method";
-    $requestType = $this->argv[5] ?? "GET";
-    file_put_contents(
-      "app/config/routes.php",
-      "
-\$config['/$name'] = ['$controllerMethod', '$requestType'];",
-      FILE_APPEND
-    );
-    echo "Route created successfully.\n";
-  }
-
-  /**
-   * @param mixed $name
-   * @return void
-   */
-  private function generateHelper($name): void
-  {
-    if (!$name) {
-      echo "Helper name can't be empty.\n";
-      $name = readline("Enter helper name: ");
-    }
-
-    echo "Creating new helper file...";
-    $helperFile = "app/helpers/$name.php";
-    file_put_contents(
-      $helperFile,
-      "<?php
-
-// Helper functions here
-"
-    );
-    echo "Helper file created successfully.\n";
-  }
-
-  /**
-   * @param mixed $name
-   * @return void
-   */
-  private function generateConfig($name): void
-  {
-    if (!$name) {
-      echo "Config name can't be empty.\n";
-      exit(1);
-    }
-
-    echo "Creating new config file...";
-    $configFile = "app/config/$name.php";
-    file_put_contents(
-      $configFile,
-      "<?php
-
-/**
- * $name Configuration
- * Load this file using load_config('$name');
- * @var array \$config;
- */
-if (!defined('SDF')) die('Security warning. You can\'t view this page.');
-\$config[$name] = [
-    'key' => 'value'
-];"
-    );
-    echo "Config file created successfully.\n";
-  }
-
-  /**
-   * @param mixed $name
-   * @return void
-   */
-  private function generateView($name): void
-  {
-    if (!$name) {
-      echo "View name can't be empty.\n";
-      exit(1);
-    }
-
-    echo "Creating new view file...";
-    $viewFile = "app/views/$name.php";
-    file_put_contents(
-      $viewFile,
-      "<h1>$name works!</h1>
-"
-    );
-    echo "View file created successfully.\n";
-  }
-
-  private function generateMigrationFromModel(string $name): void
-  {
-    $pdo = new PDO(
-      "mysql:host=" . $this->config["DATABASE_HOST"] . ";dbname=" . $this->config["DATABASE_NAME"] . ";charset=utf8",
-      $this->config["DATABASE_USER"],
-      $this->config["DATABASE_PASSWORD"]
-    );
-
-    echo "Generating migration for $name...\n";
-
-    $name = preg_replace('/\.[^.]*$/', '', $name);
-
-    if (!file_exists("app/models/$name.php")) {
-      echo "Model $name not found.\n";
-      return;
-    }
-
-    try {
-      require_once "app/models/$name.php";
-      $migrator = new Migrator($name, $pdo);
-    } catch (\Exception $e) {
-      echo "Error creating migration for $name: " . $e->getMessage() . "\n";
-      return;
-    }
-    try {
-      $contents = $migrator->run(0);
-      $timestamp = date("YmdHis");
-      $migrationFile = "app/migrations/{$name}_$timestamp.php";
-      file_put_contents($migrationFile, "
-      <?php
-// Required for Sorm
-require_once \"sdf/core/Sorm.php\";
-
-class {$name}_$timestamp extends SDF\Sorm\Migration
-{
-  public function up(): void
-  {
-    \$this->execute(\"$contents\");
-  }
-
-  public function down(): void
-  {
-    // Rollback logic here
-  }
-}");
-    } catch (\Exception $e) {
-      echo "Error in migration for $name: " . $e->getMessage() . "\n";
-      return;
-    }
-    echo "Migration for $name created successfully.\n";
-  }
-
-  /**
-   * @return void
-   */
-  private function migrate(): void
-  {
-    $pdo = new PDO(
-      "mysql:host=" . $this->config["DATABASE_HOST"] . ";dbname=" . $this->config["DATABASE_NAME"] . ";charset=utf8",
-      $this->config["DATABASE_USER"],
-      $this->config["DATABASE_PASSWORD"]
-    );
-
-    echo "Running migrations...\n";
-
-    foreach (glob("app/migrations/*.php") as $migrationFile) {
-      echo "Running " . basename($migrationFile) . "...\n";
-
-      include $migrationFile;
-      $className = pathinfo($migrationFile, PATHINFO_FILENAME);
-      $migration = new $className($pdo);
-      $migration->up();
-    }
-    echo "All migrations completed.\n";
-  }
-
-
-  /**
-   * @return void
-   */
-  private function rollback(): void
-  {
-    echo "Rolling back the last migration...";
-    $migrationFiles = glob("migrations/*.php");
-    if (count($migrationFiles) > 0) {
-      $lastMigration = end($migrationFiles);
-      echo "Rolling back " .
-        basename($lastMigration) .
-        "...";
-      include $lastMigration;
-    } else {
-      echo "No migrations to rollback.\n";
-    }
-  }
-
-  /**
-   * @return void
-   */
-  private function seed(): void
-  {
-    echo "Seeding the database...";
-    // open latest migration and run seed function if exists.
-  }
-
-  /**
-   * @return void
-   */
-  private function reset(): void
-  {
-    echo "Resetting the database...";
-    $this->rollback();
-    $this->migrate();
-    $this->seed();
-  }
-
-  /**
-   * @return void
-   */
+  /** Print banner. */
   private function showBanner(): void
   {
     echo "------------------------------------------------------\n";
-    echo "| Copyright (C)devsimsek. SDF devserver.             |\n";
-    echo "| Do not use in production.                          |\n";
+    echo "| SDF Framework v2.0.0  (c) devsimsek               |\n";
+    echo "| Do not use devserver in production.                |\n";
     echo "------------------------------------------------------\n";
   }
 
-  /**
-   * @param mixed $port
-   * @return bool
-   */
-  private function isPortInUse($port): bool
-  {
-    $output = shell_exec("lsof -i:$port");
-    return !empty($output);
-  }
-
-  /**
-   * @return void
-   */
+  /** Print usage help. */
   private function printUsage(): void
   {
-    echo "Usage: php sdf/cli.php [command] [subcommand] [options]\n";
+    echo "Usage: php sdf/cli [command] [subcommand] [options]\n\n";
     echo "Commands:\n";
-    echo "  g [type] [name]        Generate a new component\n";
-    echo "    ↳ migration [name]    Create a new migration file\n";
-    echo "    ↳ controller [name]   Create a new controller file\n";
-    echo "    ↳ route [name]        Create a new route\n";
-    echo "    ↳ helper [name]       Create a new helper file\n";
-    echo "    ↳ config [name]       Create a new config file\n";
-    echo "    ↳ view [name]         Create a new view file\n";
-    echo "  db [action]            Database actions\n";
-    echo "    ↳ migrate             Run migrations\n";
-    echo "    ↳ rollback            Rollback the last migration\n";
-    echo "    ↳ seed                Seed the database\n";
-    echo "    ↳ reset               Reset the database\n";
-    echo "  devserver [port]       Start the development server\n";
-    echo "    ↳ serve                Start the development server\n";
-    echo "  help                   Show this help message\n";
+    echo "  g|generate [type] [name]    Generate a new component\n";
+    echo "    model|m [name]            Spark ORM model\n";
+    echo "    migration|migrate [name]  Migration stub\n";
+    echo "    controller|c [name]       Controller\n";
+    echo "    route|r [name]            Append a route\n";
+    echo "    helper|h [name]           Helper file\n";
+    echo "    config|cfg [name]         Config file\n";
+    echo "    view|v [name]             View file\n";
+    echo "\n";
+    echo "  db|database [action]        Database actions\n";
+    echo "    migrate                   Run all migrations\n";
+    echo "    rollback                  Rollback last migration\n";
+    echo "    seed                      Seed the database\n";
+    echo "    reset                     Migrate + seed\n";
+    echo "\n";
+    echo "  serve|devserver [-p port] [-q]   Start dev server (default port 8080)\n";
   }
 }
 

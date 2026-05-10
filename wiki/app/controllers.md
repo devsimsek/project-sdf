@@ -1,125 +1,156 @@
-# Controllers Documentation
+# Controllers
 
-This is the documentation for the controllers in the app. Here you can find all the information you need to get started.
-
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+Controllers handle incoming HTTP requests. They live in `app/controllers/`.
 
 ## Basic Controller
 
-A basic controller in SDF looks like this:
-
 ```php
 <?php
 
 class Home extends SDF\Controller
 {
-    public function __construct() {
-        parent::__construct(); // This is required to load the predefined methods, some php versions require this.
-    }
-
-    public function index()
+    public function index(): void
     {
-        echo 'Hello, World!';
+        $this->fuse->render('home');
     }
 }
 ```
 
-Let's break down the controller:
-
-- `Home` - This is the name of the controller. The controller name should be the same as the file name.
-- `SDF\Controller` - This is the base controller class. All controllers should extend this class.
-- `__construct()` - This is the constructor method. This is required to load the predefined methods, some php versions
-  require this.
-- `index()` - This is the default method. This method is called when no method is specified in the URL.
-- `echo 'Hello, World!';` - This is the output of the method.
-
-Let's use `Response` class to output the message:
+## Accessing Request Data
 
 ```php
 <?php
 
-class Home extends SDF\Controller
+class Auth extends SDF\Controller
 {
-    public function __construct() {
-        parent::__construct(); // This is required to load the predefined methods, some php versions require this.
-    }
-
-    public function index()
+    public function login(): void
     {
-        $this->response->text('Hello, World!');
+        $email    = $this->request->post('email');
+        $password = $this->request->post('password');
+
+        if (!$email || !$password) {
+            $this->response->status(422)->json([
+                'error' => 'email and password required'
+            ]);
+            return;
+        }
+
+        // ... auth logic
+        $this->response->json(['token' => 'eyJ...']);
     }
 }
 ```
 
-In this example, we used the `text()` method of the `Response` class to output the message.
-
-## Methods
-
-You can define your methods in the controller as follows:
+## Returning JSON (REST API)
 
 ```php
 <?php
 
-class Home extends SDF\Controller
+class Api\UserController extends SDF\Controller
 {
-    public function __construct() {
-        parent::__construct(); // This is required to load the predefined methods, some php versions require this.
+    public function index(): void
+    {
+        $users = User::all();
+        $this->response->json($users);
     }
 
-    public function index()
+    public function show(int $id): void
     {
-        $this->response->text('Hello, World!');
+        $rows = User::query()->where('id', '=', $id)->get();
+        if (empty($rows)) {
+            $this->response->status(404)->json(['error' => 'Not found']);
+            return;
+        }
+        $this->response->json($rows[0]);
     }
 
-    public function about()
+    public function store(): void
     {
-        $this->response->text('This is the about page.');
+        $body = $this->request->body();
+        User::query()->insert([
+            'name'  => $body['name'],
+            'email' => $body['email'],
+        ]);
+        $this->response->status(201)->json(['created' => true]);
     }
 }
 ```
 
-In this example, we defined an `about()` method in the controller.
-
-## Parameters
-
-You can pass parameters to the controller methods as follows:
+## Rendering Views with Data
 
 ```php
 <?php
 
-class Home extends SDF\Controller
+class Dashboard extends SDF\Controller
 {
-    public function __construct() {
-        parent::__construct(); // This is required to load the predefined methods, some php versions require this.
-    }
-
-    public function index()
+    public function index(): void
     {
-        $this->response->text('Hello, World!');
-    }
+        $user   = $this->request->session('user');
+        $orders = Order::query()->where('user_id', '=', $user['id'])->get();
 
-    public function about($name)
-    {
-        $this->response->text('Hello, ' . $name);
+        $this->fuse
+            ->with('user', $user)
+            ->with('orders', $orders)
+            ->with('total', count($orders))
+            ->render('dashboard/index');
     }
 }
 ```
 
-and routes.php as follows:
+In `app/views/dashboard/index.php`:
+
+```html
+<h1>Welcome, {{ $user['name'] }}</h1>
+<p>You have {{ $total }} orders.</p>
+
+@Foreach($orders as $order)
+  <div class="order">
+    <span>{{ $order['id'] }}</span>
+    <span>{{ $order['status'] }}</span>
+  </div>
+@endForeach
+```
+
+## Loading Helpers & Libraries
 
 ```php
 <?php
-$config['/'] = 'Home/index';
-$config['/about/{name}'] = 'Home/about';
+
+class Reports extends SDF\Controller
+{
+    public function index(): void
+    {
+        $this->load->helper('date_helper');
+        $this->load->library('CsvExporter');
+
+        $data = Report::all();
+        $csv  = new CsvExporter($data);
+        $csv->download('report.csv');
+    }
+}
 ```
 
-In this example, we defined a route with a parameter `{name}` and passed it to the `about()` method in the controller.
+## Available Controller Properties
 
-## Conclusion
+| Property | Type | Description |
+|---|---|---|
+| `$this->fuse` | `Fuse` | Render Fuse templates |
+| `$this->request` | `Request` | Access GET/POST/headers/body |
+| `$this->response` | `Response` | Send responses, set status |
+| `$this->load` | `Loader` | Load views, helpers, models, libraries |
 
-In this section, you learned how to create controllers in SDF. You learned about the basic controller, methods, and
-parameters.
+## Subdirectory Controllers
 
-> For detailed information on controller properties and methods, check the core [Controller](sdf/core.md#controllers)
-> documentation.
+For `app/controllers/api/UserController.php`:
+
+```php
+<?php
+// app/config/routes.php
+$config['/api/users'] = ['api/UserController/index', 'GET'];
+```
+
+The CLI generator handles subdirectories automatically:
+
+```bash
+php sdf/cli g controller api/UserController
+```
