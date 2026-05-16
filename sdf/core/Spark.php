@@ -479,6 +479,10 @@ abstract class Model
     public static function find(mixed $id): ?static
     {
         $data = static::query()->where(static::$primaryKey, $id)->first();
+        if ($data instanceof static) {
+            return $data;
+        }
+
         return $data ? new static($data, true) : null;
     }
 
@@ -497,8 +501,10 @@ abstract class Model
      */
     public static function all(): array
     {
-        $results = self::query()->get();
-        return array_map(fn($data) => new static($data, true), $results);
+        return array_map(
+            fn($data) => $data instanceof static ? $data : new static((array)$data, true),
+            self::query()->get()
+        );
     }
 
     /**

@@ -52,3 +52,4 @@ sdf_config.cache
 # Misc temp
 *.cache
 *.tmp
+.phpactor.json

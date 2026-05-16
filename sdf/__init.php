@@ -85,12 +85,11 @@ $bm->mark("__sdf__init__start__");
 
 // Initialize Logger early so we can write debug marks
 require_once SDF_DIR . 'core/Logger.php';
+$initializer::core_loadConfigurations();
 // Use configuration if present (do not crash if not)
 $loggerConfig = $initializer::core_getConfig('logger') ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
 $logger->log(Level::DEBUG, 'sdf init start');
-
-$initializer::core_loadConfigurations();
 // Lets include our error handlers...
 require SDF_APP . "handlers/errors.php";
 // And Router...
@@ -99,12 +98,11 @@ $router = $initializer::core_loadClass("Router");
 $initializer::core_loadClass("Controller");
 $initializer::core_loadClass("Library");
 $initializer::core_loadClass("Model");
-$initializer::core_loadClass("Sorm");
-$initializer::core_loadClass("Spark");
 $initializer::core_loadClass("Guard");
 
 // Initialize Spark ORM
 $dbConfig = $initializer::core_getConfig("database", "database");
+$initializer::core_loadClass("Spark");
 try {
     if ($dbConfig) {
         $logger->log(Level::DEBUG, 'Initializing database connection', ['driver' => $dbConfig['driver'] ?? null]);
