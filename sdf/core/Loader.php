@@ -39,9 +39,9 @@ class Loader
     string       $directory = SDF_APP_VIEW
   ): bool
   {
-    $name = $this->normalizeFilename($name);
+    $viewName = $this->normalizeFilename($name);
 
-    if (!$this->isLoaded($name) && file_exists($directory . $name)) {
+    if (!$this->isLoaded($viewName) && file_exists($directory . $viewName)) {
       if (is_object($params) && !USE_FUSE) {
         $params = get_object_vars($params);
       }
@@ -49,13 +49,13 @@ class Loader
         extract($params);
       }
 
-      $this->load($name);
+      $this->load($viewName);
 
       if (USE_FUSE) {
         $fuse = new Fuse();
-        echo $fuse->with($params)->render($name, $directory);
+        echo $fuse->with($params)->render($viewName, $directory);
       } else {
-        require $directory . $name;
+        require $directory . $viewName;
       }
       // checkpoint: Maybe i need to rollback to returning view content, and supporting view chaining
       return true;

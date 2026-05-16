@@ -161,20 +161,21 @@ class CLI
 
     @mkdir("app/models", 0755, true);
     $file = "app/models/$name.php";
-    file_put_contents($file, <<<'PHP'
-    <?php
+    $template = <<<'PHP'
+<?php
 
-    use SDF\Spark\Model;
+use SDF\Spark\Model;
 
 /**
- * Model $name
+ * Model __NAME__
  */
-class $name extends Model
+class __NAME__ extends Model
 {
     // Override table name if needed:
-    // protected static string \$table = '{$name}s';
+    // protected static string $table = '__NAME__s';
 }
-PHP);
+PHP;
+    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
     echo "Model '$name' created at $file\n";
   }
 
@@ -195,16 +196,16 @@ PHP);
     $className = "{$name}_{$timestamp}";
     $file = "app/migrations/{$className}.php";
 
-    file_put_contents($file, <<<'PHP'
-    <?php
+    $template = <<<'PHP'
+<?php
 
-    /**
-     * Migration: $name
-     * Created: $timestamp
-     */
-    use SDF\Spark\Migration;
+/**
+ * Migration: __NAME__
+ * Created: __TIMESTAMP__
+ */
+use SDF\Spark\Migration;
 
-class $className extends Migration
+class __CLASS__ extends Migration
 {
     /**
      * Run the migrations.
@@ -230,7 +231,12 @@ class $className extends Migration
         // $pdo->exec("DROP TABLE users");
     }
 }
-PHP);
+PHP;
+    file_put_contents($file, strtr($template, [
+        '__NAME__' => $name,
+        '__CLASS__' => $className,
+        '__TIMESTAMP__' => $timestamp,
+    ]));
     echo "Migration '$className' created at $file\n";
   }
 
@@ -248,15 +254,15 @@ PHP);
 
     @mkdir(dirname("app/controllers/$name.php"), 0755, true);
     $file = "app/controllers/$name.php";
-    file_put_contents($file, <<<'PHP'
-    <?php
+    $template = <<<'PHP'
+<?php
 
-    use SDF\Controller;
+use SDF\Controller;
 
 /**
- * Controller $name
+ * Controller __NAME__
  */
-class $name extends Controller
+class __NAME__ extends Controller
 {
     /**
      * Default action.
@@ -264,12 +270,13 @@ class $name extends Controller
     public function index(): void
     {
         // Example of rendering a view:
-        // $this->view('$name/index', ['title' => 'Welcome']);
+        // $this->view('__NAME__/index', ['title' => 'Welcome']);
 
-        echo "Welcome to $name Controller";
+        echo "Welcome to __NAME__ Controller";
     }
 }
-PHP);
+PHP;
+    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
     echo "Controller '$name' created at $file\n";
   }
 
@@ -328,20 +335,21 @@ PHP);
 
     @mkdir("app/config", 0755, true);
     $file = "app/config/$name.php";
-    file_put_contents($file, <<<'PHP'
-    <?php
+    $template = <<<'PHP'
+<?php
 
-    /**
-     * $name Configuration
-     * Load using: load_config('$name');
-     * @var array \$config
-     */
-    if (!defined('SDF')) die('Security warning.');
+/**
+ * __NAME__ Configuration
+ * Load using: load_config('__NAME__');
+ * @var array $config
+ */
+if (!defined('SDF')) die('Security warning.');
 
-\$config['$name'] = [
+$config['__NAME__'] = [
     'key' => 'value',
 ];
-PHP);
+PHP;
+    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
     echo "Config '$name' created at $file\n";
   }
 
@@ -377,15 +385,15 @@ PHP);
 
     @mkdir("app/seeds", 0755, true);
     $file = "app/seeds/$name.php";
-    file_put_contents($file, <<<'PHP'
-    <?php
+    $template = <<<'PHP'
+<?php
 
-    /**
-     * Seeder: $name
-     */
-    use SDF\Spark\Seeder;
+/**
+ * Seeder: __NAME__
+ */
+use SDF\Spark\Seeder;
 
-class $name extends Seeder
+class __NAME__ extends Seeder
 {
     /**
      * Run the database seeds.
@@ -396,13 +404,14 @@ class $name extends Seeder
     public function run(\PDO $pdo): void
     {
         // You can use raw PDO:
-        // \$pdo->exec("INSERT INTO users (name) VALUES ('Admin')");
+        // $pdo->exec("INSERT INTO users (name) VALUES ('Admin')");
 
         // Or use Spark ORM if you have a model:
         // \User::create(['name' => 'Admin']);
     }
 }
-PHP);
+PHP;
+    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
     echo "Seeder '$name' created at $file\n";
   }
 
@@ -420,38 +429,39 @@ PHP);
 
     @mkdir("app/middlewares", 0755, true);
     $file = "app/middlewares/$name.php";
-    file_put_contents($file, <<<'PHP'
-    <?php
+    $template = <<<'PHP'
+<?php
 
-    namespace App\Middlewares;
+namespace App\Middlewares;
 
-    use SDF\Middleware;
-    use SDF\Request;
+use SDF\Middleware;
+use SDF\Request;
 
 /**
- * Middleware $name
+ * Middleware __NAME__
  */
-class $name implements Middleware
+class __NAME__ implements Middleware
 {
     /**
      * Handle the incoming request.
      *
-     * @param Request  \$request
-     * @param \Closure \$next
+     * @param Request $request
+     * @param \Closure $next
      * @return mixed
      */
-    public function handle(Request \$request, \Closure \$next): mixed
+    public function handle(Request $request, \Closure $next): mixed
     {
         // Logic before request...
 
-        \$response = \$next(\$request);
+        $response = $next($request);
 
         // Logic after request...
 
-        return \$response;
+        return $response;
     }
 }
-PHP);
+PHP;
+    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
     echo "Middleware '$name' created at $file\n";
   }
 
@@ -469,34 +479,35 @@ PHP);
 
     @mkdir("app/guards", 0755, true);
     $file = "app/guards/$name.php";
-    file_put_contents($file, <<<'PHP'
-    <?php
+    $template = <<<'PHP'
+<?php
 
-    namespace App\Guards;
+namespace App\Guards;
 
-    use SDF\Guard;
-    use SDF\Request;
+use SDF\Guard;
+use SDF\Request;
 
 /**
- * Guard $name
+ * Guard __NAME__
  */
-class $name extends Guard
+class __NAME__ extends Guard
 {
     /**
      * Determine if the request is authorized.
      *
-     * @param Request \$request
+     * @param Request $request
      * @return bool
      */
-    public function authorize(Request \$request): bool
+    public function authorize(Request $request): bool
     {
         // Example:
-        // return isset(\$_SESSION['user_id']);
+        // return isset($_SESSION['user_id']);
 
         return true;
     }
 }
-PHP);
+PHP;
+    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
     echo "Guard '$name' created at $file\n";
   }
 
@@ -587,146 +598,120 @@ PHP);
     }
 
     // Templates per type
-    switch ($type) {
-      case 'controller':
-        $lines = [
-          '<?php',
-          '',
-          'namespace Tests;',
-          '',
-          'use PHPUnit\\Framework\\TestCase;',
-          'use SDF\\Request;',
-          'use SDF\\Response;',
-        ];
-        if (!empty($ns)) {
-          $lines[] = '';
-          $lines[] = '// Target controller FQCN';
-          $lines[] = 'use ' . $targetClass . ';';
-        } else {
-          $lines[] = '';
-          $lines[] = '// Replace with your controller\'s FQCN if namespaced';
-        }
+    $content = match ($type) {
+      'controller' => strtr(<<<'PHP'
+<?php
 
-        $lines = array_merge($lines, [
-          '',
-          'class ' . $shortClass . ' extends TestCase',
-          '{',
-          '    protected Request|\\PHPUnit\\Framework\\MockObject\\MockObject $requestMock;',
-          '    protected Response|\\PHPUnit\\Framework\\MockObject\\MockObject $responseMock;',
-          '',
-          '    protected function setUp(): void',
-          '    {',
-          '        parent::setUp();',
-          '        $this->requestMock = $this->createMock(Request::class);',
-          '        $this->responseMock = $this->createMock(Response::class);',
-          '    }',
-          '',
-          '    public function test_index_action_exists(): void',
-          '    {',
-          '        // Basic existence check for controller/action',
-          '        $controller = new ' . $instName . '();',
-          '        $this->assertTrue(method_exists($controller, \'index\') || method_exists($controller, \'handle\'));',
-          '    }',
-          '}',
-        ]);
-        $content = implode(PHP_EOL, $lines);
-        break;
+namespace Tests;
 
-      case 'model':
-        $lines = [
-          '<?php',
-          '',
-          'namespace Tests;',
-          '',
-          'use PHPUnit\\Framework\\TestCase;',
-          '',
-          'use ' . $targetClass . ';',
-          '',
-          'class ' . $shortClass . ' extends TestCase',
-          '{',
-          '    public function test_model_dirty_and_fill(): void',
-          '    {',
-          '        // Instantiate model (adjust constructor params if needed)',
-          '        $model = new ' . $targetClass . '([]);',
-          '',
-          '        // Test fill and dirty behavior',
-            '        $model->fill([\'name\' => \'Alice\']);',
-            '        $this->assertTrue($model->isDirty());',
-            '        $dirty = $model->getDirty();',
-            '        $this->assertArrayHasKey(\'name\', $dirty);',
-          '    }',
-          '}',
-        ];
-        $content = implode(PHP_EOL, $lines);
-        break;
+use PHPUnit\Framework\TestCase;
+use SDF\Request;
+use SDF\Response;
+__TARGET_USE__
 
-      case 'integration':
-        $lines = [
-          '<?php',
-          '',
-          'namespace Tests;',
-          '',
-          'use PHPUnit\\Framework\\TestCase;',
-          'use SDF\\Spark;',
-          '',
-          'class ' . $shortClass . ' extends TestCase',
-          '{',
-          '    public function test_sqlite_in_memory_example(): void',
-          '    {',
-          '        // Connect Spark to in-memory sqlite for lightweight integration tests',
-          "        Spark::connect(\\'sqlite::memory:\\');",
-          '        $pdo = Spark::pdo();',
-          '',
-          '        // Create a sample table',
-          '        $pdo->exec("CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);");',
-          '        $stmt = $pdo->prepare("INSERT INTO items (name) VALUES (?)");',
-          '        $stmt->execute([\'alpha\']);',
-          '',
-          '        $count = $pdo->query(\'SELECT COUNT(*) FROM items\')->fetchColumn();',
-          '        $this->assertSame(1, (int)$count);',
-          '    }',
-          '}',
-        ];
-        $content = implode(PHP_EOL, $lines);
-        break;
+class __SHORT_CLASS__ extends TestCase
+{
+    protected Request|\PHPUnit\Framework\MockObject\MockObject $requestMock;
+    protected Response|\PHPUnit\Framework\MockObject\MockObject $responseMock;
 
-      default:
-        // unit
-        $lines = [
-          '<?php',
-          '',
-          'namespace Tests;',
-          '',
-          'use PHPUnit\\Framework\\TestCase;',
-          'use SDF\\Request;',
-          'use SDF\\Response;',
-          '',
-          'class ' . $shortClass . ' extends TestCase',
-          '{',
-          '    protected Request|\\PHPUnit\\Framework\\MockObject\\MockObject $requestMock;',
-          '    protected Response|\\PHPUnit\\Framework\\MockObject\\MockObject $responseMock;',
-          '',
-          '    protected function setUp(): void',
-          '    {',
-          '        parent::setUp();',
-          '        // Create lightweight mocks for common SDF classes',
-          '        $this->requestMock = $this->createMock(Request::class);',
-          '        $this->responseMock = $this->createMock(Response::class);',
-          '    }',
-          '',
-          '    public function test_example_with_mock(): void',
-          '    {',
-          '        // Example: configure request mock',
-          '        $this->requestMock->method(\'get\')->with(\'id\')->willReturn(123);',
-          '',
-          '        // Assert the mock behaves as configured',
-          '        $this->assertSame(123, $this->requestMock->get(\'id\'));',
-          '    }',
-          '}',
-        ];
-        $content = implode(PHP_EOL, $lines);
-        break;
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->requestMock = $this->createMock(Request::class);
+        $this->responseMock = $this->createMock(Response::class);
     }
+
+    public function test_index_action_exists(): void
+    {
+        $controller = new __INST_NAME__();
+        $this->assertTrue(method_exists($controller, 'index') || method_exists($controller, 'handle'));
+    }
+}
+PHP, [
+        '__SHORT_CLASS__' => $shortClass,
+        '__INST_NAME__' => $instName,
+        '__TARGET_USE__' => !empty($ns) ? 'use ' . $targetClass . ';' : '// Replace with your controller\'s FQCN if namespaced',
+      ]),
+      'model' => strtr(<<<'PHP'
+<?php
+
+namespace Tests;
+
+use PHPUnit\Framework\TestCase;
+use __TARGET__;
+
+class __SHORT_CLASS__ extends TestCase
+{
+    public function test_model_dirty_and_fill(): void
+    {
+        $model = new __TARGET__([]);
+        $model->fill(['name' => 'Alice']);
+        $this->assertTrue($model->isDirty());
+        $dirty = $model->getDirty();
+        $this->assertArrayHasKey('name', $dirty);
+    }
+}
+PHP, [
+        '__SHORT_CLASS__' => $shortClass,
+        '__TARGET__' => $targetClass,
+      ]),
+      'integration' => <<<PHP
+<?php
+
+namespace Tests;
+
+use PHPUnit\Framework\TestCase;
+use SDF\Spark;
+
+class $shortClass extends TestCase
+{
+    public function test_sqlite_in_memory_example(): void
+    {
+        Spark::connect('sqlite::memory:');
+        \$pdo = Spark::pdo();
+
+        \$pdo->exec("CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);");
+        \$stmt = \$pdo->prepare("INSERT INTO items (name) VALUES (?)");
+        \$stmt->execute(['alpha']);
+
+        \$count = \$pdo->query('SELECT COUNT(*) FROM items')->fetchColumn();
+        \$this->assertSame(1, (int)\$count);
+    }
+}
+PHP,
+      default => <<<'PHP'
+<?php
+
+namespace Tests;
+
+use PHPUnit\Framework\TestCase;
+use SDF\Request;
+use SDF\Response;
+
+class __SHORT_CLASS__ extends TestCase
+{
+    protected Request|\PHPUnit\Framework\MockObject\MockObject $requestMock;
+    protected Response|\PHPUnit\Framework\MockObject\MockObject $responseMock;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->requestMock = $this->createMock(Request::class);
+        $this->responseMock = $this->createMock(Response::class);
+    }
+
+    public function test_example_with_mock(): void
+    {
+        $this->requestMock->method('get')->with('id')->willReturn(123);
+        $this->assertSame(123, $this->requestMock->get('id'));
+    }
+}
+PHP
+    };
+
+    $content = strtr($content, [
+      '__SHORT_CLASS__' => $shortClass,
+    ]);
 
     file_put_contents($path, $content);
     echo "Test '{$shortClass}' (type: {$type}) created at $path\n";
@@ -806,14 +791,56 @@ PHP);
    */
   private function ensureMigrationTable(PDO $pdo): void
   {
-    $pdo->exec("
-      CREATE TABLE IF NOT EXISTS migrations (
-        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        migration VARCHAR(255) NOT NULL,
-        batch INT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    ");
+    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+
+    switch ($driver) {
+      case 'sqlite':
+        $sql = "
+          CREATE TABLE IF NOT EXISTS migrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            migration TEXT NOT NULL,
+            batch INTEGER NOT NULL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+          )
+        ";
+        break;
+      case 'pgsql':
+        $sql = "
+          CREATE TABLE IF NOT EXISTS migrations (
+            id BIGSERIAL PRIMARY KEY,
+            migration VARCHAR(255) NOT NULL,
+            batch INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        ";
+        break;
+      case 'sqlsrv':
+        $sql = "
+          IF OBJECT_ID('migrations', 'U') IS NULL
+          BEGIN
+            CREATE TABLE migrations (
+              id INT IDENTITY(1,1) PRIMARY KEY,
+              migration VARCHAR(255) NOT NULL,
+              batch INT NOT NULL,
+              created_at DATETIME2 DEFAULT CURRENT_TIMESTAMP
+            )
+          END
+        ";
+        break;
+      case 'mysql':
+      default:
+        $sql = "
+          CREATE TABLE IF NOT EXISTS migrations (
+            id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            migration VARCHAR(255) NOT NULL,
+            batch INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          )
+        ";
+        break;
+    }
+
+    $pdo->exec($sql);
   }
 
   /**
@@ -936,12 +963,40 @@ PHP);
     $user = $this->config['user'] ?? 'root';
     $pass = $this->config['pass'] ?? '';
     $driver = $this->config['driver'] ?? 'mysql';
+    $port = $this->config['port'] ?? null;
+    $path = $this->config['path'] ?? null;
+    $dsn = null;
 
-    if (empty($name)) {
-        die("[ERROR] Database name not configured. Check app/config/database.php\n");
+    switch ($driver) {
+      case 'sqlite':
+        $dsn = 'sqlite:' . ($path ?: $name);
+        $user = null;
+        $pass = null;
+        break;
+      case 'pgsql':
+      case 'postgres':
+      case 'psql':
+        if (empty($name)) {
+          die("[ERROR] Database name not configured. Check app/config/database.php\n");
+        }
+        $dsn = 'pgsql:host=' . $host . ';dbname=' . $name . ';port=' . ($port ?? '5432');
+        break;
+      case 'sqlsrv':
+        if (empty($name)) {
+          die("[ERROR] Database name not configured. Check app/config/database.php\n");
+        }
+        $dsn = 'sqlsrv:Server=' . $host . ',' . ($port ?? '1433') . ';database=' . $name;
+        break;
+      case 'mysql':
+      default:
+        if (empty($name)) {
+          die("[ERROR] Database name not configured. Check app/config/database.php\n");
+        }
+        $dsn = 'mysql:host=' . $host . ';dbname=' . $name . ';charset=utf8';
+        break;
     }
 
-    return new PDO("$driver:host=$host;dbname=$name;charset=utf8", $user, $pass, [
+    return new PDO($dsn, $user, $pass, [
       PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
   }
