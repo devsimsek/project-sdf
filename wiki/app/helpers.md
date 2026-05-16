@@ -2,8 +2,7 @@
 
 This is the documentation for the helpers in the app. Here you can find all the information you need to get started.
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+> Helpers are small utility files meant to extend application behavior in a lightweight, testable way. This page documents common helper patterns, where to place helper files (`app/helpers/`), how to load them via the framework loader, and best practices for naming and side-effect-free design. Examples and recommended assertions for testing helpers are included below.
 
 Helpers are your best friends when it comes to changing the core's behavior. You can use helpers to extend the core's
 functionality without changing the core itself.

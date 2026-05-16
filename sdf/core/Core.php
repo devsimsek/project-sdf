@@ -157,29 +157,24 @@ class Core
     int    $errline = 0
   ): void
   {
-    if (!self::core_getConfig("app", "eh_errorHandler")) {
-      $input = [
-        "errnum" => $errnum,
-        "errmessage" => $errmessage,
-        "errfile" => $errfile,
-        "errline" => $errline,
-      ];
-      call_user_func_array(
-        self::core_getConfig("app", "eh_errorHandler"),
-        $input
-      );
+    $input = [
+      "errnum" => $errnum,
+      "errmessage" => $errmessage,
+      "errfile" => $errfile,
+      "errline" => $errline,
+    ];
+
+    $customHandler = self::core_getConfig("app", "eh_errorHandler");
+    if ($customHandler && function_exists($customHandler)) {
+      call_user_func_array($customHandler, $input);
+      return;
     }
+
     if (function_exists("eh_errorHandler")) {
-      $input = [
-        "errnum" => $errnum,
-        "errmessage" => $errmessage,
-        "errfile" => $errfile,
-        "errline" => $errline,
-      ];
       call_user_func_array("eh_errorHandler", $input);
     } else {
       die(
-      "(E_eh404) Error. SDF can't find errorHandler function. Maybe it does not exists?"
+      "(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline. (Also: SDF can't find errorHandler function)"
       );
     }
   }

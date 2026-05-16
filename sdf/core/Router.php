@@ -40,6 +40,21 @@ class Router extends Core
   ];
 
   /**
+   * @var array
+   */
+  protected static array $middlewares = [];
+
+  /**
+   * Register a middleware
+   * @param string $middleware
+   * @return void
+   */
+  public static function middleware(string $middleware): void
+  {
+    self::$middlewares[] = $middleware;
+  }
+
+  /**
    * @param string $expression
    * @param string $controller
    * @param string $method
@@ -136,10 +151,36 @@ class Router extends Core
     $path_match_found = false;
     $route_match_found = false;
     $controllerDir = self::$config["controllersDir"];
-    $routeMatches = [];
-
-    // SDF-2: Load cached routes if exist
     $cacheFile = sys_get_temp_dir() . '/sdf_routes.cache';
+
+    if (getenv('SDF_LIVE_RELOAD') === 'true') {
+      self::middleware(\SDF\Middleware\LiveReloadMiddleware::class);
+    }
+
+    if (!empty(self::$middlewares)) {
+      $pipeline = new Pipeline();
+      $request = new Request();
+      
+      $response = $pipeline->send($request)
+        ->through(self::$middlewares)
+        ->then(function($request) use ($basepath, $parsed_url, &$request_path, &$request_method, &$path_match_found, &$route_match_found, $controllerDir, $cacheFile) {
+           ob_start();
+           self::runRouting($basepath, $parsed_url, $request_path, $request_method, $path_match_found, $route_match_found, $controllerDir, $cacheFile);
+           return ob_get_clean();
+        });
+      echo $response;
+    } else {
+      self::runRouting($basepath, $parsed_url, $request_path, $request_method, $path_match_found, $route_match_found, $controllerDir, $cacheFile);
+    }
+  }
+
+  /**
+   * Internal routing logic separated from ignite to support middleware.
+   */
+  private static function runRouting($basepath, $parsed_url, $request_path, $request_method, &$path_match_found, &$route_match_found, $controllerDir, $cacheFile): void
+  {
+    $routeMatches = [];
+    // SDF-2: Load cached routes if exist
     if (file_exists($cacheFile) && !self::$config["debug"]) {
       self::$routes = require $cacheFile;
     } else {

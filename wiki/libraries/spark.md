@@ -1,6 +1,6 @@
 # Spark ORM
 
-Spark is the SDF v2.0.0 database layer. It replaces `Sorm` with a clean PDO-backed QueryBuilder and Active Record model base.
+Spark is the SDF v2.0.0 database layer. It provides a clean PDO-backed QueryBuilder and Active Record model base.
 
 ## Connecting
 

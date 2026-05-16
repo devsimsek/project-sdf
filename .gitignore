@@ -36,3 +36,20 @@ sdf_config.cache
 /.phpunit.cache/
 /.phpunit.result.cache
 /coverage/
+
+# PHP CS Fixer
+/.php_cs.cache
+/.php-cs-fixer.cache
+.phpunit.cache
+.phpunit.result.cache
+
+# PHPStan cache
+/phpstan.cache
+
+# CLI generator temp folders
+/tests/cli-temp/
+
+# Misc temp
+*.cache
+*.tmp
+.phpactor.json
