@@ -2,8 +2,7 @@
 
 This is the documentation for the views in the app. Here you can find all the information you need to get started.
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+> Views are presentation templates for your application. This document shows how to render plain PHP views and Fuse templates, pass data from controllers to views, and structure view directories for reusable partials. Also included: tips for escaping output and testing view helpers.
 
 ## Basic View
 

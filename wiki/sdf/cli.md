@@ -1,7 +1,6 @@
 # CLI Documentation
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+> The CLI documentation describes available commands and examples for code generation, database management, and development workflows. It includes usage patterns and tips for common tasks. If you need additional examples, please open an issue or contact.
 
 ## Definition
 
@@ -101,6 +100,21 @@ The config subcommand allows you to generate a configuration file. The configura
 ./sdf/cli generate config <name>
 ```
 
+#### Test (new)
+
+You can scaffold a PHPUnit test using the `generate test` (or `g test`) command. This creates a basic test class under
+`tests/` with the `Tests` namespace so it can be picked up by PHPUnit.
+
+```bash
+# generate a test named UserTest
+./sdf/cli generate test User
+
+# generate a test named UserControllerTest
+./sdf/cli g test UserControllerTest
+```
+
+The generated file will be `tests/UserTest.php` or `tests/UserControllerTest.php` and contains a single `test_example` method.
+
 ## Serve
 
 The serve command allows you to run the application in development mode. The application is run on `localhost:8000` by
@@ -109,6 +123,29 @@ default.
 ```bash
 ./sdf/cli serve
 ```
+
+Live reload and dev endpoints
+
+- The devserver exposes helper endpoints and live-reload support only when explicitly enabled. To enable live reload, set the environment variable `SDF_LIVE_RELOAD=true`.
+- For safety, development-only endpoints (cache clear/refresh, live reload) are restricted to requests coming from `localhost`. On shared networks, do not enable live reload unless you trust the environment.
+
+## Running Tests (new)
+
+You can run the test suite directly from the CLI using the `test` (or `tests`) command. Any additional arguments are
+passed to the PHPUnit executable.
+
+```bash
+# run full suite
+./sdf/cli test
+
+# run with a filter
+./sdf/cli test --filter PipelineExecutionTest
+
+# run a specific tests file via phpunit args
+./sdf/cli tests --testsuite unit
+```
+
+The CLI will look for `vendor/bin/phpunit` first and fall back to a global `phpunit` if not found.
 
 ## Usage
 
@@ -179,4 +216,4 @@ This will run the application on `localhost:8080`.
 ## Contributing
 
 If you would like to contribute to the cli, feel free to submit a pull request. You can also reach out to me on
-[Twitter](https://x.com/devsimsek) if you have any questions or suggestions.
+[Mastodon](https://universeodon.com/@devsimsek) if you have any questions or suggestions.

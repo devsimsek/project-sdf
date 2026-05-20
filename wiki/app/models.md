@@ -2,12 +2,7 @@
 
 This is the documentation for the models in the app. Here you can find all the information you need to get started.
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
-
-> Note: SDF currently uses Sorm\Model as the base class for the models. This documentation only covers the basic
-> implementation of SDF\Model not SDF\Sorm\Model.
-> If you want to use SDF\Sorm\Model, you can find the documentation under [Sorm Library](libraries/sorm.md#model).
+> Models encapsulate data access and business logic. This page documents both legacy `SDF\Model` and the newer `SDF\Spark\Model` conventions, how models map to tables, common methods (`query`, `create`, `find`, `save`), and recommended testing approaches (unit tests for business logic, integration tests for DB operations).
 
 ## Basic Model
 

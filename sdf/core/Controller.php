@@ -18,58 +18,66 @@ namespace SDF;
  */
 class Controller extends Core
 {
-  /**
-   * Loader class instance
-   * @var Loader
-   */
-  public Loader $load;
+    /**
+     * Loader class instance
+     * @var Loader
+     */
+    public Loader $load;
 
-  /**
-   * Fuse, A brand new View Engine
-   * @var mixed|object
-   */
-  private Fuse $fuse;
+    /**
+     * Fuse, A brand new View Engine
+     * @var Fuse
+     */
+    private Fuse $fuse;
 
-  /**
-   * Request class instance
-   * @var Request
-   */
-  public Request $request;
+    /**
+     * Request class instance
+     * @var Request
+     */
+    public Request $request;
 
-  /**
-   * Response class instance
-   * @var Response
-   */
-  public Response $response;
+    /**
+     * Response class instance
+     * @var Response
+     */
+    public Response $response;
 
-  public function __construct()
-  {
-    // To access loaded models,
-    // libraries and so.
-    $this->load = &self::core_loadClass("Loader");
-    $this->fuse = &self::core_loadClass("Fuse");
-    $this->request = &self::core_loadClass("Request");
-    $this->response = &self::core_loadClass("Response");
-  }
+    public function __construct()
+    {
+        // To access loaded models,
+        // libraries and so.
+        $this->load = &self::core_loadClass("Loader");
+        $this->fuse = &self::core_loadClass("Fuse");
+        $this->request = &self::core_loadClass("Request");
+        $this->response = &self::core_loadClass("Response");
+    }
 
-  /**
-   * Returns Application's configuration.
-   * @param string|null $key
-   * @return false|mixed
-   */
-  public function get_config(?string $key = null): mixed
-  {
-    return self::core_getConfig("app", $key);
-  }
+    /**
+     * Get the Fuse instance.
+     */
+    public function get_fuse(): Fuse
+    {
+        return $this->fuse;
+    }
 
-  /**
-   * Loads custom configuration
-   * @param string $config
-   * @param string|null $key
-   * @return array
-   */
-  public function load_config(string $config, ?string $key = null): array
-  {
-    return self::core_getConfig($config, $key);
-  }
+    /**
+     * Returns Application's configuration.
+     * @param string|null $key
+     * @return false|mixed
+     */
+    public function get_config(?string $key = null): mixed
+    {
+        return self::core_getConfig("app", $key);
+    }
+
+    /**
+     * Loads custom configuration
+     * @param string $config
+     * @param string|null $key
+     * @return array
+     */
+    public function load_config(string $config, ?string $key = null): array
+    {
+        return self::core_getConfig($config, $key);
+    }
 }
