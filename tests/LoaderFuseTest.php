@@ -113,6 +113,7 @@ class LoaderFuseTest extends TestCase
     {
         $ref = new \ReflectionClass(Loader::class);
         $prop = $ref->getProperty('isLoaded');
+        $prop->setAccessible(true);
         $prop->setValue(null, []);
     }
 

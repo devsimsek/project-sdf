@@ -49,7 +49,9 @@ class SparkTest extends TestCase
         $ref = new \ReflectionClass($qb);
 
         $tableP = $ref->getProperty('table');
+        $tableP->setAccessible(true);
         $wheresP = $ref->getProperty('wheres');
+        $wheresP->setAccessible(true);
 
         $table = $tableP->getValue($qb);
         $wheres = $wheresP->getValue($qb);

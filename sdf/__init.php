@@ -98,7 +98,7 @@ $initializer::core_loadConfigurations();
 // Use configuration if present (do not crash if not)
 $loggerConfig = $initializer::core_getConfig("logger") ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
-$logger->log(Level::DEBUG, "sdf init start");
+SDF\Logger::log(Level::DEBUG, "sdf init start");
 // Lets include our error handlers...
 require SDF_APP . "handlers/errors.php";
 // And Router...
@@ -114,7 +114,7 @@ $dbConfig = $initializer::core_getConfig("database", "database");
 $initializer::core_loadClass("Spark");
 try {
     if ($dbConfig) {
-        $logger->log(Level::DEBUG, "Initializing database connection", [
+        SDF\Logger::log(Level::DEBUG, "Initializing database connection", [
             "driver" => $dbConfig["driver"] ?? null,
         ]);
         switch ($dbConfig["driver"]) {
@@ -147,7 +147,16 @@ try {
                 );
                 break;
             case "sqlite":
-                \SDF\Spark::connect("sqlite:" . $dbConfig["path"]);
+                $sqlitePath = $dbConfig["path"] ?? $dbConfig["dsn"] ?? null;
+                if ($sqlitePath === null) {
+                    throw new \Exception("SQLite configuration missing path/dsn");
+                }
+                // If it already looks like a DSN (contains ':'), use as-is; otherwise prepend sqlite:
+                if (str_contains($sqlitePath, ':')) {
+                    \SDF\Spark::connect($sqlitePath);
+                } else {
+                    \SDF\Spark::connect('sqlite:' . $sqlitePath);
+                }
                 break;
             case "sqlsrv":
                 // if using windows authentication
@@ -189,11 +198,11 @@ try {
                     "Unsupported database driver: " . $dbConfig["driver"],
                 );
         }
-        $logger->log(Level::DEBUG, "Database initialized");
+        SDF\Logger::log(Level::DEBUG, "Database initialized");
     }
 } catch (Exception $e) {
     // use logger to report fatal DB errors
-    $logger->log(
+    SDF\Logger::log(
         Level::FATAL,
         "Database connection failed: " . $e->getMessage(),
         ["exception" => $e],
@@ -205,8 +214,8 @@ $router::pathNotFound(SDF_EH_404);
 $router::methodNotAllowed(SDF_EH_405);
 // Set Routing Configuration (Class config not the routes.)
 foreach ($initializer::core_getConfig("app") as $config => $value) {
-    if (str_starts_with("rc_", $value)) {
-        $router::setRConfig(str_replace("rc_", "", $config), $value);
+if (str_starts_with($config, 'rc_')) {
+    $router::setRConfig(str_replace('rc_', '', $config), $value);
     }
 }
 // Initialize routes configuration
