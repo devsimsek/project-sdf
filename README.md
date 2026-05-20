@@ -13,7 +13,7 @@ and better security out of the box.
 
 - **MVC Pattern:** Clean separation of concerns.
 - **Spark ORM:** Built-in QueryBuilder, Active Record implementation, and PDO
-  connection manager. (Replaces `Sorm`).
+  connection manager.
 - **Middleware Pipeline:** PSR-15 inspired request filtering.
 - **Guards:** Explicit authentication and authorization classes.
 - **Application Scopes:** Organize context gracefully (Controller, Helper,
@@ -77,7 +77,7 @@ php sdf/cli serve -p 8000
 Full documentation is available in the `wiki/` directory.
 
 - [Core Components](wiki/sdf/home.md)
-- [Spark ORM](wiki/libraries/sorm.md) (Updating soon)
+- [Spark ORM](wiki/libraries/spark.md)
 - [Fuse Template Engine](wiki/libraries/fuse.md)
 
 ## Feedback

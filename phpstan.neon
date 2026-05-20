@@ -1,0 +1,13 @@
+includes:
+  - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
+parameters:
+  level: 5
+  treatPhpDocTypesAsCertain: false
+  bootstrapFiles:
+    - phpstan-bootstrap.php
+  paths:
+    - sdf/core
+    - app
+  excludePaths:
+    - tests

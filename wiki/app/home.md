@@ -2,8 +2,7 @@
 
 This is the home page of the app documentation. Here you can find all the information you need to get started.
 
-> I am currently working on the documentation. If you have any questions, feel free to reach out to me
-> on [Twitter](https://x.com/devsimsek).
+> This section contains the application-level documentation: configuration, controllers, models, views, helpers, routes and examples. Each page provides quick examples and recommended conventions to help you build apps with SDF. If something is missing, open an issue.
 
 # Navigation
 

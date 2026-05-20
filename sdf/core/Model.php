@@ -2,7 +2,7 @@
 
 namespace SDF;
 
-// Warning, To be deprecated, use Sorm\Model instead
+// Warning, To be deprecated, use Spark\Model instead
 
 /**
  * Model Boilerplate.

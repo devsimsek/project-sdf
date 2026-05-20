@@ -13,6 +13,37 @@ usage of the Benchmark library,
 static mimes for development and local server,
 and many more.
 
+Database configuration (recommended)
+
+- Place `app/config/database.php` with a top-level `$config` array containing driver-specific keys. This is the canonical shape used by the initializer and CLI.
+
+Example (SQLite in-memory):
+
+```php
+<?php
+$config = [
+    'driver' => 'sqlite',
+    'path' => ':memory:', // or '/var/www/app/database.sqlite'
+];
+```
+
+Example (MySQL):
+
+```php
+<?php
+$config = [
+    'driver' => 'mysql',
+    'host' => '127.0.0.1',
+    'name' => 'myapp',
+    'user' => 'dbuser',
+    'password' => 'secret',
+    'port' => 3306,
+    'charset' => 'utf8mb4',
+];
+```
+
+- The initializer accepts either a full DSN (via `dsn`) or the component keys above. For SQLite the bootstrap detects full DSNs (e.g., `sqlite::memory:`) and will avoid double-prefixing `sqlite:`.
+- If your legacy config used `$config['database'] = [...]`, the loader will still read it, but it's recommended to use the top-level `$config` shape above for clarity.
 Routing is done in the `app/config/routes.php` file. You can define your routes here.
 
 Ability to use magicRouting is also available. You can enable it in the `app/config/app.php` file.
@@ -90,4 +121,4 @@ application.
 In this section, you learned how to configure your application using SDF. You learned about the framework configuration,
 application configuration, routing configuration, and custom configuration.
 
-If you have any questions, feel free to reach out to me on [Twitter](https://x.com/devsimsek).
+If you have any questions, feel free to reach out to me on [Mastodon](https://universeodon.com/@devsimsek).

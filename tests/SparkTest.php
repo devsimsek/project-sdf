@@ -15,14 +15,14 @@ class SparkTest extends TestCase
     {
         $qb = new QueryBuilder('users');
         $sql = $this->getSql($qb);
-        $this->assertSame('SELECT * FROM users', $sql);
+        $this->assertSame('SELECT * FROM `users`', $sql);
     }
 
     public function test_query_builder_builds_select_with_single_where(): void
     {
         $qb = (new QueryBuilder('users'))->where('id', '=', 1);
         $sql = $this->getSql($qb);
-        $this->assertSame('SELECT * FROM users WHERE id = ?', $sql);
+        $this->assertSame('SELECT * FROM `users` WHERE `id` = ?', $sql);
     }
 
     public function test_query_builder_chains_multiple_wheres(): void
@@ -31,7 +31,7 @@ class SparkTest extends TestCase
             ->where('status', '=', 'active')
             ->where('user_id', '=', 5);
         $sql = $this->getSql($qb);
-        $this->assertSame('SELECT * FROM posts WHERE status = ? AND user_id = ?', $sql);
+        $this->assertSame('SELECT * FROM `posts` WHERE `status` = ? AND `user_id` = ?', $sql);
     }
 
     public function test_spark_throws_when_no_connection(): void
@@ -50,14 +50,13 @@ class SparkTest extends TestCase
 
         $tableP = $ref->getProperty('table');
         $tableP->setAccessible(true);
-
         $wheresP = $ref->getProperty('wheres');
         $wheresP->setAccessible(true);
 
         $table = $tableP->getValue($qb);
         $wheres = $wheresP->getValue($qb);
 
-        $sql = "SELECT * FROM {$table}";
+        $sql = "SELECT * FROM `{$table}`";
         if (!empty($wheres)) {
             $sql .= " WHERE " . implode(" AND ", $wheres);
         }

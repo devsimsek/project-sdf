@@ -1,5 +1,8 @@
 <?php
+
 namespace SDF;
+
+use Closure;
 
 /**
  * Interface Middleware
@@ -9,12 +12,12 @@ interface Middleware
 {
     /**
      * Handle the incoming request.
-     * 
+     *
      * @param Request  $request The incoming HTTP request.
-     * @param \Closure $next    The next middleware in the pipeline.
+     * @param Closure $next    The next middleware in the pipeline.
      * @return mixed Response object or data.
      */
-    public function handle(Request $request, \Closure $next): mixed;
+    public function handle(Request $request, Closure $next): mixed;
 }
 
 /**
@@ -25,13 +28,13 @@ class Pipeline
 {
     /** @var Request $request The incoming request instance. */
     protected Request $request;
-    
+
     /** @var array $pipes Array of middleware classes. */
     protected array $pipes = [];
 
     /**
      * Set the object being sent through the pipeline.
-     * 
+     *
      * @param Request $request
      * @return self
      */
@@ -43,7 +46,7 @@ class Pipeline
 
     /**
      * Set the array of pipes.
-     * 
+     *
      * @param array $pipes
      * @return self
      */
@@ -55,11 +58,11 @@ class Pipeline
 
     /**
      * Run the pipeline with a final destination callback.
-     * 
-     * @param \Closure $destination Final operation to execute.
+     *
+     * @param Closure $destination Final operation to execute.
      * @return mixed
      */
-    public function then(\Closure $destination): mixed
+    public function then(Closure $destination): mixed
     {
         $pipeline = array_reduce(
             array_reverse($this->pipes),
@@ -72,14 +75,14 @@ class Pipeline
 
     /**
      * Get a Closure that represents a slice of the application onion.
-     * 
-     * @return \Closure
+     *
+     * @return Closure
      */
-    protected function getSlice(): \Closure
+    protected function getSlice(): Closure
     {
         return function ($stack, $pipe) {
             return function ($request) use ($stack, $pipe) {
-                return (new $pipe)->handle($request, $stack);
+                return (new $pipe())->handle($request, $stack);
             };
         };
     }
