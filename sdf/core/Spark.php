@@ -21,14 +21,15 @@ class Spark
      * Establish database connection.
      *
      * @param string $dsn      Data Source Name.
-     * @param string $username Database username.
-     * @param string $password Database password.
+     * @param string|null $username Database username.
+     * @param string|null $password Database password.
      * @param array  $options  PDO connection options.
      * @return void
      */
-    public static function connect(string $dsn, string $username = '', string $password = '', array $options = []): void
+    public static function connect(string $dsn, ?string $username = null, ?string $password = null, array $options = []): void
     {
         try {
+            // PDO accepts null for username/password; pass through nullable values
             self::$pdo = new PDO($dsn, $username, $password, $options);
             self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
