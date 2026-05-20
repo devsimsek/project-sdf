@@ -17,7 +17,8 @@ Thumbs.db
 # ─── Runtime cache ────────────────────────────────────────────────────────────
 sdf_routes.cache
 sdf_config.cache
-/tmp/fuse_cache/
+app/cache/
+app/cache/*
 
 # ─── Secrets / environment ────────────────────────────────────────────────────
 .env
