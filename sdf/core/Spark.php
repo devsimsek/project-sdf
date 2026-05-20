@@ -87,24 +87,7 @@ class QueryBuilder
             $out[] = "`" . $part . "`";
         }
         return implode('.', $out);
-    }
-
-    /**
-     * Quote an SQL identifier safely (simple implementation).
-     * Splits on dot and quotes each segment. Allows alphanumeric and underscore only.
-     *
-     * @param string $identifier
-     * @return string
-     */
-    private function quoteIdent(string $identifier): string
-    {
-        $parts = explode('.', $identifier);
-        $out = [];
-        foreach ($parts as $part) {
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $part)) {
-                throw new \InvalidArgumentException('Invalid identifier: ' . $identifier);
-            }
-            $out[] = "`" . $part . "`";
+    }            $out[] = "`" . $part . "`";
         }
         return implode('.', $out);
     }
