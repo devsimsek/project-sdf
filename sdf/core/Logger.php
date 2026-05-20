@@ -270,8 +270,13 @@ class RotatingFileHandler implements HandlerInterface
                 // compress file to .gz
                 $data = file_get_contents($first);
                 if ($data !== false) {
-                    file_put_contents($first . ".gz", gzencode($data));
-                    @unlink($first);
+                    if (function_exists('gzencode')) {
+                        file_put_contents($first . ".gz", gzencode($data));
+                        @unlink($first);
+                    } else {
+                        // zlib not available — keep rotated uncompressed
+                        // leave $first as-is
+                    }
                 }
             }
         }

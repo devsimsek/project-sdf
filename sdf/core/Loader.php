@@ -92,7 +92,15 @@ class Loader
      */
     public function helper(string $name, string $directory = SDF_APP_HELP): bool
     {
-        return $this->loadFile($name, $directory);
+        $name = $this->normalizeFilename($name);
+        // if already loaded or file does not exist, return accordingly
+        if ($this->isLoaded($name) || !file_exists($directory . $name)) {
+            return false;
+        }
+
+        $this->load($name);
+        require_once $directory . $name;
+        return true;
     }
 
     /**
@@ -166,12 +174,13 @@ class Loader
         string $file,
         string $directory = SDF_APP_CONF
     ): bool|array {
-        $filePath =
-          SDF_APP .
-          DIRECTORY_SEPARATOR .
-          $directory .
-          DIRECTORY_SEPARATOR .
-          $file;
+        // If $directory is an absolute or already-prefixed path, use it as-is
+        $startsWithApp = str_starts_with($directory, SDF_APP) || str_starts_with($directory, SDF_DIR);
+        if ($startsWithApp || str_starts_with($directory, DIRECTORY_SEPARATOR)) {
+            $filePath = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $file;
+        } else {
+            $filePath = SDF_APP . DIRECTORY_SEPARATOR . trim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $file;
+        }
 
         if (file_exists($filePath)) {
             require_once $filePath;
