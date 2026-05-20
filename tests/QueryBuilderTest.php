@@ -54,7 +54,7 @@ class QueryBuilderTest extends TestCase
         $order = $orderP->getValue($qb) ?? '';
         $limit = $limitP->getValue($qb) ?? '';
 
-        $sql = "SELECT * FROM {$table}";
+        $sql = "SELECT * FROM `{$table}`";
         if (!empty($wheres)) {
             $sql .= " WHERE " . implode(" AND ", $wheres);
         }
