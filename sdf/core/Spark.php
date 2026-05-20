@@ -87,9 +87,6 @@ class QueryBuilder
             $out[] = "`" . $part . "`";
         }
         return implode('.', $out);
-    }            $out[] = "`" . $part . "`";
-        }
-        return implode('.', $out);
     }
 
     /** @var string $table Target table name. */
