@@ -4,6 +4,7 @@ namespace SDF;
 
 use Throwable;
 
+
 /**
  * Single-file Logger implementation that contains Level, LogRecord,
  * HandlerInterface, ConsoleHandler, BufferHandler and Logger facade/engine.
@@ -107,12 +108,25 @@ class ConsoleHandler implements HandlerInterface
     public function handle(LogRecord $record): void
     {
         $line = $this->format($record);
-        if ($this->useColor) {
+        // Choose appropriate output stream: CLI -> STDOUT, Web -> STDERR (avoid polluting response body)
+        if (PHP_SAPI === 'cli' && defined('STDOUT')) {
+            $out = \STDOUT;
+            $shouldClose = false;
+        } else {
+            $out = fopen('php://stderr', 'w');
+            $shouldClose = true;
+        }
+
+        if ($this->useColor && PHP_SAPI === 'cli') {
             $color = $this->levelColors[$record->level] ?? "\033[0m";
             $reset = "\033[0m";
-            fwrite(\STDOUT, $color . $line . $reset . PHP_EOL);
+            fwrite($out, $color . $line . $reset . PHP_EOL);
         } else {
-            fwrite(\STDOUT, $line . PHP_EOL);
+            fwrite($out, $line . PHP_EOL);
+        }
+
+        if ($shouldClose) {
+            fclose($out);
         }
     }
 
@@ -141,8 +155,8 @@ class ConsoleHandler implements HandlerInterface
     // todo: add other methods
     private function isTty(): bool
     {
-        // simple heuristic: STDOUT is a TTY
-        return !function_exists("posix_isatty") || posix_isatty(\STDOUT);
+        // simple heuristic: only attempt posix_isatty when available and STDOUT exists
+        return function_exists("posix_isatty") && defined('STDOUT') && posix_isatty(\STDOUT);
     }
 }
 
