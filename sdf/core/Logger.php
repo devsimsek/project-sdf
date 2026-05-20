@@ -10,20 +10,20 @@ use Throwable;
  */
 class Level
 {
-    public const TRACE = 'TRACE';
-    public const DEBUG = 'DEBUG';
-    public const INFO = 'INFO';
-    public const WARN = 'WARN';
-    public const ERROR = 'ERROR';
-    public const FATAL = 'FATAL';
+    public const TRACE = "TRACE";
+    public const DEBUG = "DEBUG";
+    public const INFO = "INFO";
+    public const WARN = "WARN";
+    public const ERROR = "ERROR";
+    public const FATAL = "FATAL";
 
     private const MAP = [
-      self::TRACE => 10,
-      self::DEBUG => 20,
-      self::INFO => 30,
-      self::WARN => 40,
-      self::ERROR => 50,
-      self::FATAL => 60,
+        self::TRACE => 10,
+        self::DEBUG => 20,
+        self::INFO => 30,
+        self::WARN => 40,
+        self::ERROR => 50,
+        self::FATAL => 60,
     ];
 
     public static function toInt(string $level): int
@@ -53,13 +53,13 @@ class LogRecord
      * @param int|null $timestamp milliseconds since epoch
      */
     public function __construct(
-        public string  $level,
-        public string  $message,
-        public array   $context = [],
+        public string $level,
+        public string $message,
+        public array $context = [],
         public ?string $marker = null,
-        ?int           $timestamp = null
+        ?int $timestamp = null,
     ) {
-        $this->timestamp = $timestamp ?? (int)(microtime(true) * 1000);
+        $this->timestamp = $timestamp ?? (int) (microtime(true) * 1000);
         $this->levelInt = Level::toInt($level);
     }
 
@@ -69,12 +69,12 @@ class LogRecord
     public function toArray(): array
     {
         return [
-          'ts' => $this->timestamp,
-          'level' => $this->level,
-          'levelInt' => $this->levelInt,
-          'message' => $this->message,
-          'context' => $this->context,
-          'marker' => $this->marker,
+            "ts" => $this->timestamp,
+            "level" => $this->level,
+            "levelInt" => $this->levelInt,
+            "message" => $this->message,
+            "context" => $this->context,
+            "marker" => $this->marker,
         ];
     }
 }
@@ -89,12 +89,12 @@ interface HandlerInterface
 class ConsoleHandler implements HandlerInterface
 {
     private array $levelColors = [
-      Level::TRACE => "\033[37m", // white/grey
-      Level::DEBUG => "\033[36m", // cyan
-      Level::INFO => "\033[32m", // green
-      Level::WARN => "\033[33m", // yellow
-      Level::ERROR => "\033[31m", // red
-      Level::FATAL => "\033[1;31m", // bold red
+        Level::TRACE => "\033[37m", // white/grey
+        Level::DEBUG => "\033[36m", // cyan
+        Level::INFO => "\033[32m", // green
+        Level::WARN => "\033[33m", // yellow
+        Level::ERROR => "\033[31m", // red
+        Level::FATAL => "\033[1;31m", // bold red
     ];
 
     private bool $useColor;
@@ -110,9 +110,9 @@ class ConsoleHandler implements HandlerInterface
         if ($this->useColor) {
             $color = $this->levelColors[$record->level] ?? "\033[0m";
             $reset = "\033[0m";
-            fwrite(STDOUT, $color . $line . $reset . PHP_EOL);
+            fwrite(\STDOUT, $color . $line . $reset . PHP_EOL);
         } else {
-            fwrite(STDOUT, $line . PHP_EOL);
+            fwrite(\STDOUT, $line . PHP_EOL);
         }
     }
 
@@ -123,16 +123,26 @@ class ConsoleHandler implements HandlerInterface
 
     protected function format(LogRecord $r): string
     {
-        $ts = date('Y-m-d H:i:s', (int)($r->timestamp / 1000));
-        $marker = $r->marker ? " [$r->marker]" : '';
-        $ctx = $r->context ? json_encode($r->context, JSON_UNESCAPED_SLASHES) : '';
-        return sprintf("%s %s%s: %s %s", $ts, $r->level, $marker, $r->message, $ctx);
+        $ts = date("Y-m-d H:i:s", (int) ($r->timestamp / 1000));
+        $marker = $r->marker ? " [$r->marker]" : "";
+        $ctx = $r->context
+            ? json_encode($r->context, JSON_UNESCAPED_SLASHES)
+            : "";
+        return sprintf(
+            "%s %s%s: %s %s",
+            $ts,
+            $r->level,
+            $marker,
+            $r->message,
+            $ctx,
+        );
     }
 
+    // todo: add other methods
     private function isTty(): bool
     {
         // simple heuristic: STDOUT is a TTY
-        return !function_exists('posix_isatty') || posix_isatty(STDOUT);
+        return !function_exists("posix_isatty") || posix_isatty(\STDOUT);
     }
 }
 
@@ -153,7 +163,7 @@ class FileHandler implements HandlerInterface
     {
         $line = $this->format($record) . PHP_EOL;
         // write with exclusive lock
-        $fp = @fopen($this->path, 'a');
+        $fp = @fopen($this->path, "a");
         if (!$fp) {
             return;
         }
@@ -183,8 +193,12 @@ class RotatingFileHandler implements HandlerInterface
     private int $maxFiles;
     private bool $compress;
 
-    public function __construct(string $path, int $maxBytes, int $maxFiles = 5, bool $compress = false)
-    {
+    public function __construct(
+        string $path,
+        int $maxBytes,
+        int $maxFiles = 5,
+        bool $compress = false,
+    ) {
         $this->path = $path;
         $this->maxBytes = max(1024, $maxBytes);
         $this->maxFiles = max(1, $maxFiles);
@@ -200,12 +214,15 @@ class RotatingFileHandler implements HandlerInterface
     {
         // rotate if necessary
         clearstatcache(true, $this->path);
-        if (file_exists($this->path) && filesize($this->path) >= $this->maxBytes) {
+        if (
+            file_exists($this->path) &&
+            filesize($this->path) >= $this->maxBytes
+        ) {
             $this->rotate();
         }
         // delegate to basic write todo: improve
         $line = $this->format($record) . PHP_EOL;
-        $fp = @fopen($this->path, 'a');
+        $fp = @fopen($this->path, "a");
         if (!$fp) {
             return;
         }
@@ -219,27 +236,27 @@ class RotatingFileHandler implements HandlerInterface
     private function rotate(): void
     {
         // delete oldest if exists
-        $last = $this->path . '.' . $this->maxFiles;
+        $last = $this->path . "." . $this->maxFiles;
         if (file_exists($last)) {
             @unlink($last);
         }
         // shift files
         for ($i = $this->maxFiles - 1; $i >= 1; $i--) {
-            $src = $this->path . '.' . $i;
-            $dst = $this->path . '.' . ($i + 1);
+            $src = $this->path . "." . $i;
+            $dst = $this->path . "." . ($i + 1);
             if (file_exists($src)) {
                 @rename($src, $dst);
             }
         }
         // rotate current to .1
         if (file_exists($this->path)) {
-            $first = $this->path . '.1';
+            $first = $this->path . ".1";
             @rename($this->path, $first);
             if ($this->compress && file_exists($first)) {
                 // compress file to .gz
                 $data = file_get_contents($first);
                 if ($data !== false) {
-                    file_put_contents($first . '.gz', gzencode($data));
+                    file_put_contents($first . ".gz", gzencode($data));
                     @unlink($first);
                 }
             }
@@ -265,14 +282,17 @@ class AsyncHandler implements HandlerInterface
     private array $batch = [];
     private bool $useFork;
 
-    public function __construct(HandlerInterface $inner, int $batchSize = 50, bool $useFork = false)
-    {
+    public function __construct(
+        HandlerInterface $inner,
+        int $batchSize = 50,
+        bool $useFork = false,
+    ) {
         $this->inner = $inner;
         $this->batchSize = max(1, $batchSize);
-        $this->useFork = $useFork && function_exists('pcntl_fork');
+        $this->useFork = $useFork && function_exists("pcntl_fork");
 
         // ensure flush on shutdown
-        register_shutdown_function([$this, 'flush']);
+        register_shutdown_function([$this, "flush"]);
     }
 
     public function handle(LogRecord $record): void
@@ -400,11 +420,11 @@ class Logger
     private function __construct(array $config = [])
     {
         // Determine default level based on environment if not provided
-        if (isset($config['level'])) {
-            $this->levelThreshold = Level::toInt($config['level']);
+        if (isset($config["level"])) {
+            $this->levelThreshold = Level::toInt($config["level"]);
         } else {
-            $env = defined('SDF_ENV') ? strtolower(SDF_ENV) : 'production';
-            if (in_array($env, ['dev', 'development', 'local'])) {
+            $env = defined("SDF_ENV") ? strtolower(SDF_ENV) : "production";
+            if (in_array($env, ["dev", "development", "local"])) {
                 $this->levelThreshold = Level::toInt(Level::DEBUG);
             } else {
                 $this->levelThreshold = Level::toInt(Level::INFO);
@@ -412,21 +432,26 @@ class Logger
         }
 
         // default handlers
-        $useColor = $config['console_color'] ?? true;
+        $useColor = $config["console_color"] ?? true;
         $this->handlers[] = new ConsoleHandler($useColor);
 
         // file handler if configured (support rotation and async)
-        $fileCfg = $config['file'] ?? null;
-        if (is_array($fileCfg) && !empty($fileCfg['path'])) {
-            $path = $fileCfg['path'];
-            $rotateSize = (int)($fileCfg['rotate_size'] ?? 0);
-            $maxFiles = (int)($fileCfg['max_files'] ?? 0);
-            $asyncCfg = $config['async'] ?? [];
-            $useAsync = (bool)($asyncCfg['enabled'] ?? false);
-            $batchSize = (int)($asyncCfg['batch_size'] ?? 50);
+        $fileCfg = $config["file"] ?? null;
+        if (is_array($fileCfg) && !empty($fileCfg["path"])) {
+            $path = $fileCfg["path"];
+            $rotateSize = (int) ($fileCfg["rotate_size"] ?? 0);
+            $maxFiles = (int) ($fileCfg["max_files"] ?? 0);
+            $asyncCfg = $config["async"] ?? [];
+            $useAsync = (bool) ($asyncCfg["enabled"] ?? false);
+            $batchSize = (int) ($asyncCfg["batch_size"] ?? 50);
 
             if ($rotateSize > 0 && $maxFiles > 0) {
-                $fileHandler = new RotatingFileHandler($path, $rotateSize, $maxFiles, (bool)($fileCfg['compress'] ?? false));
+                $fileHandler = new RotatingFileHandler(
+                    $path,
+                    $rotateSize,
+                    $maxFiles,
+                    (bool) ($fileCfg["compress"] ?? false),
+                );
             } else {
                 $fileHandler = new FileHandler($path);
             }
@@ -439,9 +464,9 @@ class Logger
         }
 
         // buffer enabled via config or SDF_LOG_BUFFER
-        $bufferCfg = $config['buffer'] ?? null;
-        if (defined('SDF_LOG_BUFFER')) {
-            $b = constant('SDF_LOG_BUFFER');
+        $bufferCfg = $config["buffer"] ?? null;
+        if (defined("SDF_LOG_BUFFER")) {
+            $b = constant("SDF_LOG_BUFFER");
             if (is_int($b) && $b > 0) {
                 $this->bufferHandler = new BufferHandler($b);
                 $this->handlers[] = $this->bufferHandler;
@@ -449,8 +474,8 @@ class Logger
                 $this->bufferHandler = new BufferHandler(500);
                 $this->handlers[] = $this->bufferHandler;
             }
-        } elseif (is_array($bufferCfg) && ($bufferCfg['enabled'] ?? false)) {
-            $cap = (int)($bufferCfg['capacity'] ?? 500);
+        } elseif (is_array($bufferCfg) && ($bufferCfg["enabled"] ?? false)) {
+            $cap = (int) ($bufferCfg["capacity"] ?? 500);
             $this->bufferHandler = new BufferHandler($cap);
             $this->handlers[] = $this->bufferHandler;
         }
@@ -489,8 +514,12 @@ class Logger
      * @param string|null $marker optional tag
      * @return void
      */
-    public static function log(string $level, string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public static function log(
+        string $level,
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         $inst = self::getInstance();
         $inst->logInstance($level, $message, $context, $marker);
     }
@@ -502,8 +531,11 @@ class Logger
      * @param array $context
      * @param string|null $marker
      */
-    public static function trace(string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public static function trace(
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         self::log(Level::TRACE, $message, $context, $marker);
     }
 
@@ -511,8 +543,11 @@ class Logger
      * @param array $context
      * @param string|null $marker
      */
-    public static function debug(string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public static function debug(
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         self::log(Level::DEBUG, $message, $context, $marker);
     }
 
@@ -520,8 +555,11 @@ class Logger
      * @param array $context
      * @param string|null $marker
      */
-    public static function info(string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public static function info(
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         self::log(Level::INFO, $message, $context, $marker);
     }
 
@@ -529,8 +567,11 @@ class Logger
      * @param array $context
      * @param string|null $marker
      */
-    public static function warn(string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public static function warn(
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         self::log(Level::WARN, $message, $context, $marker);
     }
 
@@ -538,8 +579,11 @@ class Logger
      * @param array $context
      * @param string|null $marker
      */
-    public static function error(string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public static function error(
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         self::log(Level::ERROR, $message, $context, $marker);
     }
 
@@ -547,8 +591,11 @@ class Logger
      * @param array $context
      * @param string|null $marker
      */
-    public static function fatal(string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public static function fatal(
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         self::log(Level::FATAL, $message, $context, $marker);
     }
 
@@ -561,8 +608,12 @@ class Logger
      * @param string|null $marker
      * @return void
      */
-    public function logInstance(string $level, string|callable $message, array $context = [], ?string $marker = null): void
-    {
+    public function logInstance(
+        string $level,
+        string|callable $message,
+        array $context = [],
+        ?string $marker = null,
+    ): void {
         // validate
         if (!Level::isValid($level)) {
             $level = Level::INFO;
@@ -577,7 +628,7 @@ class Logger
         // lazy message evaluation
         $msg = is_callable($message) ? $message() : $message;
 
-        $record = new LogRecord($level, (string)$msg, $context, $marker);
+        $record = new LogRecord($level, (string) $msg, $context, $marker);
 
         foreach ($this->handlers as $h) {
             try {
