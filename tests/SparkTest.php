@@ -54,7 +54,7 @@ class SparkTest extends TestCase
         $table = $tableP->getValue($qb);
         $wheres = $wheresP->getValue($qb);
 
-        $sql = "SELECT * FROM {$table}";
+        $sql = "SELECT * FROM `{$table}`";
         if (!empty($wheres)) {
             $sql .= " WHERE " . implode(" AND ", $wheres);
         }
