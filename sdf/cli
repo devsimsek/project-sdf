@@ -1131,9 +1131,16 @@ class CLI
     {
         $lockFile = sys_get_temp_dir() . "/sdf_watcher.lock";
         if (file_exists($lockFile)) {
-            $pid = file_get_contents($lockFile);
-            if (posix_getpgid($pid)) {
-                return; // Already running
+            $pid = (int)file_get_contents($lockFile);
+            if (function_exists('posix_getpgid')) {
+                if (posix_getpgid($pid)) {
+                    return; // Already running
+                }
+            } else {
+                // posix not available; best-effort check: if pid is numeric and process exists
+                if ($pid > 0 && file_exists("/proc/$pid")) {
+                    return;
+                }
             }
         }
 

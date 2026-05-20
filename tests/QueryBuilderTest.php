@@ -19,7 +19,7 @@ class QueryBuilderTest extends TestCase
         $wheres = $wheresP->getValue($qb);
         $bindings = $bindingsP->getValue($qb);
 
-        $this->assertSame(['a = ?', 'b = ?'], $wheres);
+        $this->assertSame(['`a` = ?', '`b` = ?'], $wheres);
         $this->assertSame([1, 2], $bindings);
     }
 
@@ -31,7 +31,7 @@ class QueryBuilderTest extends TestCase
         $orderP = $ref->getProperty('orderBy');
         $limitP = $ref->getProperty('limit');
 
-        $this->assertSame(' ORDER BY created_at DESC', $orderP->getValue($qb));
+        $this->assertSame(' ORDER BY `created_at` DESC', $orderP->getValue($qb));
         $this->assertSame(' LIMIT 10', $limitP->getValue($qb));
     }
 
@@ -61,6 +61,6 @@ class QueryBuilderTest extends TestCase
         $sql .= $order;
         $sql .= $limit;
 
-        $this->assertSame('SELECT * FROM users WHERE status = ? AND user_id = ? ORDER BY id ASC LIMIT 2', $sql);
+        $this->assertSame('SELECT * FROM `users` WHERE `status` = ? AND `user_id` = ? ORDER BY `id` ASC LIMIT 2', $sql);
     }
 }

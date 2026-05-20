@@ -69,6 +69,46 @@ class Spark
  */
 class QueryBuilder
 {
+    /**
+     * Quote an SQL identifier safely (simple implementation).
+     * Splits on dot and quotes each segment. Allows alphanumeric and underscore only.
+     *
+     * @param string $identifier
+     * @return string
+     */
+    private function quoteIdent(string $identifier): string
+    {
+        $parts = explode('.', $identifier);
+        $out = [];
+        foreach ($parts as $part) {
+            if (!preg_match('/^[A-Za-z0-9_]+$/', $part)) {
+                throw new \InvalidArgumentException('Invalid identifier: ' . $identifier);
+            }
+            $out[] = "`" . $part . "`";
+        }
+        return implode('.', $out);
+    }
+
+    /**
+     * Quote an SQL identifier safely (simple implementation).
+     * Splits on dot and quotes each segment. Allows alphanumeric and underscore only.
+     *
+     * @param string $identifier
+     * @return string
+     */
+    private function quoteIdent(string $identifier): string
+    {
+        $parts = explode('.', $identifier);
+        $out = [];
+        foreach ($parts as $part) {
+            if (!preg_match('/^[A-Za-z0-9_]+$/', $part)) {
+                throw new \InvalidArgumentException('Invalid identifier: ' . $identifier);
+            }
+            $out[] = "`" . $part . "`";
+        }
+        return implode('.', $out);
+    }
+
     /** @var string $table Target table name. */
     protected string $table;
 
@@ -107,12 +147,22 @@ class QueryBuilder
      */
     public function where(string $column, mixed $operator, mixed $value = null): self
     {
-        if ($value === null) {
+        // Detect 2-arg shorthand by argument count
+        if (func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
         }
-        $this->wheres[] = "$column $operator ?";
-        $this->bindings[] = $value;
+
+        $col = $this->quoteIdent($column);
+
+        // Handle explicit NULL comparisons
+        if ($value === null && strtoupper($operator) === '=') {
+            $this->wheres[] = "$col IS NULL";
+        } else {
+            $this->wheres[] = "$col $operator ?";
+            $this->bindings[] = $value;
+        }
+
         return $this;
     }
 
@@ -125,7 +175,10 @@ class QueryBuilder
      */
     public function orderBy(string $column, string $direction = 'ASC'): self
     {
-        $this->orderBy = " ORDER BY $column $direction";
+        $dir = strtoupper($direction);
+        $dir = in_array($dir, ['ASC', 'DESC']) ? $dir : 'ASC';
+        $col = $this->quoteIdent($column);
+        $this->orderBy = " ORDER BY $col $dir";
         return $this;
     }
 
@@ -160,7 +213,7 @@ class QueryBuilder
      */
     public function first(): mixed
     {
-        $sql = "SELECT * FROM {$this->table}";
+        $sql = "SELECT * FROM " . $this->quoteIdent($this->table);
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . implode(" AND ", $this->wheres);
         }
@@ -190,7 +243,7 @@ class QueryBuilder
      */
     public function get(): array
     {
-        $sql = "SELECT * FROM {$this->table}";
+        $sql = "SELECT * FROM " . $this->quoteIdent($this->table);
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . implode(" AND ", $this->wheres);
         }
@@ -216,7 +269,7 @@ class QueryBuilder
      */
     public function count(): int
     {
-        $sql = "SELECT COUNT(*) FROM {$this->table}";
+        $sql = "SELECT COUNT(*) FROM " . $this->quoteIdent($this->table);
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . implode(" AND ", $this->wheres);
         }
@@ -234,7 +287,8 @@ class QueryBuilder
      */
     public function avg(string $column): float
     {
-        $sql = "SELECT AVG($column) FROM {$this->table}";
+        $col = $this->quoteIdent($column);
+        $sql = "SELECT AVG($col) FROM " . $this->quoteIdent($this->table);
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . implode(" AND ", $this->wheres);
         }
@@ -252,10 +306,11 @@ class QueryBuilder
      */
     public function insert(array $data): bool
     {
-        $columns = implode(', ', array_keys($data));
+        $cols = array_keys($data);
+        $columns = implode(', ', array_map(fn($c) => $this->quoteIdent($c), $cols));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
-        $sql = "INSERT INTO {$this->table} ($columns) VALUES ($placeholders)";
+        $sql = "INSERT INTO " . $this->quoteIdent($this->table) . " ($columns) VALUES ($placeholders)";
         $stmt = Spark::pdo()->prepare($sql);
         return $stmt->execute(array_values($data));
     }
@@ -271,10 +326,10 @@ class QueryBuilder
         $fields = [];
         $values = [];
         foreach ($data as $column => $value) {
-            $fields[] = "$column = ?";
+            $fields[] = $this->quoteIdent($column) . " = ?";
             $values[] = $value;
         }
-        $sql = "UPDATE {$this->table} SET " . implode(', ', $fields);
+        $sql = "UPDATE " . $this->quoteIdent($this->table) . " SET " . implode(', ', $fields);
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . implode(" AND ", $this->wheres);
         }

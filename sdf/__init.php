@@ -17,13 +17,11 @@
 
 use SDF\Level;
 
-if (!defined("SDF") and !SDF) {
-    print_r(
-        'PANIC: sdf is not called by it\'s own script. Are you attacking sdf?'
-    );
+if (!defined("SDF")) {
+    print_r('PANIC: sdf is not called by it\'s own script.');
     exit(1);
 }
-const SDF_VERSION = '2.0.0';
+const SDF_VERSION = "2.0.0";
 
 // Check minimum version requirement of this framework.
 // PHP 8.0 or higher is required, framework is tested and compatible up to PHP 8.5
@@ -34,35 +32,46 @@ if (version_compare(PHP_VERSION, "8.0.0") < 0) {
 }
 
 // Check's if the application is running on a php cli server (aka. devserver)
-if (PHP_SAPI == "cli-server" && SDF_ENV == "development") {
+if (PHP_SAPI == "cli-server") {
     header("X-Powered-By: SDF/" . SDF_VERSION);
     $url = parse_url($_SERVER["REQUEST_URI"]);
     $file = SDF_ROOT . $url["path"];
 
     // Live Reload Check
     if ($url["path"] === "/__sdf_reload_check") {
-        $signalFile = sys_get_temp_dir() . '/sdf_reload.signal';
-        echo file_exists($signalFile) ? file_get_contents($signalFile) : '0';
-        exit;
+        $signalFile = sys_get_temp_dir() . "/sdf_reload.signal";
+        echo file_exists($signalFile) ? file_get_contents($signalFile) : "0";
+        exit();
     }
 
-    // Cache Management
+    // Cache Management (restricted to localhost)
+    $remote = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    $isLocal = in_array($remote, ['127.0.0.1', '::1']);
+
     if ($url["path"] === "/__sdf_cache_clear") {
+        if (!$isLocal) {
+            header('HTTP/1.1 403 Forbidden');
+            exit();
+        }
         $temp = sys_get_temp_dir();
-        @unlink($temp . '/sdf_routes.cache');
-        @unlink($temp . '/sdf_config.cache');
+        @unlink($temp . "/sdf_routes.cache");
+        @unlink($temp . "/sdf_config.cache");
         echo "Cache cleared.";
-        exit;
+        exit();
     }
 
     if ($url["path"] === "/__sdf_cache_refresh") {
+        if (!$isLocal) {
+            header('HTTP/1.1 403 Forbidden');
+            exit();
+        }
         $temp = sys_get_temp_dir();
-        @unlink($temp . '/sdf_routes.cache');
-        @unlink($temp . '/sdf_config.cache');
+        @unlink($temp . "/sdf_routes.cache");
+        @unlink($temp . "/sdf_config.cache");
         // Setting a reload signal will also refresh the browser
-        file_put_contents($temp . '/sdf_reload.signal', time());
+        file_put_contents($temp . "/sdf_reload.signal", time());
         echo "Cache refreshed. Browser will reload.";
-        exit;
+        exit();
     }
 
     preg_match("/([0-9a-zA-Z]+).?(.*)?(\.(.*))/", $url["path"], $data);
@@ -84,12 +93,12 @@ $bm = $initializer::core_loadClass("Benchmark");
 $bm->mark("__sdf__init__start__");
 
 // Initialize Logger early so we can write debug marks
-require_once SDF_DIR . 'core/Logger.php';
+require_once SDF_DIR . "core/Logger.php";
 $initializer::core_loadConfigurations();
 // Use configuration if present (do not crash if not)
-$loggerConfig = $initializer::core_getConfig('logger') ?: [];
+$loggerConfig = $initializer::core_getConfig("logger") ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
-$logger->log(Level::DEBUG, 'sdf init start');
+$logger->log(Level::DEBUG, "sdf init start");
 // Lets include our error handlers...
 require SDF_APP . "handlers/errors.php";
 // And Router...
@@ -105,22 +114,36 @@ $dbConfig = $initializer::core_getConfig("database", "database");
 $initializer::core_loadClass("Spark");
 try {
     if ($dbConfig) {
-        $logger->log(Level::DEBUG, 'Initializing database connection', ['driver' => $dbConfig['driver'] ?? null]);
+        $logger->log(Level::DEBUG, "Initializing database connection", [
+            "driver" => $dbConfig["driver"] ?? null,
+        ]);
         switch ($dbConfig["driver"]) {
             case "mysql":
                 \SDF\Spark::connect(
-                    "mysql:host=" . $dbConfig["host"] . ";dbname=" . $dbConfig["name"] . ";port=" . ($dbConfig["port"] ?? "3306") . ";charset=" . ($dbConfig["charset"] ?? "utf8mb4"),
+                    "mysql:host=" .
+                        $dbConfig["host"] .
+                        ";dbname=" .
+                        $dbConfig["name"] .
+                        ";port=" .
+                        ($dbConfig["port"] ?? "3306") .
+                        ";charset=" .
+                        ($dbConfig["charset"] ?? "utf8mb4"),
                     $dbConfig["user"],
-                    $dbConfig["password"]
+                    $dbConfig["password"],
                 );
                 break;
             case "psql":
             case "pgsql":
             case "postgres":
                 \SDF\Spark::connect(
-                    "pgsql:host=" . $dbConfig["host"] . ";dbname=" . $dbConfig["name"] . ";port=" . ($dbConfig["port"] ?? "5432"),
+                    "pgsql:host=" .
+                        $dbConfig["host"] .
+                        ";dbname=" .
+                        $dbConfig["name"] .
+                        ";port=" .
+                        ($dbConfig["port"] ?? "5432"),
                     $dbConfig["user"],
-                    $dbConfig["password"]
+                    $dbConfig["password"],
                 );
                 break;
             case "sqlite":
@@ -130,34 +153,51 @@ try {
                 // if using windows authentication
                 if ($dbConfig["auth"]) {
                     \SDF\Spark::connect(
-                        "sqlsrv:Server=" . $dbConfig["host"] . "," . ($dbConfig["port"] ?? "1433") . ";database=" . $dbConfig["name"],
+                        "sqlsrv:Server=" .
+                            $dbConfig["host"] .
+                            "," .
+                            ($dbConfig["port"] ?? "1433") .
+                            ";database=" .
+                            $dbConfig["name"],
                         null,
-                        null
+                        null,
                     );
                 } else {
                     \SDF\Spark::connect(
-                        "sqlsrv:Server=" . $dbConfig["host"] . "," . ($dbConfig["port"] ?? "1433") . ";database=" . $dbConfig["name"],
+                        "sqlsrv:Server=" .
+                            $dbConfig["host"] .
+                            "," .
+                            ($dbConfig["port"] ?? "1433") .
+                            ";database=" .
+                            $dbConfig["name"],
                         $dbConfig["user"],
-                        $dbConfig["password"]
+                        $dbConfig["password"],
                     );
                 }
                 break;
             case "manual":
                 // Check if 'args' is provided and is an array
-                $args = (isset($dbConfig["args"]) && is_array($dbConfig["args"]))
-                  ? $dbConfig["args"]
-                  : [];
+                $args =
+                    isset($dbConfig["args"]) && is_array($dbConfig["args"])
+                        ? $dbConfig["args"]
+                        : [];
 
                 \SDF\Spark::connect($dbConfig["dsn"], ...$args);
                 break;
             default:
-                throw new Exception("Unsupported database driver: " . $dbConfig["driver"]);
+                throw new Exception(
+                    "Unsupported database driver: " . $dbConfig["driver"],
+                );
         }
-        $logger->log(Level::DEBUG, 'Database initialized');
+        $logger->log(Level::DEBUG, "Database initialized");
     }
 } catch (Exception $e) {
     // use logger to report fatal DB errors
-    $logger->log(Level::FATAL, 'Database connection failed: ' . $e->getMessage(), ['exception' => $e]);
+    $logger->log(
+        Level::FATAL,
+        "Database connection failed: " . $e->getMessage(),
+        ["exception" => $e],
+    );
     exit(1);
 }
 
@@ -177,15 +217,17 @@ foreach ($initializer::core_getConfig("routes") as $route => $controller) {
         $router::add($route, $controller);
     }
 }
-$logger->log(Level::DEBUG, 'Router: preparing to ignite');
+$logger->log(Level::DEBUG, "Router: preparing to ignite");
 $bm->mark("__sdf__router__start__");
 $router::ignite();
-$logger->log(Level::DEBUG, 'Router: ignite completed', ['elapsed_ms' => $bm->elapsed_time("__sdf__router__start__")]);
+$logger->log(Level::DEBUG, "Router: ignite completed", [
+    "elapsed_ms" => $bm->elapsed_time("__sdf__router__start__"),
+]);
 if (SDF_Benchmark) {
     print_r(
         '<script>console.log("SDF RENDERER DEBUG: Total Benchmark Result: ' .
-    $bm->elapsed_time("__sdf__router__start__") .
-    'ms.");</script>'
+            $bm->elapsed_time("__sdf__router__start__") .
+            'ms.");</script>',
     );
 }
 // And This Is All :) Sdf must be initialized by now :)

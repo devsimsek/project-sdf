@@ -115,13 +115,22 @@ class Core
                 }
                 if (isset($config)) {
                     $key = str_replace([".php", ".json"], "", $file);
+
+                    // If the config file returned a wrapper array keyed by the filename (e.g. $config['database'] = [...])
+                    // then unwrap it to keep self::$config['database'] = [...]
+                    if (is_array($config) && array_key_exists($key, $config) && is_array($config[$key])) {
+                        $cfgToStore = $config[$key];
+                    } else {
+                        $cfgToStore = $config;
+                    }
+
                     if (isset(self::$config[$key])) {
                         self::$config[$key] = array_merge(
                             self::$config[$key],
-                            $config
+                            $cfgToStore
                         );
                     } else {
-                        self::$config[$key] = $config;
+                        self::$config[$key] = $cfgToStore;
                     }
                 }
             }
