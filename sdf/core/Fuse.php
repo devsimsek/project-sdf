@@ -53,13 +53,13 @@ class Fuse
      * Render's the view file
      * @param string $view View file name
      * @param string $path Directory path of the view file
-     * @return string|false Rendered content or false on failure
+     * @return string Rendered content
      * @throws \Exception If the view file is not found
      */
     public function render(
         string $view,
         string $path = SDF_APP_VIEW
-    ): string|false {
+    ): string {
         $viewFile = $this->resolveView($view, $path);
         $cacheDir = defined('SDF_APP_CACHE') ? SDF_APP_CACHE . 'views/' : sys_get_temp_dir() . '/fuse_cache/';
         
@@ -85,10 +85,10 @@ class Fuse
      * Resolve the view file
      * @param string $view View file name
      * @param string $path Directory path of the view file
-     * @return string|false Resolved view file or false on failure
+     * @return string Resolved view file
      * @throws \Exception If the view file is not found
      */
-    private function resolveView(string $view, string $path): string|false
+    private function resolveView(string $view, string $path): string
     {
         $extensions = [".php", ".phtml", ".fuse"];
         // remove extension from view

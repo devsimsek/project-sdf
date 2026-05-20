@@ -40,9 +40,10 @@ class Loader
   ): bool
   {
     $viewName = $this->normalizeFilename($name);
+    $useFuse = defined('USE_FUSE') ? (bool) constant('USE_FUSE') : false;
 
     if (!$this->isLoaded($viewName) && file_exists($directory . $viewName)) {
-      if (is_object($params) && !USE_FUSE) {
+      if (is_object($params) && !$useFuse) {
         $params = get_object_vars($params);
       }
       if (is_array($params)) {
@@ -51,7 +52,7 @@ class Loader
 
       $this->load($viewName);
 
-      if (USE_FUSE) {
+      if ($useFuse) {
         $fuse = new Fuse();
         echo $fuse->with($params)->render($viewName, $directory);
       } else {

@@ -155,7 +155,7 @@ class QueryBuilder
     /**
      * Get the first record matching the query.
      *
-     * @return array|null
+     * @return mixed
      */
     public function first(): mixed
     {
@@ -483,7 +483,13 @@ abstract class Model
             return $data;
         }
 
-        return $data ? new static($data, true) : null;
+        if (is_array($data)) {
+            $class = static::class;
+            /** @var class-string<static> $class */
+            return new $class($data, true);
+        }
+
+        return null;
     }
 
     /**
@@ -501,8 +507,10 @@ abstract class Model
      */
     public static function all(): array
     {
+        $class = static::class;
+        /** @var class-string<static> $class */
         return array_map(
-            fn($data) => $data instanceof static ? $data : new static((array)$data, true),
+            fn($data) => $data instanceof static ? $data : new $class((array) $data, true),
             self::query()->get()
         );
     }
@@ -515,7 +523,9 @@ abstract class Model
      */
     public static function create(array $data): ?static
     {
-        $instance = new static($data);
+        $class = static::class;
+        /** @var class-string<static> $class */
+        $instance = new $class($data);
         return $instance->save() ? $instance : null;
     }
 

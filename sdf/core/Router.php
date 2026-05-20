@@ -160,7 +160,7 @@ class Router extends Core
     if (!empty(self::$middlewares)) {
       $pipeline = new Pipeline();
       $request = new Request();
-      
+
       $response = $pipeline->send($request)
         ->through(self::$middlewares)
         ->then(function($request) use ($basepath, $parsed_url, &$request_path, &$request_method, &$path_match_found, &$route_match_found, $controllerDir, $cacheFile) {
