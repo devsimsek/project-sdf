@@ -3,7 +3,7 @@
 This is the home page of the sdf core documentation. Here you can find all the information you need to
 start developing with the sdf core framework.
 
-> The SDF core docs provide details about boot, core APIs, the CLI, router behaviors, and the Spark ORM. These pages include code examples, configuration references, and guidance for extending the framework. If you find gaps or need examples for a specific use-case please open an issue or contact https://x.com/devsimsek.
+> The SDF core docs provide details about boot, core APIs, the CLI, router behaviors, and the Spark ORM. These pages include code examples, configuration references, and guidance for extending the framework. If you find gaps or need examples for a specific use-case please open an issue or contact me at [Mastodon](https://universeodon.com/@devsimsek).
 
 > SDF is built with modularity in mind. This means that you can use the core framework to build your
 > own custom framework.

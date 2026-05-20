@@ -1,6 +1,6 @@
 # CLI Documentation
 
-> The CLI documentation describes available commands and examples for code generation, database management, and development workflows. It includes usage patterns and tips for common tasks. If you need additional examples, please open an issue or contact the maintainer at https://x.com/devsimsek.
+> The CLI documentation describes available commands and examples for code generation, database management, and development workflows. It includes usage patterns and tips for common tasks. If you need additional examples, please open an issue or contact.
 
 ## Definition
 
@@ -211,4 +211,4 @@ This will run the application on `localhost:8080`.
 ## Contributing
 
 If you would like to contribute to the cli, feel free to submit a pull request. You can also reach out to me on
-[Twitter](https://x.com/devsimsek) if you have any questions or suggestions.
+[Mastodon](https://universeodon.com/@devsimsek) if you have any questions or suggestions.

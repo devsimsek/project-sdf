@@ -67,10 +67,26 @@ class Core
             exit(5);
         }
         // Keep track of what we just loaded
-        $name = "\\SDF\\" . $name;
+        $fqcn = "\\SDF\\" . $name;
         self::core_isLoaded($class);
-        $_classes[$class] = isset($param) ? new $name($param) : new $name();
-        return $_classes[$class];
+
+        // Instantiate only when class is instantiable; otherwise store a placeholder
+        try {
+            $rc = new \ReflectionClass($fqcn);
+            if ($rc->isInstantiable()) {
+                $inst = isset($param) ? new $fqcn($param) : new $fqcn();
+                self::$classes[$class] = $inst;
+                return self::$classes[$class];
+            } else {
+                // abstract/interface: store a placeholder object with classname
+                self::$classes[$class] = (object)["__class" => $fqcn];
+                return self::$classes[$class];
+            }
+        } catch (\ReflectionException $e) {
+            header("HTTP/1.0 503 Service Unavailable", true, 503);
+            echo "Unable to instantiate the specified class: " . $fqcn;
+            exit(5);
+        }
     }
 
     /**

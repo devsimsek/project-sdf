@@ -90,4 +90,4 @@ application.
 In this section, you learned how to configure your application using SDF. You learned about the framework configuration,
 application configuration, routing configuration, and custom configuration.
 
-If you have any questions, feel free to reach out to me on [Twitter](https://x.com/devsimsek).
+If you have any questions, feel free to reach out to me on [Mastodon](https://universeodon.com/@devsimsek).
