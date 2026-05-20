@@ -124,6 +124,11 @@ default.
 ./sdf/cli serve
 ```
 
+Live reload and dev endpoints
+
+- The devserver exposes helper endpoints and live-reload support only when explicitly enabled. To enable live reload, set the environment variable `SDF_LIVE_RELOAD=true`.
+- For safety, development-only endpoints (cache clear/refresh, live reload) are restricted to requests coming from `localhost`. On shared networks, do not enable live reload unless you trust the environment.
+
 ## Running Tests (new)
 
 You can run the test suite directly from the CLI using the `test` (or `tests`) command. Any additional arguments are

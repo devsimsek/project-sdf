@@ -25,6 +25,36 @@ For SQLite:
 Spark::connect('sqlite:' . SDF_ROOT . '/database.sqlite');
 ```
 
+Configuration and DSN notes
+
+- Recommended database config file shape (top-level keys):
+
+```php
+// app/config/database.php
+<?php
+$config = [
+  'driver'  => 'sqlite',      // mysql | pgsql | sqlite | sqlsrv | manual
+  'host'    => '127.0.0.1',
+  'name'    => 'myapp',
+  'user'    => 'dbuser',
+  'password'=> 'secret',
+  'port'    => 3306,
+  'charset' => 'utf8mb4',
+  // For sqlite use either a path or :memory:
+  'path'    => ':memory:'
+];
+```
+
+- The initializer accepts either a full DSN (e.g. `sqlite::memory:` or `mysql:...`) provided via `dsn`, or a `path`/`host`+`name` combination. When using SQLite, pass a filesystem path (e.g. `/var/www/db.sqlite`) or `:memory:`. The bootstrap will detect an already-formed DSN and avoid double-prefixing `sqlite:`.
+
+- `Spark::connect()` accepts nullable username/password to accommodate drivers (e.g., Windows-auth SQL Server or DSN-only connections).
+
+QueryBuilder identifier quoting and NULL handling
+
+- QueryBuilder quotes identifiers (table/column names) to reduce injection risk. Prefer using constant column names from your code (not raw user input). For complex cases, validate/whitelist identifiers before passing them to QueryBuilder.
+
+- To compare against NULL explicitly use the full 3-arg form (e.g. `->where('deleted_at', 'IS', null)`) or helper methods (e.g. `whereNull()`); the builder detects the number of arguments to preserve explicit NULL comparisons.
+
 ## Defining a Model
 
 ```php

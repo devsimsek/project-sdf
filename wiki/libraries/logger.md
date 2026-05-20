@@ -60,6 +60,14 @@ Design notes
 - Marker is an optional short tag useful for filtering and quick classification.
 - ConsoleHandler produces colored output by default when TTY available. In daemonized environments you may prefer file handlers.
 
+Web vs CLI
+
+- When running in a web SAPI, the console handler writes to `php://stderr` to avoid polluting HTTP responses. Console output to STDOUT is used for CLI/daemon contexts only.
+
+Operational notes
+
+- RotatingFileHandler supports optional compression when zlib is available. If the `gzencode()` function is not present (no ext-zlib), rotation will fall back to uncompressed files. Ensure the zlib extension is available if you rely on compressed rotated logs.
+
 Testing
 
 - The logger exposes `resetInstance()` to reset the singleton so unit tests can create a fresh configured instance.
