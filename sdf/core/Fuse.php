@@ -62,7 +62,7 @@ class Fuse
     ): string {
         $viewFile = $this->resolveView($view, $path);
         $cacheDir = defined('SDF_APP_CACHE') ? SDF_APP_CACHE . 'views/' : sys_get_temp_dir() . '/fuse_cache/';
-        
+
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0777, true);
         }

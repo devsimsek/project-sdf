@@ -1,4 +1,5 @@
 <?php
+
 namespace SDF;
 
 /**
@@ -9,7 +10,7 @@ abstract class Guard
 {
     /**
      * Determine if the request is authorized.
-     * 
+     *
      * @param Request $request
      * @return bool True if authorized, false otherwise.
      */

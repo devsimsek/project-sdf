@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Example routing schema,
  * $config['path/{pattern}'] = 'controller/method';

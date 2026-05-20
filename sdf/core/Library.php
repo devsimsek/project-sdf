@@ -7,5 +7,4 @@ namespace SDF;
  */
 class Library
 {
-
 }

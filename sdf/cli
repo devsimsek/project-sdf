@@ -1,9 +1,7 @@
 #!/usr/bin/env php
-<?php
+<?php namespace SDF;
 
-namespace SDF;
-
-require_once __DIR__ . '/core/Spark.php';
+require_once __DIR__ . "/core/Spark.php";
 
 use PDO;
 
@@ -13,789 +11,811 @@ use PDO;
  */
 class CLI
 {
-  /** @var array $argv Command-line arguments. */
-  private array $argv;
+    /** @var array $argv Command-line arguments. */
+    private array $argv;
 
-  /** @var array $config Key-value env/config store. */
-  private array $config = [];
+    /** @var array $config Key-value env/config store. */
+    private array $config = [];
 
-  /**
-   * @param array $argv
-   */
-  public function __construct(array $argv)
-  {
-    $this->argv = $argv;
-    $this->loadEnvironment();
-  }
-
-  /**
-   * Load framework environment and configurations.
-   */
-  private function loadEnvironment(): void
-  {
-    define("SDF_ROOT", dirname(__DIR__));
-    define("SDF_APP", SDF_ROOT . "/app/");
-    define("SDF_DIR", SDF_ROOT . "/sdf/");
-
-    require_once SDF_DIR . "core/Core.php";
-    Core::core_loadConfigurations();
-
-    $this->config = Core::core_getConfig("database") ?: [];
-  }
-
-  /**
-   * Main dispatcher.
-   */
-  public function handle(): void
-  {
-    if (count($this->argv) < 2) {
-      $this->printUsage();
-      exit(1);
-    }
-
-    $command = $this->argv[1];
-
-    switch ($command) {
-      case "g":
-      case "generate":
-        $this->handleGenerate();
-        break;
-      case "db":
-      case "database":
-        $this->handleDatabase();
-        break;
-      case "serve":
-      case "devserver":
-        $this->handleDevServer();
-        break;
-      case "test":
-      case "tests":
-        $this->handleTests();
-        break;
-      case "cache":
-        $this->handleCache();
-        break;
-      default:
-        $this->printUsage();
-        break;
-    }
-  }
-
-  // ─── Generators ──────────────────────────────────────────────────────────
-
-  /**
-   * Route to sub-generator based on argv[2].
-   */
-  private function handleGenerate(): void
-  {
-    if (count($this->argv) < 3) {
-      $this->printUsage();
-      exit(1);
-    }
-
-    $subCommand = $this->argv[2];
-    $name = $this->argv[3] ?? null;
-
-    switch ($subCommand) {
-      case "model":
-      case "m":
-        $this->generateModel($name);
-        break;
-      case "migration":
-      case "migrate":
-        $this->generateMigration($name);
-        break;
-      case "controller":
-      case "c":
-        $this->generateController($name);
-        break;
-      case "route":
-      case "r":
-        $this->generateRoute($name);
-        break;
-      case "helper":
-      case "h":
-        $this->generateHelper($name);
-        break;
-      case "config":
-      case "cfg":
-        $this->generateConfig($name);
-        break;
-      case "view":
-      case "v":
-        $this->generateView($name);
-        break;
-      case "seeder":
-      case "s":
-        $this->generateSeeder($name);
-        break;
-      case "middleware":
-      case "mw":
-        $this->generateMiddleware($name);
-        break;
-      case "guard":
-      case "g":
-        $this->generateGuard($name);
-        break;
-      case "test":
-      case "t":
-        $this->generateTest($name);
-        break;
-      default:
-        $this->printUsage();
-        break;
-    }
-  }
-
-  /**
-   * Generate a Spark ORM model file.
-   *
-   * @param string|null $name
-   */
-  private function generateModel(?string $name): void
-  {
-    if (!$name) {
-      echo "Model name can't be empty.\n";
-      $name = readline("Enter model name: ");
-    }
-
-    @mkdir("app/models", 0755, true);
-    $file = "app/models/$name.php";
-    $template = <<<'PHP'
-<?php
-
-use SDF\Spark\Model;
-
-/**
- * Model __NAME__
- */
-class __NAME__ extends Model
-{
-    // Override table name if needed:
-    // protected static string $table = '__NAME__s';
-}
-PHP;
-    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
-    echo "Model '$name' created at $file\n";
-  }
-
-  /**
-   * Generate a migration stub using Spark ORM.
-   *
-   * @param string|null $name
-   */
-  private function generateMigration(?string $name): void
-  {
-    if (!$name) {
-      echo "Migration name can't be empty.\n";
-      $name = readline("Enter migration name: ");
-    }
-
-    @mkdir("app/migrations", 0755, true);
-    $timestamp = date("YmdHis");
-    $className = "{$name}_{$timestamp}";
-    $file = "app/migrations/{$className}.php";
-
-    $template = <<<'PHP'
-<?php
-
-/**
- * Migration: __NAME__
- * Created: __TIMESTAMP__
- */
-use SDF\Spark\Migration;
-
-class __CLASS__ extends Migration
-{
     /**
-     * Run the migrations.
+     * @param array $argv
+     */
+    public function __construct(array $argv)
+    {
+        $this->argv = $argv;
+        $this->loadEnvironment();
+    }
+
+    /**
+     * Load framework environment and configurations.
+     */
+    private function loadEnvironment(): void
+    {
+        define("SDF_ROOT", dirname(__DIR__));
+        define("SDF_APP", SDF_ROOT . "/app/");
+        define("SDF_DIR", SDF_ROOT . "/sdf/");
+
+        require_once SDF_DIR . "core/Core.php";
+        Core::core_loadConfigurations();
+
+        $this->config = Core::core_getConfig("database") ?: [];
+    }
+
+    /**
+     * Main dispatcher.
+     */
+    public function handle(): void
+    {
+        if (count($this->argv) < 2) {
+            $this->printUsage();
+            exit(1);
+        }
+
+        $command = $this->argv[1];
+
+        switch ($command) {
+            case "g":
+            case "generate":
+                $this->handleGenerate();
+                break;
+            case "db":
+            case "database":
+                $this->handleDatabase();
+                break;
+            case "serve":
+            case "devserver":
+                $this->handleDevServer();
+                break;
+            case "test":
+            case "tests":
+                $this->handleTests();
+                break;
+            case "cache":
+                $this->handleCache();
+                break;
+            default:
+                $this->printUsage();
+                break;
+        }
+    }
+
+    // ─── Generators ──────────────────────────────────────────────────────────
+
+    /**
+     * Route to sub-generator based on argv[2].
+     */
+    private function handleGenerate(): void
+    {
+        if (count($this->argv) < 3) {
+            $this->printUsage();
+            exit(1);
+        }
+
+        $subCommand = $this->argv[2];
+        $name = $this->argv[3] ?? null;
+
+        switch ($subCommand) {
+            case "model":
+            case "m":
+                $this->generateModel($name);
+                break;
+            case "migration":
+            case "migrate":
+                $this->generateMigration($name);
+                break;
+            case "controller":
+            case "c":
+                $this->generateController($name);
+                break;
+            case "route":
+            case "r":
+                $this->generateRoute($name);
+                break;
+            case "helper":
+            case "h":
+                $this->generateHelper($name);
+                break;
+            case "config":
+            case "cfg":
+                $this->generateConfig($name);
+                break;
+            case "view":
+            case "v":
+                $this->generateView($name);
+                break;
+            case "seeder":
+            case "s":
+                $this->generateSeeder($name);
+                break;
+            case "middleware":
+            case "mw":
+                $this->generateMiddleware($name);
+                break;
+            case "guard":
+            case "g":
+                $this->generateGuard($name);
+                break;
+            case "test":
+            case "t":
+                $this->generateTest($name);
+                break;
+            default:
+                $this->printUsage();
+                break;
+        }
+    }
+
+    /**
+     * Generate a Spark ORM model file.
      *
-     * @param \PDO $pdo
-     * @return void
+     * @param string|null $name
      */
-    public function up(\PDO $pdo): void
+    private function generateModel(?string $name): void
     {
-        // Example:
-        // $pdo->exec("CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))");
+        if (!$name) {
+            echo "Model name can't be empty.\n";
+            $name = readline("Enter model name: ");
+        }
+
+        @mkdir("app/models", 0755, true);
+        $file = "app/models/$name.php";
+        $template = <<<'PHP'
+        <?php
+
+        use SDF\Spark\Model;
+
+        /**
+         * Model __NAME__
+         */
+        class __NAME__ extends Model
+        {
+            // Override table name if needed:
+            // protected static string $table = '__NAME__s';
+        }
+        PHP;
+        file_put_contents($file, strtr($template, ["__NAME__" => $name]));
+        echo "Model '$name' created at $file\n";
     }
 
     /**
-     * Reverse the migrations.
+     * Generate a migration stub using Spark ORM.
      *
-     * @param \PDO $pdo
-     * @return void
+     * @param string|null $name
      */
-    public function down(\PDO $pdo): void
+    private function generateMigration(?string $name): void
     {
-        // Example:
-        // $pdo->exec("DROP TABLE users");
+        if (!$name) {
+            echo "Migration name can't be empty.\n";
+            $name = readline("Enter migration name: ");
+        }
+
+        @mkdir("app/migrations", 0755, true);
+        $timestamp = date("YmdHis");
+        $className = "{$name}_{$timestamp}";
+        $file = "app/migrations/{$className}.php";
+
+        $template = <<<'PHP'
+        <?php
+
+        /**
+         * Migration: __NAME__
+         * Created: __TIMESTAMP__
+         */
+        use SDF\Spark\Migration;
+
+        class __CLASS__ extends Migration
+        {
+            /**
+             * Run the migrations.
+             *
+             * @param \PDO $pdo
+             * @return void
+             */
+            public function up(\PDO $pdo): void
+            {
+                // Example:
+                // $pdo->exec("CREATE TABLE users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255))");
+            }
+
+            /**
+             * Reverse the migrations.
+             *
+             * @param \PDO $pdo
+             * @return void
+             */
+            public function down(\PDO $pdo): void
+            {
+                // Example:
+                // $pdo->exec("DROP TABLE users");
+            }
+        }
+        PHP;
+        file_put_contents(
+            $file,
+            strtr($template, [
+                "__NAME__" => $name,
+                "__CLASS__" => $className,
+                "__TIMESTAMP__" => $timestamp,
+            ]),
+        );
+        echo "Migration '$className' created at $file\n";
     }
-}
-PHP;
-    file_put_contents($file, strtr($template, [
-        '__NAME__' => $name,
-        '__CLASS__' => $className,
-        '__TIMESTAMP__' => $timestamp,
-    ]));
-    echo "Migration '$className' created at $file\n";
-  }
 
-  /**
-   * Generate a controller file.
-   *
-   * @param string|null $name
-   */
-  private function generateController(?string $name): void
-  {
-    if (!$name) {
-      echo "Controller name can't be empty.\n";
-      $name = readline("Enter controller name: ");
-    }
-
-    @mkdir(dirname("app/controllers/$name.php"), 0755, true);
-    $file = "app/controllers/$name.php";
-    $template = <<<'PHP'
-<?php
-
-use SDF\Controller;
-
-/**
- * Controller __NAME__
- */
-class __NAME__ extends Controller
-{
     /**
-     * Default action.
-     */
-    public function index(): void
-    {
-        // Example of rendering a view:
-        // $this->view('__NAME__/index', ['title' => 'Welcome']);
-
-        echo "Welcome to __NAME__ Controller";
-    }
-}
-PHP;
-    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
-    echo "Controller '$name' created at $file\n";
-  }
-
-  /**
-   * Append a new route to routes config.
-   *
-   * @param string|null $name
-   */
-  private function generateRoute(?string $name): void
-  {
-    if (!$name) {
-      echo "Route name can't be empty.\n";
-      $name = readline("Enter route name: ");
-    }
-
-    $controllerMethod = $this->argv[4] ?? "Controller/method";
-    $requestType = $this->argv[5] ?? "GET";
-
-    file_put_contents(
-      "app/config/routes.php",
-      "\n\$config['/$name'] = ['$controllerMethod', '$requestType'];",
-      FILE_APPEND
-    );
-    echo "Route '/$name' appended to app/config/routes.php\n";
-  }
-
-  /**
-   * Generate a helper file.
-   *
-   * @param string|null $name
-   */
-  private function generateHelper(?string $name): void
-  {
-    if (!$name) {
-      echo "Helper name can't be empty.\n";
-      $name = readline("Enter helper name: ");
-    }
-
-    @mkdir("app/helpers", 0755, true);
-    $file = "app/helpers/$name.php";
-    file_put_contents($file, "<?php\n\n// Helper: $name\n");
-    echo "Helper '$name' created at $file\n";
-  }
-
-  /**
-   * Generate a config file.
-   *
-   * @param string|null $name
-   */
-  private function generateConfig(?string $name): void
-  {
-    if (!$name) {
-      echo "Config name can't be empty.\n";
-      exit(1);
-    }
-
-    @mkdir("app/config", 0755, true);
-    $file = "app/config/$name.php";
-    $template = <<<'PHP'
-<?php
-
-/**
- * __NAME__ Configuration
- * Load using: load_config('__NAME__');
- * @var array $config
- */
-if (!defined('SDF')) die('Security warning.');
-
-$config['__NAME__'] = [
-    'key' => 'value',
-];
-PHP;
-    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
-    echo "Config '$name' created at $file\n";
-  }
-
-  /**
-   * Generate a view file.
-   *
-   * @param string|null $name
-   */
-  private function generateView(?string $name): void
-  {
-    if (!$name) {
-      echo "View name can't be empty.\n";
-      exit(1);
-    }
-
-    @mkdir(dirname("app/views/$name.php"), 0755, true);
-    $file = "app/views/$name.php";
-    file_put_contents($file, "<h1>$name works!</h1>\n");
-    echo "View '$name' created at $file\n";
-  }
-
-  /**
-   * Generate a seeder file.
-   *
-   * @param string|null $name
-   */
-  private function generateSeeder(?string $name): void
-  {
-    if (!$name) {
-      echo "Seeder name can't be empty.\n";
-      exit(1);
-    }
-
-    @mkdir("app/seeds", 0755, true);
-    $file = "app/seeds/$name.php";
-    $template = <<<'PHP'
-<?php
-
-/**
- * Seeder: __NAME__
- */
-use SDF\Spark\Seeder;
-
-class __NAME__ extends Seeder
-{
-    /**
-     * Run the database seeds.
+     * Generate a controller file.
      *
-     * @param \PDO $pdo
-     * @return void
+     * @param string|null $name
      */
-    public function run(\PDO $pdo): void
+    private function generateController(?string $name): void
     {
-        // You can use raw PDO:
-        // $pdo->exec("INSERT INTO users (name) VALUES ('Admin')");
+        if (!$name) {
+            echo "Controller name can't be empty.\n";
+            $name = readline("Enter controller name: ");
+        }
 
-        // Or use Spark ORM if you have a model:
-        // \User::create(['name' => 'Admin']);
+        @mkdir(dirname("app/controllers/$name.php"), 0755, true);
+        $file = "app/controllers/$name.php";
+        $template = <<<'PHP'
+        <?php
+
+        use SDF\Controller;
+
+        /**
+         * Controller __NAME__
+         */
+        class __NAME__ extends Controller
+        {
+            /**
+             * Default action.
+             */
+            public function index(): void
+            {
+                // Example of rendering a view:
+                // $this->view('__NAME__/index', ['title' => 'Welcome']);
+
+                echo "Welcome to __NAME__ Controller";
+            }
+        }
+        PHP;
+        file_put_contents($file, strtr($template, ["__NAME__" => $name]));
+        echo "Controller '$name' created at $file\n";
     }
-}
-PHP;
-    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
-    echo "Seeder '$name' created at $file\n";
-  }
 
-  /**
-   * Generate a middleware file.
-   *
-   * @param string|null $name
-   */
-  private function generateMiddleware(?string $name): void
-  {
-    if (!$name) {
-      echo "Middleware name can't be empty.\n";
-      exit(1);
-    }
-
-    @mkdir("app/middlewares", 0755, true);
-    $file = "app/middlewares/$name.php";
-    $template = <<<'PHP'
-<?php
-
-namespace App\Middlewares;
-
-use SDF\Middleware;
-use SDF\Request;
-
-/**
- * Middleware __NAME__
- */
-class __NAME__ implements Middleware
-{
     /**
-     * Handle the incoming request.
+     * Append a new route to routes config.
      *
-     * @param Request $request
-     * @param \Closure $next
-     * @return mixed
+     * @param string|null $name
      */
-    public function handle(Request $request, \Closure $next): mixed
+    private function generateRoute(?string $name): void
     {
-        // Logic before request...
+        if (!$name) {
+            echo "Route name can't be empty.\n";
+            $name = readline("Enter route name: ");
+        }
 
-        $response = $next($request);
+        $controllerMethod = $this->argv[4] ?? "Controller/method";
+        $requestType = $this->argv[5] ?? "GET";
 
-        // Logic after request...
-
-        return $response;
-    }
-}
-PHP;
-    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
-    echo "Middleware '$name' created at $file\n";
-  }
-
-  /**
-   * Generate a guard file.
-   *
-   * @param string|null $name
-   */
-  private function generateGuard(?string $name): void
-  {
-    if (!$name) {
-      echo "Guard name can't be empty.\n";
-      exit(1);
+        file_put_contents(
+            "app/config/routes.php",
+            "\n\$config['/$name'] = ['$controllerMethod', '$requestType'];",
+            FILE_APPEND,
+        );
+        echo "Route '/$name' appended to app/config/routes.php\n";
     }
 
-    @mkdir("app/guards", 0755, true);
-    $file = "app/guards/$name.php";
-    $template = <<<'PHP'
-<?php
-
-namespace App\Guards;
-
-use SDF\Guard;
-use SDF\Request;
-
-/**
- * Guard __NAME__
- */
-class __NAME__ extends Guard
-{
     /**
-     * Determine if the request is authorized.
+     * Generate a helper file.
      *
-     * @param Request $request
-     * @return bool
+     * @param string|null $name
      */
-    public function authorize(Request $request): bool
+    private function generateHelper(?string $name): void
     {
-        // Example:
-        // return isset($_SESSION['user_id']);
+        if (!$name) {
+            echo "Helper name can't be empty.\n";
+            $name = readline("Enter helper name: ");
+        }
 
-        return true;
-    }
-}
-PHP;
-    file_put_contents($file, strtr($template, ['__NAME__' => $name]));
-    echo "Guard '$name' created at $file\n";
-  }
-
-  /**
-   * Generate a PHPUnit test scaffold.
-   *
-   * @param string|null $name
-   */
-  private function generateTest(?string $name): void
-  {
-    // Parse options: --type, --namespace, --force
-    $type = null;
-    $ns = null;
-    $force = false;
-
-    foreach ($this->argv as $arg) {
-      if (str_starts_with($arg, '--type=')) {
-        $type = strtolower(substr($arg, 7));
-      }
-      if (str_starts_with($arg, '--namespace=')) {
-        $ns = substr($arg, 12);
-      }
-      if ($arg === '--force' || $arg === '-f') {
-        $force = true;
-      }
+        @mkdir("app/helpers", 0755, true);
+        $file = "app/helpers/$name.php";
+        file_put_contents($file, "<?php\n\n// Helper: $name\n");
+        echo "Helper '$name' created at $file\n";
     }
 
-    // support --type value (two-arg form) and --namespace two-arg form
-    if ($type === null) {
-      $idx = array_search('--type', $this->argv);
-      if ($idx !== false && isset($this->argv[$idx + 1])) {
-        $type = strtolower($this->argv[$idx + 1]);
-      }
-    }
-    if ($ns === null) {
-      $idx = array_search('--namespace', $this->argv);
-      if ($idx !== false && isset($this->argv[$idx + 1])) {
-        $ns = $this->argv[$idx + 1];
-      }
-    }
-
-    if (!$name) {
-      echo "Test name can't be empty.\n";
-      $name = readline("Enter test name (eg. UserControllerTest or UserTest): ");
-    }
-
-    // If a positional type provided as argv[4], accept it (generate test : php sdf/cli g test Name controller)
-    if ($type === null && isset($this->argv[4])) {
-      $maybe = strtolower($this->argv[4]);
-      // ignore flags
-      if (!str_starts_with($maybe, '-') ) {
-        $type = $maybe;
-      }
-    }
-
-    // Default type
-    if ($type === null || $type === '') {
-      $type = 'unit';
-    }
-
-    // Normalize name and path
-    if (str_ends_with($name, 'Test')) {
-      $className = $name;
-    } else {
-      $className = $name . 'Test';
-    }
-
-    $path = 'tests/' . str_replace('\\', '/', $className) . '.php';
-    $dir = dirname($path);
-    @mkdir($dir, 0755, true);
-
-    if (file_exists($path) && !$force) {
-      echo "Test file already exists: $path (use --force to overwrite)\n";
-      return;
-    }
-
-    $shortClass = basename($className);
-    // Determine target class FQCN and instantiation name
-    $defaultTarget = preg_replace('/Test$/', '', $shortClass);
-    if (!empty($ns)) {
-      // If namespace provided, accept either 'App\\Controllers\\User' or 'App/Controllers/User'
-      $fqn = str_replace('/', '\\', trim($ns, '\\/'));
-      $targetClass = $fqn; // used for 'use' imports
-      $instName = preg_replace('/^.*\\\\/', '', $fqn); // short class name for instantiation
-    } else {
-      $targetClass = $defaultTarget;
-      $instName = $defaultTarget;
-    }
-
-    // Templates per type
-    $content = match ($type) {
-      'controller' => strtr(<<<'PHP'
-<?php
-
-namespace Tests;
-
-use PHPUnit\Framework\TestCase;
-use SDF\Request;
-use SDF\Response;
-__TARGET_USE__
-
-class __SHORT_CLASS__ extends TestCase
-{
-    protected Request|\PHPUnit\Framework\MockObject\MockObject $requestMock;
-    protected Response|\PHPUnit\Framework\MockObject\MockObject $responseMock;
-
-    protected function setUp(): void
+    /**
+     * Generate a config file.
+     *
+     * @param string|null $name
+     */
+    private function generateConfig(?string $name): void
     {
-        parent::setUp();
-        $this->requestMock = $this->createMock(Request::class);
-        $this->responseMock = $this->createMock(Response::class);
+        if (!$name) {
+            echo "Config name can't be empty.\n";
+            exit(1);
+        }
+
+        @mkdir("app/config", 0755, true);
+        $file = "app/config/$name.php";
+        $template = <<<'PHP'
+        <?php
+
+        /**
+         * __NAME__ Configuration
+         * Load using: load_config('__NAME__');
+         * @var array $config
+         */
+        if (!defined('SDF')) die('Security warning.');
+
+        $config['__NAME__'] = [
+            'key' => 'value',
+        ];
+        PHP;
+        file_put_contents($file, strtr($template, ["__NAME__" => $name]));
+        echo "Config '$name' created at $file\n";
     }
 
-    public function test_index_action_exists(): void
+    /**
+     * Generate a view file.
+     *
+     * @param string|null $name
+     */
+    private function generateView(?string $name): void
     {
-        $controller = new __INST_NAME__();
-        $this->assertTrue(method_exists($controller, 'index') || method_exists($controller, 'handle'));
+        if (!$name) {
+            echo "View name can't be empty.\n";
+            exit(1);
+        }
+
+        @mkdir(dirname("app/views/$name.php"), 0755, true);
+        $file = "app/views/$name.php";
+        file_put_contents($file, "<h1>$name works!</h1>\n");
+        echo "View '$name' created at $file\n";
     }
-}
-PHP, [
-        '__SHORT_CLASS__' => $shortClass,
-        '__INST_NAME__' => $instName,
-        '__TARGET_USE__' => !empty($ns) ? 'use ' . $targetClass . ';' : '// Replace with your controller\'s FQCN if namespaced',
-      ]),
-      'model' => strtr(<<<'PHP'
-<?php
 
-namespace Tests;
-
-use PHPUnit\Framework\TestCase;
-use __TARGET__;
-
-class __SHORT_CLASS__ extends TestCase
-{
-    public function test_model_dirty_and_fill(): void
+    /**
+     * Generate a seeder file.
+     *
+     * @param string|null $name
+     */
+    private function generateSeeder(?string $name): void
     {
-        $model = new __TARGET__([]);
-        $model->fill(['name' => 'Alice']);
-        $this->assertTrue($model->isDirty());
-        $dirty = $model->getDirty();
-        $this->assertArrayHasKey('name', $dirty);
+        if (!$name) {
+            echo "Seeder name can't be empty.\n";
+            exit(1);
+        }
+
+        @mkdir("app/seeds", 0755, true);
+        $file = "app/seeds/$name.php";
+        $template = <<<'PHP'
+        <?php
+
+        /**
+         * Seeder: __NAME__
+         */
+        use SDF\Spark\Seeder;
+
+        class __NAME__ extends Seeder
+        {
+            /**
+             * Run the database seeds.
+             *
+             * @param \PDO $pdo
+             * @return void
+             */
+            public function run(\PDO $pdo): void
+            {
+                // You can use raw PDO:
+                // $pdo->exec("INSERT INTO users (name) VALUES ('Admin')");
+
+                // Or use Spark ORM if you have a model:
+                // \User::create(['name' => 'Admin']);
+            }
+        }
+        PHP;
+        file_put_contents($file, strtr($template, ["__NAME__" => $name]));
+        echo "Seeder '$name' created at $file\n";
     }
-}
-PHP, [
-        '__SHORT_CLASS__' => $shortClass,
-        '__TARGET__' => $targetClass,
-      ]),
-      'integration' => <<<PHP
-<?php
 
-namespace Tests;
-
-use PHPUnit\Framework\TestCase;
-use SDF\Spark;
-
-class $shortClass extends TestCase
-{
-    public function test_sqlite_in_memory_example(): void
+    /**
+     * Generate a middleware file.
+     *
+     * @param string|null $name
+     */
+    private function generateMiddleware(?string $name): void
     {
-        Spark::connect('sqlite::memory:');
-        \$pdo = Spark::pdo();
+        if (!$name) {
+            echo "Middleware name can't be empty.\n";
+            exit(1);
+        }
 
-        \$pdo->exec("CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);");
-        \$stmt = \$pdo->prepare("INSERT INTO items (name) VALUES (?)");
-        \$stmt->execute(['alpha']);
+        @mkdir("app/middlewares", 0755, true);
+        $file = "app/middlewares/$name.php";
+        $template = <<<'PHP'
+        <?php
 
-        \$count = \$pdo->query('SELECT COUNT(*) FROM items')->fetchColumn();
-        \$this->assertSame(1, (int)\$count);
+        namespace App\Middlewares;
+
+        use SDF\Middleware;
+        use SDF\Request;
+
+        /**
+         * Middleware __NAME__
+         */
+        class __NAME__ implements Middleware
+        {
+            /**
+             * Handle the incoming request.
+             *
+             * @param Request $request
+             * @param \Closure $next
+             * @return mixed
+             */
+            public function handle(Request $request, \Closure $next): mixed
+            {
+                // Logic before request...
+
+                $response = $next($request);
+
+                // Logic after request...
+
+                return $response;
+            }
+        }
+        PHP;
+        file_put_contents($file, strtr($template, ["__NAME__" => $name]));
+        echo "Middleware '$name' created at $file\n";
     }
-}
-PHP,
-      default => <<<'PHP'
-<?php
 
-namespace Tests;
-
-use PHPUnit\Framework\TestCase;
-use SDF\Request;
-use SDF\Response;
-
-class __SHORT_CLASS__ extends TestCase
-{
-    protected Request|\PHPUnit\Framework\MockObject\MockObject $requestMock;
-    protected Response|\PHPUnit\Framework\MockObject\MockObject $responseMock;
-
-    protected function setUp(): void
+    /**
+     * Generate a guard file.
+     *
+     * @param string|null $name
+     */
+    private function generateGuard(?string $name): void
     {
-        parent::setUp();
-        $this->requestMock = $this->createMock(Request::class);
-        $this->responseMock = $this->createMock(Response::class);
+        if (!$name) {
+            echo "Guard name can't be empty.\n";
+            exit(1);
+        }
+
+        @mkdir("app/guards", 0755, true);
+        $file = "app/guards/$name.php";
+        $template = <<<'PHP'
+        <?php
+
+        namespace App\Guards;
+
+        use SDF\Guard;
+        use SDF\Request;
+
+        /**
+         * Guard __NAME__
+         */
+        class __NAME__ extends Guard
+        {
+            /**
+             * Determine if the request is authorized.
+             *
+             * @param Request $request
+             * @return bool
+             */
+            public function authorize(Request $request): bool
+            {
+                // Example:
+                // return isset($_SESSION['user_id']);
+
+                return true;
+            }
+        }
+        PHP;
+        file_put_contents($file, strtr($template, ["__NAME__" => $name]));
+        echo "Guard '$name' created at $file\n";
     }
 
-    public function test_example_with_mock(): void
+    /**
+     * Generate a PHPUnit test scaffold.
+     *
+     * @param string|null $name
+     */
+    private function generateTest(?string $name): void
     {
-        $this->requestMock->method('get')->with('id')->willReturn(123);
-        $this->assertSame(123, $this->requestMock->get('id'));
+        // Parse options: --type, --namespace, --force
+        $type = null;
+        $ns = null;
+        $force = false;
+
+        foreach ($this->argv as $arg) {
+            if (str_starts_with($arg, "--type=")) {
+                $type = strtolower(substr($arg, 7));
+            }
+            if (str_starts_with($arg, "--namespace=")) {
+                $ns = substr($arg, 12);
+            }
+            if ($arg === "--force" || $arg === "-f") {
+                $force = true;
+            }
+        }
+
+        // support --type value (two-arg form) and --namespace two-arg form
+        if ($type === null) {
+            $idx = array_search("--type", $this->argv);
+            if ($idx !== false && isset($this->argv[$idx + 1])) {
+                $type = strtolower($this->argv[$idx + 1]);
+            }
+        }
+        if ($ns === null) {
+            $idx = array_search("--namespace", $this->argv);
+            if ($idx !== false && isset($this->argv[$idx + 1])) {
+                $ns = $this->argv[$idx + 1];
+            }
+        }
+
+        if (!$name) {
+            echo "Test name can't be empty.\n";
+            $name = readline(
+                "Enter test name (eg. UserControllerTest or UserTest): ",
+            );
+        }
+
+        // If a positional type provided as argv[4], accept it (generate test : php sdf/cli g test Name controller)
+        if ($type === null && isset($this->argv[4])) {
+            $maybe = strtolower($this->argv[4]);
+            // ignore flags
+            if (!str_starts_with($maybe, "-")) {
+                $type = $maybe;
+            }
+        }
+
+        // Default type
+        if ($type === null || $type === "") {
+            $type = "unit";
+        }
+
+        // Normalize name and path
+        if (str_ends_with($name, "Test")) {
+            $className = $name;
+        } else {
+            $className = $name . "Test";
+        }
+
+        $path = "tests/" . str_replace("\\", "/", $className) . ".php";
+        $dir = dirname($path);
+        @mkdir($dir, 0755, true);
+
+        if (file_exists($path) && !$force) {
+            echo "Test file already exists: $path (use --force to overwrite)\n";
+            return;
+        }
+
+        $shortClass = basename($className);
+        // Determine target class FQCN and instantiation name
+        $defaultTarget = preg_replace('/Test$/', "", $shortClass);
+        if (!empty($ns)) {
+            // If namespace provided, accept either 'App\\Controllers\\User' or 'App/Controllers/User'
+            $fqn = str_replace("/", "\\", trim($ns, "\\/"));
+            $targetClass = $fqn; // used for 'use' imports
+            $instName = preg_replace("/^.*\\\\/", "", $fqn); // short class name for instantiation
+        } else {
+            $targetClass = $defaultTarget;
+            $instName = $defaultTarget;
+        }
+
+        // Templates per type
+        $content = match ($type) {
+            "controller" => strtr(
+                <<<'PHP'
+                <?php
+
+                namespace Tests;
+
+                use PHPUnit\Framework\TestCase;
+                use SDF\Request;
+                use SDF\Response;
+                __TARGET_USE__
+
+                class __SHORT_CLASS__ extends TestCase
+                {
+                    protected Request|\PHPUnit\Framework\MockObject\MockObject $requestMock;
+                    protected Response|\PHPUnit\Framework\MockObject\MockObject $responseMock;
+
+                    protected function setUp(): void
+                    {
+                        parent::setUp();
+                        $this->requestMock = $this->createMock(Request::class);
+                        $this->responseMock = $this->createMock(Response::class);
+                    }
+
+                    public function test_index_action_exists(): void
+                    {
+                        $controller = new __INST_NAME__();
+                        $this->assertTrue(method_exists($controller, 'index') || method_exists($controller, 'handle'));
+                    }
+                }
+                PHP
+                ,
+                [
+                    "__SHORT_CLASS__" => $shortClass,
+                    "__INST_NAME__" => $instName,
+                    "__TARGET_USE__" => !empty($ns)
+                        ? "use " . $targetClass . ";"
+                        : '// Replace with your controller\'s FQCN if namespaced',
+                ],
+            ),
+            "model" => strtr(
+                <<<'PHP'
+                <?php
+
+                namespace Tests;
+
+                use PHPUnit\Framework\TestCase;
+                use __TARGET__;
+
+                class __SHORT_CLASS__ extends TestCase
+                {
+                    public function test_model_dirty_and_fill(): void
+                    {
+                        $model = new __TARGET__([]);
+                        $model->fill(['name' => 'Alice']);
+                        $this->assertTrue($model->isDirty());
+                        $dirty = $model->getDirty();
+                        $this->assertArrayHasKey('name', $dirty);
+                    }
+                }
+                PHP
+                ,
+                [
+                    "__SHORT_CLASS__" => $shortClass,
+                    "__TARGET__" => $targetClass,
+                ],
+            ),
+            "integration" => <<<PHP
+            <?php
+
+            namespace Tests;
+
+            use PHPUnit\Framework\TestCase;
+            use SDF\Spark;
+
+            class $shortClass extends TestCase
+            {
+                public function test_sqlite_in_memory_example(): void
+                {
+                    Spark::connect('sqlite::memory:');
+                    \$pdo = Spark::pdo();
+
+                    \$pdo->exec("CREATE TABLE items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT);");
+                    \$stmt = \$pdo->prepare("INSERT INTO items (name) VALUES (?)");
+                    \$stmt->execute(['alpha']);
+
+                    \$count = \$pdo->query('SELECT COUNT(*) FROM items')->fetchColumn();
+                    \$this->assertSame(1, (int)\$count);
+                }
+            }
+            PHP,
+            default => <<<'PHP'
+            <?php
+
+            namespace Tests;
+
+            use PHPUnit\Framework\TestCase;
+            use SDF\Request;
+            use SDF\Response;
+
+            class __SHORT_CLASS__ extends TestCase
+            {
+                protected Request|\PHPUnit\Framework\MockObject\MockObject $requestMock;
+                protected Response|\PHPUnit\Framework\MockObject\MockObject $responseMock;
+
+                protected function setUp(): void
+                {
+                    parent::setUp();
+                    $this->requestMock = $this->createMock(Request::class);
+                    $this->responseMock = $this->createMock(Response::class);
+                }
+
+                public function test_example_with_mock(): void
+                {
+                    $this->requestMock->method('get')->with('id')->willReturn(123);
+                    $this->assertSame(123, $this->requestMock->get('id'));
+                }
+            }
+            PHP,
+        };
+
+        $content = strtr($content, [
+            "__SHORT_CLASS__" => $shortClass,
+        ]);
+
+        file_put_contents($path, $content);
+        echo "Test '{$shortClass}' (type: {$type}) created at $path\n";
     }
-}
-PHP
-    };
 
-    $content = strtr($content, [
-      '__SHORT_CLASS__' => $shortClass,
-    ]);
+    // ─── Database ─────────────────────────────────────────────────────────────
 
-    file_put_contents($path, $content);
-    echo "Test '{$shortClass}' (type: {$type}) created at $path\n";
-  }
+    /**
+     * Route to database sub-commands.
+     */
+    private function handleDatabase(): void
+    {
+        if (count($this->argv) < 3) {
+            $this->printUsage();
+            exit(1);
+        }
 
-  // ─── Database ─────────────────────────────────────────────────────────────
-
-  /**
-   * Route to database sub-commands.
-   */
-  private function handleDatabase(): void
-  {
-    if (count($this->argv) < 3) {
-      $this->printUsage();
-      exit(1);
+        switch ($this->argv[2]) {
+            case "migrate":
+                $this->migrate();
+                break;
+            case "rollback":
+                $this->rollback();
+                break;
+            case "seed":
+                $this->seed();
+                break;
+            case "reset":
+                $this->reset();
+                break;
+            default:
+                $this->printUsage();
+                break;
+        }
     }
 
-    switch ($this->argv[2]) {
-      case "migrate":
-        $this->migrate();
-        break;
-      case "rollback":
-        $this->rollback();
-        break;
-      case "seed":
-        $this->seed();
-        break;
-      case "reset":
-        $this->reset();
-        break;
-      default:
-        $this->printUsage();
-        break;
-    }
-  }
+    /**
+     * Run all pending migrations.
+     */
+    private function migrate(): void
+    {
+        $pdo = $this->getPdo();
+        $this->ensureMigrationTable($pdo);
 
-  /**
-   * Run all pending migrations.
-   */
-  private function migrate(): void
-  {
-    $pdo = $this->getPdo();
-    $this->ensureMigrationTable($pdo);
+        $stmt = $pdo->query("SELECT migration FROM migrations");
+        $ran = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    $stmt = $pdo->query("SELECT migration FROM migrations");
-    $ran = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $files = glob("app/migrations/*.php");
+        $batch =
+            (int) $pdo
+                ->query("SELECT MAX(batch) FROM migrations")
+                ->fetchColumn() + 1;
 
-    $files = glob("app/migrations/*.php");
-    $batch = (int) $pdo->query("SELECT MAX(batch) FROM migrations")->fetchColumn() + 1;
+        $count = 0;
+        echo "Running migrations...\n";
 
-    $count = 0;
-    echo "Running migrations...\n";
+        foreach ($files as $file) {
+            $name = pathinfo($file, PATHINFO_FILENAME);
+            if (in_array($name, $ran)) {
+                continue;
+            }
 
-    foreach ($files as $file) {
-      $name = pathinfo($file, PATHINFO_FILENAME);
-      if (in_array($name, $ran)) continue;
+            echo "  → $name\n";
+            require_once $file;
+            $migration = new $name();
+            $migration->up($pdo);
 
-      echo "  → $name\n";
-      require_once $file;
-      $migration = new $name();
-      $migration->up($pdo);
+            $stmt = $pdo->prepare(
+                "INSERT INTO migrations (migration, batch) VALUES (?, ?)",
+            );
+            $stmt->execute([$name, $batch]);
+            $count++;
+        }
 
-      $stmt = $pdo->prepare("INSERT INTO migrations (migration, batch) VALUES (?, ?)");
-      $stmt->execute([$name, $batch]);
-      $count++;
+        if ($count === 0) {
+            echo "Nothing to migrate.\n";
+        } else {
+            echo "$count migration(s) completed.\n";
+        }
     }
 
-    if ($count === 0) {
-      echo "Nothing to migrate.\n";
-    } else {
-      echo "$count migration(s) completed.\n";
-    }
-  }
+    /**
+     * Ensure migrations table exists.
+     */
+    private function ensureMigrationTable(PDO $pdo): void
+    {
+        $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
 
-  /**
-   * Ensure migrations table exists.
-   */
-  private function ensureMigrationTable(PDO $pdo): void
-  {
-    $driver = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
-
-    switch ($driver) {
-      case 'sqlite':
-        $sql = "
+        switch ($driver) {
+            case "sqlite":
+                $sql = "
           CREATE TABLE IF NOT EXISTS migrations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             migration TEXT NOT NULL,
@@ -803,9 +823,9 @@ PHP
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
           )
         ";
-        break;
-      case 'pgsql':
-        $sql = "
+                break;
+            case "pgsql":
+                $sql = "
           CREATE TABLE IF NOT EXISTS migrations (
             id BIGSERIAL PRIMARY KEY,
             migration VARCHAR(255) NOT NULL,
@@ -813,9 +833,9 @@ PHP
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         ";
-        break;
-      case 'sqlsrv':
-        $sql = "
+                break;
+            case "sqlsrv":
+                $sql = "
           IF OBJECT_ID('migrations', 'U') IS NULL
           BEGIN
             CREATE TABLE migrations (
@@ -826,10 +846,10 @@ PHP
             )
           END
         ";
-        break;
-      case 'mysql':
-      default:
-        $sql = "
+                break;
+            case "mysql":
+            default:
+                $sql = "
           CREATE TABLE IF NOT EXISTS migrations (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             migration VARCHAR(255) NOT NULL,
@@ -837,395 +857,435 @@ PHP
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
         ";
-        break;
+                break;
+        }
+
+        $pdo->exec($sql);
     }
 
-    $pdo->exec($sql);
-  }
+    /**
+     * Rollback the last migration batch.
+     */
+    private function rollback(): void
+    {
+        $pdo = $this->getPdo();
+        $this->ensureMigrationTable($pdo);
 
-  /**
-   * Rollback the last migration batch.
-   */
-  private function rollback(): void
-  {
-    $pdo = $this->getPdo();
-    $this->ensureMigrationTable($pdo);
+        $batch = $pdo
+            ->query("SELECT MAX(batch) FROM migrations")
+            ->fetchColumn();
+        if (!$batch) {
+            echo "Nothing to rollback.\n";
+            return;
+        }
 
-    $batch = $pdo->query("SELECT MAX(batch) FROM migrations")->fetchColumn();
-    if (!$batch) {
-      echo "Nothing to rollback.\n";
-      return;
+        $stmt = $pdo->prepare(
+            "SELECT migration FROM migrations WHERE batch = ? ORDER BY id DESC",
+        );
+        $stmt->execute([$batch]);
+        $toRollback = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+        echo "Rolling back batch $batch...\n";
+
+        foreach ($toRollback as $name) {
+            $file = "app/migrations/$name.php";
+            if (!file_exists($file)) {
+                echo "  [WARNING] Migration file '$name.php' not found. Skipping SQL rollback but removing from table.\n";
+            } else {
+                echo "  ← $name\n";
+                require_once $file;
+                $migration = new $name();
+                $migration->down($pdo);
+            }
+
+            $stmt = $pdo->prepare("DELETE FROM migrations WHERE migration = ?");
+            $stmt->execute([$name]);
+        }
+
+        echo "Rollback complete.\n";
     }
 
-    $stmt = $pdo->prepare("SELECT migration FROM migrations WHERE batch = ? ORDER BY id DESC");
-    $stmt->execute([$batch]);
-    $toRollback = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    /**
+     * Rollback all migrations and re-run them.
+     */
+    private function reset(): void
+    {
+        $pdo = $this->getPdo();
+        $this->ensureMigrationTable($pdo);
 
-    echo "Rolling back batch $batch...\n";
+        $batches = $pdo
+            ->query("SELECT DISTINCT batch FROM migrations ORDER BY batch DESC")
+            ->fetchAll(PDO::FETCH_COLUMN);
 
-    foreach ($toRollback as $name) {
-      $file = "app/migrations/$name.php";
-      if (!file_exists($file)) {
-        echo "  [WARNING] Migration file '$name.php' not found. Skipping SQL rollback but removing from table.\n";
-      } else {
-        echo "  ← $name\n";
-        require_once $file;
-        $migration = new $name();
-        $migration->down($pdo);
-      }
+        if (empty($batches)) {
+            echo "No migrations found to rollback.\n";
+        } else {
+            foreach ($batches as $batch) {
+                $this->rollbackBatch($pdo, $batch);
+            }
+        }
 
-      $stmt = $pdo->prepare("DELETE FROM migrations WHERE migration = ?");
-      $stmt->execute([$name]);
+        $this->migrate();
+        $this->seed();
     }
 
-    echo "Rollback complete.\n";
-  }
+    /**
+     * Rollback a specific batch.
+     */
+    private function rollbackBatch(PDO $pdo, int $batch): void
+    {
+        $stmt = $pdo->prepare(
+            "SELECT migration FROM migrations WHERE batch = ? ORDER BY id DESC",
+        );
+        $stmt->execute([$batch]);
+        $toRollback = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
-  /**
-   * Rollback all migrations and re-run them.
-   */
-  private function reset(): void
-  {
-    $pdo = $this->getPdo();
-    $this->ensureMigrationTable($pdo);
+        echo "Rolling back batch $batch...\n";
 
-    $batches = $pdo->query("SELECT DISTINCT batch FROM migrations ORDER BY batch DESC")->fetchAll(PDO::FETCH_COLUMN);
-
-    if (empty($batches)) {
-        echo "No migrations found to rollback.\n";
-    } else {
-        foreach ($batches as $batch) {
-            $this->rollbackBatch($pdo, $batch);
+        foreach ($toRollback as $name) {
+            $file = "app/migrations/$name.php";
+            if (file_exists($file)) {
+                echo "  ← $name\n";
+                require_once $file;
+                $migration = new $name();
+                $migration->down($pdo);
+            }
+            $stmt = $pdo->prepare("DELETE FROM migrations WHERE migration = ?");
+            $stmt->execute([$name]);
         }
     }
 
-    $this->migrate();
-    $this->seed();
-  }
+    /**
+     * Run all seeders in app/seeds/.
+     */
+    private function seed(): void
+    {
+        $pdo = $this->getPdo();
+        $files = glob("app/seeds/*.php");
 
-  /**
-   * Rollback a specific batch.
-   */
-  private function rollbackBatch(PDO $pdo, int $batch): void
-  {
-    $stmt = $pdo->prepare("SELECT migration FROM migrations WHERE batch = ? ORDER BY id DESC");
-    $stmt->execute([$batch]);
-    $toRollback = $stmt->fetchAll(PDO::FETCH_COLUMN);
-
-    echo "Rolling back batch $batch...\n";
-
-    foreach ($toRollback as $name) {
-      $file = "app/migrations/$name.php";
-      if (file_exists($file)) {
-        echo "  ← $name\n";
-        require_once $file;
-        $migration = new $name();
-        $migration->down($pdo);
-      }
-      $stmt = $pdo->prepare("DELETE FROM migrations WHERE migration = ?");
-      $stmt->execute([$name]);
-    }
-  }
-
-  /**
-   * Run all seeders in app/seeds/.
-   */
-  private function seed(): void
-  {
-    $pdo = $this->getPdo();
-    $files = glob("app/seeds/*.php");
-
-    if (empty($files)) {
-      echo "No seeders found in app/seeds/.\n";
-      return;
-    }
-
-    echo "Seeding database...\n";
-    foreach ($files as $file) {
-      $name = pathinfo($file, PATHINFO_FILENAME);
-      echo "  → $name\n";
-      require_once $file;
-      $seeder = new $name();
-      $seeder->run($pdo);
-    }
-    echo "Seeding complete.\n";
-  }
-
-  /**
-   * Build a PDO instance from framework config.
-   *
-   * @return PDO
-   */
-  private function getPdo(): PDO
-  {
-    $host = $this->config['host'] ?? '127.0.0.1';
-    $name = $this->config['name'] ?? '';
-    $user = $this->config['user'] ?? 'root';
-    $pass = $this->config['pass'] ?? '';
-    $driver = $this->config['driver'] ?? 'mysql';
-    $port = $this->config['port'] ?? null;
-    $path = $this->config['path'] ?? null;
-    $dsn = null;
-
-    switch ($driver) {
-      case 'sqlite':
-        $dsn = 'sqlite:' . ($path ?: $name);
-        $user = null;
-        $pass = null;
-        break;
-      case 'pgsql':
-      case 'postgres':
-      case 'psql':
-        if (empty($name)) {
-          die("[ERROR] Database name not configured. Check app/config/database.php\n");
+        if (empty($files)) {
+            echo "No seeders found in app/seeds/.\n";
+            return;
         }
-        $dsn = 'pgsql:host=' . $host . ';dbname=' . $name . ';port=' . ($port ?? '5432');
-        break;
-      case 'sqlsrv':
-        if (empty($name)) {
-          die("[ERROR] Database name not configured. Check app/config/database.php\n");
+
+        echo "Seeding database...\n";
+        foreach ($files as $file) {
+            $name = pathinfo($file, PATHINFO_FILENAME);
+            echo "  → $name\n";
+            require_once $file;
+            $seeder = new $name();
+            $seeder->run($pdo);
         }
-        $dsn = 'sqlsrv:Server=' . $host . ',' . ($port ?? '1433') . ';database=' . $name;
-        break;
-      case 'mysql':
-      default:
-        if (empty($name)) {
-          die("[ERROR] Database name not configured. Check app/config/database.php\n");
+        echo "Seeding complete.\n";
+    }
+
+    /**
+     * Build a PDO instance from framework config.
+     *
+     * @return PDO
+     */
+    private function getPdo(): PDO
+    {
+        $host = $this->config["host"] ?? "127.0.0.1";
+        $name = $this->config["name"] ?? "";
+        $user = $this->config["user"] ?? "root";
+        $pass = $this->config["pass"] ?? "";
+        $driver = $this->config["driver"] ?? "mysql";
+        $port = $this->config["port"] ?? null;
+        $path = $this->config["path"] ?? null;
+        $dsn = null;
+
+        switch ($driver) {
+            case "sqlite":
+                $dsn = "sqlite:" . ($path ?: $name);
+                $user = null;
+                $pass = null;
+                break;
+            case "pgsql":
+            case "postgres":
+            case "psql":
+                if (empty($name)) {
+                    die(
+                        "[ERROR] Database name not configured. Check app/config/database.php\n"
+                    );
+                }
+                $dsn =
+                    "pgsql:host=" .
+                    $host .
+                    ";dbname=" .
+                    $name .
+                    ";port=" .
+                    ($port ?? "5432");
+                break;
+            case "sqlsrv":
+                if (empty($name)) {
+                    die(
+                        "[ERROR] Database name not configured. Check app/config/database.php\n"
+                    );
+                }
+                $dsn =
+                    "sqlsrv:Server=" .
+                    $host .
+                    "," .
+                    ($port ?? "1433") .
+                    ";database=" .
+                    $name;
+                break;
+            case "mysql":
+            default:
+                if (empty($name)) {
+                    die(
+                        "[ERROR] Database name not configured. Check app/config/database.php\n"
+                    );
+                }
+                $dsn =
+                    "mysql:host=" .
+                    $host .
+                    ";dbname=" .
+                    $name .
+                    ";charset=utf8";
+                break;
         }
-        $dsn = 'mysql:host=' . $host . ';dbname=' . $name . ';charset=utf8';
-        break;
+
+        return new PDO($dsn, $user, $pass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
     }
 
-    return new PDO($dsn, $user, $pass, [
-      PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    ]);
-  }
+    // ─── Dev Server ───────────────────────────────────────────────────────────
 
-  // ─── Dev Server ───────────────────────────────────────────────────────────
+    /**
+     * Start PHP built-in dev server.
+     */
+    private function handleDevServer(): void
+    {
+        $port = in_array("-p", $this->argv)
+            ? $this->argv[array_search("-p", $this->argv) + 1]
+            : 8080;
+        $quiet = in_array("-q", $this->argv);
+        $live = in_array("--live", $this->argv);
 
-  /**
-   * Start PHP built-in dev server.
-   */
-  private function handleDevServer(): void
-  {
-    $port = in_array("-p", $this->argv)
-      ? $this->argv[array_search("-p", $this->argv) + 1]
-      : 8080;
-    $quiet = in_array("-q", $this->argv);
-    $live = in_array("--live", $this->argv);
+        if (!$quiet) {
+            $this->showBanner();
+            echo "[INFO] Starting SDF development server on port $port...\n";
+            if ($live) {
+                echo "[INFO] Live mode enabled. Watching for changes...\n";
+                putenv("SDF_LIVE_RELOAD=true");
+            }
+        }
 
-    if (!$quiet) {
-      $this->showBanner();
-      echo "[INFO] Starting SDF development server on port $port...\n";
-      if ($live) {
-        echo "[INFO] Live mode enabled. Watching for changes...\n";
-        putenv("SDF_LIVE_RELOAD=true");
-      }
-    }
+        if ($this->isPortInUse($port)) {
+            echo "[ERROR] Port $port already in use.\n";
+            exit(1);
+        }
 
-    if ($this->isPortInUse($port)) {
-      echo "[ERROR] Port $port already in use.\n";
-      exit(1);
-    }
+        if ($live) {
+            $this->startWatcher();
+        }
 
-    if ($live) {
-      $this->startWatcher();
-    }
+        passthru("php -S localhost:$port index.php");
 
-    passthru("php -S localhost:$port index.php");
-
-    if (!$quiet) {
-      echo "[INFO] Development server stopped.\n";
-    }
-  }
-
-  /**
-   * Run the test suite via PHPUnit.
-   */
-  private function handleTests(): void
-  {
-    // Collect any extra args after the 'test' command
-    $args = array_slice($this->argv, 2);
-    $argString = '';
-    if (!empty($args)) {
-      $argString = ' ' . implode(' ', array_map('escapeshellarg', $args));
-    }
-
-    // Common vendor locations for phpunit
-    $phpunitPaths = [
-      'vendor/bin/phpunit',
-      'vendor/phpunit/phpunit/phpunit'
-    ];
-
-    $bin = null;
-    foreach ($phpunitPaths as $p) {
-      if (file_exists($p)) { $bin = $p; break; }
-    }
-    if (!$bin) { $bin = 'phpunit'; }
-
-    // Execute phpunit and passthru the output
-    passthru($bin . $argString, $exit);
-    exit($exit);
-  }
-
-  /**
-   * Spawn a background process to watch files and clear cache.
-   */
-  private function startWatcher(): void
-  {
-    $lockFile = sys_get_temp_dir() . '/sdf_watcher.lock';
-    if (file_exists($lockFile)) {
-        $pid = file_get_contents($lockFile);
-        if (posix_getpgid($pid)) {
-            return; // Already running
+        if (!$quiet) {
+            echo "[INFO] Development server stopped.\n";
         }
     }
 
-    $cmd = "php " . $this->argv[0] . " cache watch > /dev/null 2>&1 & echo $!";
-    $pid = exec($cmd);
-    file_put_contents($lockFile, $pid);
-  }
-
-  /**
-   * Handle cache management commands.
-   */
-  private function handleCache(): void
-  {
-    $subCommand = $this->argv[2] ?? null;
-
-    switch ($subCommand) {
-      case "clear":
-      case "flush":
-        $this->clearCache();
-        break;
-      case "watch":
-        $this->watchAndClear();
-        break;
-      default:
-        echo "Usage: php sdf/cli cache [clear|watch]\n";
-        break;
-    }
-  }
-
-  /**
-   * Clear all framework caches.
-   */
-  private function clearCache(bool $silent = false): void
-  {
-    $temp = sys_get_temp_dir();
-    $files = [
-      $temp . '/sdf_routes.cache',
-      $temp . '/sdf_config.cache'
-    ];
-
-    $count = 0;
-    foreach ($files as $file) {
-      if (file_exists($file)) {
-        unlink($file);
-        $count++;
-      }
-    }
-
-    // Clear fuse cache
-    $fuseCache = $temp . '/fuse_cache';
-    if (is_dir($fuseCache)) {
-      foreach (glob("$fuseCache/*") as $f) {
-        if (is_file($f)) unlink($f);
-      }
-      $count++;
-    }
-
-    if (!$silent) {
-      echo "[SUCCESS] Cache cleared ($count items removed).\n";
-    }
-  }
-
-  /**
-   * Internal loop to watch files and clear cache.
-   */
-  private function watchAndClear(): void
-  {
-    $lastHash = $this->getProjectHash();
-    $reloadSignal = sys_get_temp_dir() . '/sdf_reload.signal';
-
-    while (true) {
-      sleep(1);
-      $currentHash = $this->getProjectHash();
-      if ($currentHash !== $lastHash) {
-        $this->clearCache(true);
-        file_put_contents($reloadSignal, time());
-        $lastHash = $currentHash;
-      }
-    }
-  }
-
-  /**
-   * Get a hash of all source file mtimes.
-   */
-  private function getProjectHash(): string
-  {
-    $dirs = ['app', 'sdf'];
-    $mtimes = "";
-    foreach ($dirs as $dir) {
-      if (!is_dir($dir)) continue;
-      $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir));
-      foreach ($it as $file) {
-        if ($file->isFile()) {
-          $mtimes .= $file->getMTime();
+    /**
+     * Run the test suite via PHPUnit.
+     */
+    private function handleTests(): void
+    {
+        // Collect any extra args after the 'test' command
+        $args = array_slice($this->argv, 2);
+        $argString = "";
+        if (!empty($args)) {
+            $argString = " " . implode(" ", array_map("escapeshellarg", $args));
         }
-      }
+
+        // Common vendor locations for phpunit
+        $phpunitPaths = [
+            "vendor/bin/phpunit",
+            "vendor/phpunit/phpunit/phpunit",
+        ];
+
+        $bin = null;
+        foreach ($phpunitPaths as $p) {
+            if (file_exists($p)) {
+                $bin = $p;
+                break;
+            }
+        }
+        if (!$bin) {
+            $bin = "phpunit";
+        }
+
+        // Execute phpunit and passthru the output
+        passthru($bin . $argString, $exit);
+        exit($exit);
     }
-    return md5($mtimes);
-  }
 
-  // ─── Utilities ────────────────────────────────────────────────────────────
+    /**
+     * Spawn a background process to watch files and clear cache.
+     */
+    private function startWatcher(): void
+    {
+        $lockFile = sys_get_temp_dir() . "/sdf_watcher.lock";
+        if (file_exists($lockFile)) {
+            $pid = file_get_contents($lockFile);
+            if (posix_getpgid($pid)) {
+                return; // Already running
+            }
+        }
 
-  /** @param int $port @return bool */
-  private function isPortInUse(int $port): bool
-  {
-    return !empty(shell_exec("lsof -i:$port"));
-  }
+        $cmd =
+            "php " . $this->argv[0] . " cache watch > /dev/null 2>&1 & echo $!";
+        $pid = exec($cmd);
+        file_put_contents($lockFile, $pid);
+    }
 
-  /** Print banner. */
-  private function showBanner(): void
-  {
-    echo "------------------------------------------------------\n";
-    echo "| SDF Framework v2.0.0  (c) devsimsek                |\n";
-    echo "| Do not use devserver in production.                |\n";
-    echo "------------------------------------------------------\n";
-  }
+    /**
+     * Handle cache management commands.
+     */
+    private function handleCache(): void
+    {
+        $subCommand = $this->argv[2] ?? null;
 
-  /** Print usage help. */
-  private function printUsage(): void
-  {
-    echo "Usage: php sdf/cli [command] [subcommand] [options]\n\n";
-    echo "Commands:\n";
-    echo "  g|generate [type] [name]    Generate a new component\n";
-    echo "    model|m [name]            Spark ORM model\n";
-    echo "    migration|migrate [name]  Migration stub\n";
-    echo "    controller|c [name]       Controller\n";
-    echo "    route|r [name]            Append a route\n";
-    echo "    helper|h [name]           Helper file\n";
-    echo "    config|cfg [name]         Config file\n";
-    echo "    view|v [name]             View file\n";
-    echo "    seeder|s [name]           Seeder file\n";
-    echo "    middleware|mw [name]      Request middleware\n";
-    echo "    guard|g [name]           Request authorization guard\n";
-    echo "    test|t [name]            Generate a PHPUnit test\n";
-    echo "\n";
-    echo "  db|database [action]        Database actions\n";
-    echo "    migrate                   Run all pending migrations\n";
-    echo "    rollback                  Rollback last batch\n";
-    echo "    seed                      Run all seeders\n";
-    echo "    reset                     Rollback all + Migrate + Seed\n";
-    echo "\n";
-    echo "  serve|devserver [-p port] [-q] [--live] Start dev server\n";
-    echo "  test|tests [phpunit args]     Run PHPUnit test suite (for example: --filter, --testsuite)\n";
-    echo "\n";
-    echo "  cache [action]              Cache management\n";
-    echo "    clear                     Clear all framework caches\n";
-    echo "    watch                     Watch for changes (used by --live)\n";
-  }
+        switch ($subCommand) {
+            case "clear":
+            case "flush":
+                $this->clearCache();
+                break;
+            case "watch":
+                $this->watchAndClear();
+                break;
+            default:
+                echo "Usage: php sdf/cli cache [clear|watch]\n";
+                break;
+        }
+    }
+
+    /**
+     * Clear all framework caches.
+     */
+    private function clearCache(bool $silent = false): void
+    {
+        $temp = sys_get_temp_dir();
+        $files = [$temp . "/sdf_routes.cache", $temp . "/sdf_config.cache"];
+
+        $count = 0;
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+                $count++;
+            }
+        }
+
+        // Clear fuse cache
+        $fuseCache = $temp . "/fuse_cache";
+        if (is_dir($fuseCache)) {
+            foreach (glob("$fuseCache/*") as $f) {
+                if (is_file($f)) {
+                    unlink($f);
+                }
+            }
+            $count++;
+        }
+
+        if (!$silent) {
+            echo "[SUCCESS] Cache cleared ($count items removed).\n";
+        }
+    }
+
+    /**
+     * Internal loop to watch files and clear cache.
+     */
+    private function watchAndClear(): void
+    {
+        $lastHash = $this->getProjectHash();
+        $reloadSignal = sys_get_temp_dir() . "/sdf_reload.signal";
+
+        while (true) {
+            sleep(1);
+            $currentHash = $this->getProjectHash();
+            if ($currentHash !== $lastHash) {
+                $this->clearCache(true);
+                file_put_contents($reloadSignal, time());
+                $lastHash = $currentHash;
+            }
+        }
+    }
+
+    /**
+     * Get a hash of all source file mtimes.
+     */
+    private function getProjectHash(): string
+    {
+        $dirs = ["app", "sdf"];
+        $mtimes = "";
+        foreach ($dirs as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+            $it = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($dir),
+            );
+            foreach ($it as $file) {
+                if ($file->isFile()) {
+                    $mtimes .= $file->getMTime();
+                }
+            }
+        }
+        return md5($mtimes);
+    }
+
+    // ─── Utilities ────────────────────────────────────────────────────────────
+
+    /** @param int $port @return bool */
+    private function isPortInUse(int $port): bool
+    {
+        return !empty(shell_exec("lsof -i:$port"));
+    }
+
+    /** Print banner. */
+    private function showBanner(): void
+    {
+        echo "------------------------------------------------------\n";
+        echo "| SDF Framework v2.0.0  (c) devsimsek                |\n";
+        echo "| Do not use devserver in production.                |\n";
+        echo "------------------------------------------------------\n";
+    }
+
+    /** Print usage help. */
+    private function printUsage(): void
+    {
+        echo "Usage: php sdf/cli [command] [subcommand] [options]\n\n";
+        echo "Commands:\n";
+        echo "  g|generate [type] [name]    Generate a new component\n";
+        echo "    model|m [name]            Spark ORM model\n";
+        echo "    migration|migrate [name]  Migration stub\n";
+        echo "    controller|c [name]       Controller\n";
+        echo "    route|r [name]            Append a route\n";
+        echo "    helper|h [name]           Helper file\n";
+        echo "    config|cfg [name]         Config file\n";
+        echo "    view|v [name]             View file\n";
+        echo "    seeder|s [name]           Seeder file\n";
+        echo "    middleware|mw [name]      Request middleware\n";
+        echo "    guard|g [name]           Request authorization guard\n";
+        echo "    test|t [name]            Generate a PHPUnit test\n";
+        echo "\n";
+        echo "  db|database [action]        Database actions\n";
+        echo "    migrate                   Run all pending migrations\n";
+        echo "    rollback                  Rollback last batch\n";
+        echo "    seed                      Run all seeders\n";
+        echo "    reset                     Rollback all + Migrate + Seed\n";
+        echo "\n";
+        echo "  serve|devserver [-p port] [-q] [--live] Start dev server\n";
+        echo "  test|tests [phpunit args]     Run PHPUnit test suite (for example: --filter, --testsuite)\n";
+        echo "\n";
+        echo "  cache [action]              Cache management\n";
+        echo "    clear                     Clear all framework caches\n";
+        echo "    watch                     Watch for changes (used by --live)\n";
+    }
 }
 
 $cli = new CLI($argv);

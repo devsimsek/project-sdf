@@ -171,7 +171,9 @@ class QueryBuilder
         $stmt->execute($this->bindings);
         $result = $stmt->fetch();
 
-        if (!$result) return null;
+        if (!$result) {
+            return null;
+        }
 
         if ($this->modelClass) {
             return new $this->modelClass($result, true);
@@ -200,7 +202,7 @@ class QueryBuilder
         $results = $stmt->fetchAll();
 
         if ($this->modelClass) {
-            return array_map(fn($data) => new $this->modelClass($data, true), $results);
+            return array_map(fn ($data) => new $this->modelClass($data, true), $results);
         }
 
         return $results;
@@ -510,7 +512,7 @@ abstract class Model
         $class = static::class;
         /** @var class-string<static> $class */
         return array_map(
-            fn($data) => $data instanceof static ? $data : new $class((array) $data, true),
+            fn ($data) => $data instanceof static ? $data : new $class((array) $data, true),
             self::query()->get()
         );
     }

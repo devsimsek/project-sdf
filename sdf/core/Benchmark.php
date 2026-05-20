@@ -60,9 +60,9 @@ class Benchmark extends Core
      * or an empty string if $point1 is not found.
      */
     public function elapsed_time(
-      string $point1 = "",
-      string $point2 = "",
-      int $decimals = 4
+        string $point1 = "",
+        string $point2 = "",
+        int $decimals = 4
     ): string {
         if ($point1 === "") {
             return "{elapsed_time}";

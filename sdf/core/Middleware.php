@@ -1,4 +1,5 @@
 <?php
+
 namespace SDF;
 
 use Closure;
@@ -81,7 +82,7 @@ class Pipeline
     {
         return function ($stack, $pipe) {
             return function ($request) use ($stack, $pipe) {
-                return (new $pipe)->handle($request, $stack);
+                return (new $pipe())->handle($request, $stack);
             };
         };
     }
