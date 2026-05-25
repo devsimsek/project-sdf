@@ -99,6 +99,9 @@ $initializer::core_loadConfigurations();
 $loggerConfig = $initializer::core_getConfig("logger") ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
 SDF\Logger::log(Level::DEBUG, "sdf init start");
+// sdf-15: better error handling and managed exceptions
+require_once SDF_DIR . "core/ExceptionHandler.php";
+set_exception_handler([\SDF\ExceptionHandler::class, 'handle']);
 // Lets include our error handlers...
 require SDF_APP . "handlers/errors.php";
 // And Router...

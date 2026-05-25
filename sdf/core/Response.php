@@ -54,15 +54,22 @@ class Response extends Core
     protected function sendHeaders(): void
     {
         if (empty($this->httpCode)) {
-            http_response_code(500);
-            die("HTTP code not set. Cannot send headers.");
+            // Log and convert to exception so callers/middleware can handle the error
+            SDF\Logger::log(Level::ERROR, 'HTTP code not set. Cannot send headers.', [
+                'file' => __FILE__,
+                'line' => __LINE__,
+                'headers' => $this->headers,
+            ]);
+            throw new HttpResponseException('HTTP code not set. Cannot send headers.', 500);
         }
 
-        if (headers_sent()) {
-            http_response_code(500);
-            die(
-                "Headers have already been sent. Cannot send additional headers."
-            );
+        if ($this->headersAlreadySent()) {
+            SDF\Logger::log(Level::ERROR, 'Headers have already been sent. Cannot send additional headers.', [
+                'file' => __FILE__,
+                'line' => __LINE__,
+                'headers' => $this->headers,
+            ]);
+            throw new HeadersSendException('Headers have already been sent. Cannot send additional headers.', 500);
         }
 
         // Send all stored headers
@@ -72,6 +79,16 @@ class Response extends Core
 
         // Set the HTTP response code
         http_response_code($this->httpCode);
+    }
+
+    /**
+     * Wrapper for headers_sent() so tests can override behaviour.
+     *
+     * @return bool
+     */
+    protected function headersAlreadySent(): bool
+    {
+        return headers_sent();
     }
 
     /**

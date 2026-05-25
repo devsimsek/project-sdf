@@ -62,9 +62,8 @@ class Core
         }
         // Did we find the class?
         if ($name === false) {
-            header("HTTP/1.0 503 Service Unavailable", true, 503);
-            echo "Unable to locate the specified class: " . $class . ".php";
-            exit(5);
+            SDF\Logger::log(Level::ERROR, 'Unable to locate the specified class: ' . $class . '.php', ['class' => $class]);
+            throw new \RuntimeException('Unable to locate the specified class: ' . $class . '.php', 5);
         }
         // Keep track of what we just loaded
         $fqcn = "\\SDF\\" . $name;
@@ -83,9 +82,8 @@ class Core
                 return self::$classes[$class];
             }
         } catch (\ReflectionException $e) {
-            header("HTTP/1.0 503 Service Unavailable", true, 503);
-            echo "Unable to instantiate the specified class: " . $fqcn;
-            exit(5);
+            SDF\Logger::log(Level::ERROR, 'Unable to instantiate the specified class: ' . $fqcn, ['exception' => $e]);
+            throw new \RuntimeException('Unable to instantiate the specified class: ' . $fqcn, 5, $e);
         }
     }
 
@@ -193,9 +191,9 @@ class Core
         if (function_exists("eh_errorHandler")) {
             call_user_func_array("eh_errorHandler", $input);
         } else {
-            die(
-                "(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline. (Also: SDF can't find errorHandler function)"
-            );
+            // todo: currently no custom error handler available, create a new ticket in yt
+            SDF\Logger::log(Level::ERROR, "(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline. (Also: SDF can't find errorHandler function)", $input);
+            throw new \RuntimeException("(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline.");
         }
     }
 
