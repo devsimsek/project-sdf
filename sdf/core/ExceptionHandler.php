@@ -13,7 +13,7 @@ class ExceptionHandler
     public static function handle(\Throwable $t): void
     {
         // Log the throwable with context
-        SDF\Logger::log(Level::FATAL, 'Uncaught exception: ' . $t->getMessage(), [
+        Logger::log(Level::FATAL, 'Uncaught exception: ' . $t->getMessage(), [
             'exception' => $t,
             'file' => $t->getFile(),
             'line' => $t->getLine(),

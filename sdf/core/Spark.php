@@ -35,7 +35,7 @@ class Spark
             self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             // Log the DB error and rethrow so the application can handle it
-            SDF\Logger::log(Level::FATAL, 'Spark DB Error: ' . $e->getMessage(), ['exception' => $e]);
+            Logger::log(Level::FATAL, 'Spark DB Error: ' . $e->getMessage(), ['exception' => $e]);
             throw $e;
         }
     }

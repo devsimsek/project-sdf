@@ -55,7 +55,7 @@ class Response extends Core
     {
         if (empty($this->httpCode)) {
             // Log and convert to exception so callers/middleware can handle the error
-            SDF\Logger::log(Level::ERROR, 'HTTP code not set. Cannot send headers.', [
+            Logger::log(Level::ERROR, 'HTTP code not set. Cannot send headers.', [
                 'file' => __FILE__,
                 'line' => __LINE__,
                 'headers' => $this->headers,
@@ -64,7 +64,7 @@ class Response extends Core
         }
 
         if ($this->headersAlreadySent()) {
-            SDF\Logger::log(Level::ERROR, 'Headers have already been sent. Cannot send additional headers.', [
+            Logger::log(Level::ERROR, 'Headers have already been sent. Cannot send additional headers.', [
                 'file' => __FILE__,
                 'line' => __LINE__,
                 'headers' => $this->headers,
