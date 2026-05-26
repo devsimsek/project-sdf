@@ -67,9 +67,9 @@ class Core
                 "Unable to locate the specified class: " . $class . ".php",
                 ["class" => $class],
             );
-            throw new \HttpResponseException(
+            throw new HttpResponseException(
                 "Unable to locate the specified class: " . $class . ".php",
-                503,
+                503
             );
         }
         // Keep track of what we just loaded
@@ -94,10 +94,10 @@ class Core
                 "Unable to instantiate the specified class: " . $fqcn,
                 ["exception" => $e],
             );
-            throw new \HttpResponseException(
+            throw new HttpResponseException(
                 "Unable to instantiate the specified class: " . $fqcn,
                 503,
-                $e,
+                $e
             );
         }
     }
@@ -120,8 +120,7 @@ class Core
             self::core_scanDirectory(
                 SDF_APP . DIRECTORY_SEPARATOR . $directory,
                 ".{php,json}",
-            )
-            as $file
+            ) as $file
         ) {
             $filePath =
                 SDF_APP .
