@@ -49,9 +49,13 @@ class SparkTest extends TestCase
         $ref = new \ReflectionClass($qb);
 
         $tableP = $ref->getProperty('table');
-        $tableP->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $tableP->setAccessible(true);
+        }
         $wheresP = $ref->getProperty('wheres');
-        $wheresP->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $wheresP->setAccessible(true);
+        }
 
         $table = $tableP->getValue($qb);
         $wheres = $wheresP->getValue($qb);
