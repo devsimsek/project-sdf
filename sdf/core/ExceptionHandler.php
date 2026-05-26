@@ -28,7 +28,10 @@ class ExceptionHandler
             // If throwable is HttpResponseException use its code/message
             if ($t instanceof HttpResponseException) {
                 $httpCode = $t->getHttpCode();
-                $message = $t->getMessage();
+                $message =
+                    $httpCode >= 500
+                        ? "Internal Server Error"
+                        : $t->getMessage();
             }
 
             // If headers already sent, we cannot set headers; write body only
