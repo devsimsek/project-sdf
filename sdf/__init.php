@@ -45,12 +45,12 @@ if (PHP_SAPI == "cli-server") {
     }
 
     // Cache Management (restricted to localhost)
-    $remote = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
-    $isLocal = in_array($remote, ['127.0.0.1', '::1']);
+    $remote = $_SERVER["REMOTE_ADDR"] ?? "127.0.0.1";
+    $isLocal = in_array($remote, ["127.0.0.1", "::1"]);
 
     if ($url["path"] === "/__sdf_cache_clear") {
         if (!$isLocal) {
-            header('HTTP/1.1 403 Forbidden');
+            header("HTTP/1.1 403 Forbidden");
             exit();
         }
         $temp = sys_get_temp_dir();
@@ -62,7 +62,7 @@ if (PHP_SAPI == "cli-server") {
 
     if ($url["path"] === "/__sdf_cache_refresh") {
         if (!$isLocal) {
-            header('HTTP/1.1 403 Forbidden');
+            header("HTTP/1.1 403 Forbidden");
             exit();
         }
         $temp = sys_get_temp_dir();
@@ -99,6 +99,10 @@ $initializer::core_loadConfigurations();
 $loggerConfig = $initializer::core_getConfig("logger") ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
 SDF\Logger::log(Level::DEBUG, "sdf init start");
+// sdf-15: better error handling and managed exceptions
+require_once SDF_DIR . "core/Exceptions.php"; // https://github.com/devsimsek/project-sdf/pull/12#discussion_r3299746185
+require_once SDF_DIR . "core/ExceptionHandler.php";
+set_exception_handler([\SDF\ExceptionHandler::class, "handle"]);
 // Lets include our error handlers...
 require SDF_APP . "handlers/errors.php";
 // And Router...
@@ -147,15 +151,17 @@ try {
                 );
                 break;
             case "sqlite":
-                $sqlitePath = $dbConfig["path"] ?? $dbConfig["dsn"] ?? null;
+                $sqlitePath = $dbConfig["path"] ?? ($dbConfig["dsn"] ?? null);
                 if ($sqlitePath === null) {
-                    throw new \Exception("SQLite configuration missing path/dsn");
+                    throw new \Exception(
+                        "SQLite configuration missing path/dsn",
+                    );
                 }
                 // If it already looks like a DSN (contains ':'), use as-is; otherwise prepend sqlite:
-                if (str_contains($sqlitePath, ':')) {
+                if (str_contains($sqlitePath, ":")) {
                     \SDF\Spark::connect($sqlitePath);
                 } else {
-                    \SDF\Spark::connect('sqlite:' . $sqlitePath);
+                    \SDF\Spark::connect("sqlite:" . $sqlitePath);
                 }
                 break;
             case "sqlsrv":
@@ -214,8 +220,8 @@ $router::pathNotFound(SDF_EH_404);
 $router::methodNotAllowed(SDF_EH_405);
 // Set Routing Configuration (Class config not the routes.)
 foreach ($initializer::core_getConfig("app") as $config => $value) {
-if (str_starts_with($config, 'rc_')) {
-    $router::setRConfig(str_replace('rc_', '', $config), $value);
+    if (str_starts_with($config, "rc_")) {
+        $router::setRConfig(str_replace("rc_", "", $config), $value);
     }
 }
 // Initialize routes configuration

@@ -113,7 +113,9 @@ class LoaderFuseTest extends TestCase
     {
         $ref = new \ReflectionClass(Loader::class);
         $prop = $ref->getProperty('isLoaded');
-        $prop->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $prop->setAccessible(true);
+        }
         $prop->setValue(null, []);
     }
 
