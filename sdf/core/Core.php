@@ -41,7 +41,7 @@ class Core
     public static function &core_loadClass(
         string $class,
         string $directory = "core",
-        ?array $param = null
+        ?array $param = null,
     ): object {
         $_classes = self::$classes;
         // Does the class exist? If so, we're done...
@@ -62,8 +62,15 @@ class Core
         }
         // Did we find the class?
         if ($name === false) {
-            Logger::log(Level::ERROR, 'Unable to locate the specified class: ' . $class . '.php', ['class' => $class]);
-            throw new \RuntimeException('Unable to locate the specified class: ' . $class . '.php', 5);
+            Logger::log(
+                Level::ERROR,
+                "Unable to locate the specified class: " . $class . ".php",
+                ["class" => $class],
+            );
+            throw new \HttpResponseException(
+                "Unable to locate the specified class: " . $class . ".php",
+                503,
+            );
         }
         // Keep track of what we just loaded
         $fqcn = "\\SDF\\" . $name;
@@ -78,12 +85,20 @@ class Core
                 return self::$classes[$class];
             } else {
                 // abstract/interface: store a placeholder object with classname
-                self::$classes[$class] = (object)["__class" => $fqcn];
+                self::$classes[$class] = (object) ["__class" => $fqcn];
                 return self::$classes[$class];
             }
         } catch (\ReflectionException $e) {
-            Logger::log(Level::ERROR, 'Unable to instantiate the specified class: ' . $fqcn, ['exception' => $e]);
-            throw new \RuntimeException('Unable to instantiate the specified class: ' . $fqcn, 5, $e);
+            Logger::log(
+                Level::ERROR,
+                "Unable to instantiate the specified class: " . $fqcn,
+                ["exception" => $e],
+            );
+            throw new \RuntimeException(
+                "Unable to instantiate the specified class: " . $fqcn,
+                5,
+                $e,
+            );
         }
     }
 
@@ -93,20 +108,29 @@ class Core
      * @return void
      */
     public static function core_loadConfigurations(
-        string $directory = "config"
+        string $directory = "config",
     ): void {
-        $cacheFile = sys_get_temp_dir() . '/sdf_config.cache';
+        $cacheFile = sys_get_temp_dir() . "/sdf_config.cache";
         if (file_exists($cacheFile)) {
             self::$config = require $cacheFile;
             return;
         }
 
         foreach (
-            self::core_scanDirectory(SDF_APP . DIRECTORY_SEPARATOR . $directory, ".{php,json}") as $file
+            self::core_scanDirectory(
+                SDF_APP . DIRECTORY_SEPARATOR . $directory,
+                ".{php,json}",
+            )
+            as $file
         ) {
-            $filePath = SDF_APP . DIRECTORY_SEPARATOR . $directory . DIRECTORY_SEPARATOR . $file;
+            $filePath =
+                SDF_APP .
+                DIRECTORY_SEPARATOR .
+                $directory .
+                DIRECTORY_SEPARATOR .
+                $file;
             if (file_exists($filePath)) {
-                if (str_ends_with($file, '.json')) {
+                if (str_ends_with($file, ".json")) {
                     $config = json_decode(file_get_contents($filePath), true);
                 } else {
                     require $filePath;
@@ -116,7 +140,11 @@ class Core
 
                     // If the config file returned a wrapper array keyed by the filename (e.g. $config['database'] = [...])
                     // then unwrap it to keep self::$config['database'] = [...]
-                    if (is_array($config) && array_key_exists($key, $config) && is_array($config[$key])) {
+                    if (
+                        is_array($config) &&
+                        array_key_exists($key, $config) &&
+                        is_array($config[$key])
+                    ) {
                         $cfgToStore = $config[$key];
                     } else {
                         $cfgToStore = $config;
@@ -125,7 +153,7 @@ class Core
                     if (isset(self::$config[$key])) {
                         self::$config[$key] = array_merge(
                             self::$config[$key],
-                            $cfgToStore
+                            $cfgToStore,
                         );
                     } else {
                         self::$config[$key] = $cfgToStore;
@@ -134,7 +162,10 @@ class Core
             }
             $config = null;
         }
-        file_put_contents($cacheFile, '<?php return ' . var_export(self::$config, true) . ';');
+        file_put_contents(
+            $cacheFile,
+            "<?php return " . var_export(self::$config, true) . ";",
+        );
     }
 
     /**
@@ -145,7 +176,7 @@ class Core
      */
     public static function core_getConfig(
         string $config,
-        ?string $key = null
+        ?string $key = null,
     ): mixed {
         if (array_key_exists($config, self::$config)) {
             if (!empty($key)) {
@@ -170,16 +201,16 @@ class Core
      * @return void
      */
     public static function core_triggerError(
-        int    $errnum,
+        int $errnum,
         string $errmessage,
         ?string $errfile = null,
-        int    $errline = 0
+        int $errline = 0,
     ): void {
         $input = [
-          "errnum" => $errnum,
-          "errmessage" => $errmessage,
-          "errfile" => $errfile,
-          "errline" => $errline,
+            "errnum" => $errnum,
+            "errmessage" => $errmessage,
+            "errfile" => $errfile,
+            "errline" => $errline,
         ];
 
         $customHandler = self::core_getConfig("app", "eh_errorHandler");
@@ -192,8 +223,14 @@ class Core
             call_user_func_array("eh_errorHandler", $input);
         } else {
             // todo: currently no custom error handler available, create a new ticket in yt
-            Logger::log(Level::ERROR, "(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline. (Also: SDF can't find errorHandler function)", $input);
-            throw new \RuntimeException("(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline.");
+            Logger::log(
+                Level::ERROR,
+                "(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline. (Also: SDF can't find errorHandler function)",
+                $input,
+            );
+            throw new \RuntimeException(
+                "(E_eh404) Fatal Error: [$errnum] $errmessage in $errfile on line $errline.",
+            );
         }
     }
 
@@ -205,7 +242,7 @@ class Core
      */
     public static function core_scanDirectory(
         string $directory = "",
-        string $extension = ".{php}"
+        string $extension = ".{php}",
     ): false|array {
         if (empty($directory)) {
             return glob("*" . $extension, GLOB_BRACE);
