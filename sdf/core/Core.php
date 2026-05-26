@@ -94,9 +94,9 @@ class Core
                 "Unable to instantiate the specified class: " . $fqcn,
                 ["exception" => $e],
             );
-            throw new \RuntimeException(
+            throw new \HttpResponseException(
                 "Unable to instantiate the specified class: " . $fqcn,
-                5,
+                503,
                 $e,
             );
         }
