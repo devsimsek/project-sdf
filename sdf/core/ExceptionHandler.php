@@ -13,16 +13,16 @@ class ExceptionHandler
     public static function handle(\Throwable $t): void
     {
         // Log the throwable with context
-        Logger::log(Level::FATAL, 'Uncaught exception: ' . $t->getMessage(), [
-            'exception' => $t,
-            'file' => $t->getFile(),
-            'line' => $t->getLine(),
+        Logger::log(Level::FATAL, "Uncaught exception: " . $t->getMessage(), [
+            "exception" => $t,
+            "file" => $t->getFile(),
+            "line" => $t->getLine(),
         ]);
 
         // Try to build a safe response
         try {
             $response = new Response();
-            $message = 'Internal Server Error';
+            $message = "Internal Server Error";
             $httpCode = 500;
 
             // If throwable is HttpResponseException use its code/message
@@ -34,7 +34,7 @@ class ExceptionHandler
             // If headers already sent, we cannot set headers; write body only
             if (headers_sent()) {
                 // Best-effort: echo a minimal body
-                echo "HTTP/" . PHP_SAPI . " " . $httpCode . "\n";
+                echo "HTTP/1.1 " . $httpCode . "\n";
                 echo $message;
                 return;
             }
@@ -43,12 +43,12 @@ class ExceptionHandler
             $response->text($message, $httpCode);
         } catch (\Throwable $inner) {
             // Last-resort fallback
-            error_log('ExceptionHandler failure: ' . $inner->getMessage());
+            error_log("ExceptionHandler failure: " . $inner->getMessage());
             if (!headers_sent()) {
                 http_response_code(500);
-                header('Content-Type: text/plain');
+                header("Content-Type: text/plain");
             }
-            echo 'Internal Server Error';
+            echo "Internal Server Error";
         }
     }
 }
