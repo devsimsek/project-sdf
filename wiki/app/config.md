@@ -46,7 +46,7 @@ $config = [
 - If your legacy config used `$config['database'] = [...]`, the loader will still read it, but it's recommended to use the top-level `$config` shape above for clarity.
 Routing is done in the `app/config/routes.php` file. You can define your routes here.
 
-Ability to use magicRouting is also available. You can enable it in the `app/config/app.php` file.
+Ability to use magic routing is also available. You can enable it in the `app/config/app.php` file.
 
 All the custom configuration is dependent on you, you can create new config files and use them in your application.
 
@@ -72,7 +72,7 @@ The framework configuration is done in the `index.php` file. Here you can set th
 
 Application configuration is done in the `app/config/app.php` file. Here you can set the following:
 
-- `rc_magicRouting` - Whether to use magicRouting or not. Default is `false`.
+- `rc_magic_routing` - Whether to use magic routing or not. Default is `false`.
   MagicRouting registers method names as routes. For example, if you have a method named `getUsers` in your users
   controller,
   you can access it by visiting `/users/getUsers`.
@@ -92,7 +92,7 @@ $config['/'] = 'Home/index'; // or $config['/'] = 'Home';
 
 As you can see, you can define your routes with or without the method name.
 
-> Note: You can use magicRouting to register method names as routes. Check the `app/config/app.php` file for more
+> Note: You can use magic routing to register method names as routes. Check the `app/config/app.php` file for more
 
 > For detailed information on routing, check the [Routing](routes.md) documentation.
 
@@ -114,7 +114,7 @@ You can create a new configuration file manually. Just create a new file in the 
 your
 application.
 
-> Note: You can use the `load_config()` function to get the configuration values in your application.
+> Note: You can use the `loadConfig()` function to get the configuration values in your application.
 
 ## Conclusion
 

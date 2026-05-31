@@ -36,9 +36,9 @@ class CLI
         define("SDF_DIR", SDF_ROOT . "/sdf/");
 
         require_once SDF_DIR . "core/Core.php";
-        Core::core_loadConfigurations();
+        Core::coreLoadConfigurations();
 
-        $this->config = Core::core_getConfig("database") ?: [];
+        $this->config = Core::coreGetConfig("database") ?: [];
     }
 
     /**
@@ -72,6 +72,14 @@ class CLI
                 break;
             case "cache":
                 $this->handleCache();
+                break;
+            case "format":
+            case "fmt":
+                $this->handleFormatter();
+                break;
+            case "benchmark":
+            case "bench":
+                $this->handleBenchmark();
                 break;
             default:
                 $this->printUsage();
@@ -341,7 +349,7 @@ class CLI
 
         /**
          * __NAME__ Configuration
-         * Load using: load_config('__NAME__');
+         * Load using: loadConfig('__NAME__');
          * @var array $config
          */
         if (!defined('SDF')) die('Security warning.');
@@ -989,7 +997,7 @@ class CLI
         $host = $this->config["host"] ?? "127.0.0.1";
         $name = $this->config["name"] ?? "";
         $user = $this->config["user"] ?? "root";
-        $pass = $this->config["pass"] ?? "";
+        $pass = $this->config["pass"] ?? ($this->config["password"] ?? "");
         $driver = $this->config["driver"] ?? "mysql";
         $port = $this->config["port"] ?? null;
         $path = $this->config["path"] ?? null;
@@ -1050,6 +1058,102 @@ class CLI
         return new PDO($dsn, $user, $pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         ]);
+    }
+
+    // ─── Formatter ────────────────────────────────────────────────────────────
+
+    /**
+     * run php-cs-fixer
+     */
+    private function handleFormatter(): void
+    {
+        // check if php-cs-fixer is installed
+        $paths = [
+            "vendor/bin/php-cs-fixer",
+            "vendor/friendsofphp/php-cs-fixer/php-cs-fixer",
+        ];
+        $bin = null;
+        foreach ($paths as $p) {
+            if (file_exists($p)) {
+                $bin = $p;
+                break;
+            }
+        }
+
+        if (!$bin) {
+            echo "PHP-CS-Fixer not found. Please install it via Composer:\n";
+            echo "composer require --dev friendsofphp/php-cs-fixer\n";
+            exit(1);
+        }
+
+        $args = array_slice($this->argv, 2);
+        $argString = !empty($args)
+            ? " " . implode(" ", array_map("escapeshellarg", $args))
+            : "";
+        passthru("$bin fix $argString", $exit);
+        exit($exit);
+    }
+
+    // ─── Benchmark ────────────────────────────────────────────────────────────
+
+    /**
+     * Route to database sub-commands.
+     */
+    private function handleBenchmark(): void
+    {
+        if (count($this->argv) < 3) {
+            $this->printUsage();
+            exit(1);
+        }
+
+        switch ($this->argv[2]) {
+            case "dry":
+                $this->runBenchmarkDry();
+                break;
+            default:
+                $this->runBenchmark();
+                break;
+        }
+    }
+
+    private function runBenchmark(): void
+    {
+        // Run wrk against the dev server and print results with 30s duration and 10 concurrent connections
+        // save results to a file named benchmark_results.txt in the current directory
+        $port = in_array("-p", $this->argv)
+            ? $this->argv[array_search("-p", $this->argv) + 1]
+            : "8080";
+
+        $duration = 30;
+        $concurrency = 10;
+
+        echo "Running benchmark against http://localhost:$port/ for $duration seconds with $concurrency concurrent connections...\n";
+        $cmd = "wrk -t{$concurrency} -c{$concurrency} -d{$duration}s http://localhost:$port/ > benchmark_results.txt";
+        passthru($cmd, $exit);
+        if ($exit === 0) {
+            echo "Benchmark completed. Results saved to benchmark_results.txt\n";
+        } else {
+            echo "Benchmark failed. Please ensure wrk is installed and in your PATH.\n";
+        }
+        exit($exit);
+    }
+
+    private function runBenchmarkDry(): void
+    {
+        // run wrk and not save results to file, just print summary to console
+        $port = in_array("-p", $this->argv)
+            ? $this->argv[array_search("-p", $this->argv) + 1]
+            : "8080";
+        $duration = 30;
+        $concurrency = 10;
+
+        echo "Running dry benchmark against http://localhost:$port/ for $duration seconds with $concurrency concurrent connections...\n";
+        $cmd = "wrk -t{$concurrency} -c{$concurrency} -d{$duration}s http://localhost:$port/";
+        passthru($cmd, $exit);
+        if ($exit !== 0) {
+            echo "Benchmark failed. Please ensure wrk is installed and in your PATH.\n";
+        }
+        exit($exit);
     }
 
     // ─── Dev Server ───────────────────────────────────────────────────────────
@@ -1131,8 +1235,8 @@ class CLI
     {
         $lockFile = sys_get_temp_dir() . "/sdf_watcher.lock";
         if (file_exists($lockFile)) {
-            $pid = (int)file_get_contents($lockFile);
-            if (function_exists('posix_getpgid')) {
+            $pid = (int) file_get_contents($lockFile);
+            if (function_exists("posix_getpgid")) {
                 if (posix_getpgid($pid)) {
                     return; // Already running
                 }
@@ -1208,10 +1312,15 @@ class CLI
      */
     private function watchAndClear(): void
     {
+        $shouldRun = true;
         $lastHash = $this->getProjectHash();
         $reloadSignal = sys_get_temp_dir() . "/sdf_reload.signal";
 
-        while (true) {
+        pcntl_signal(SIGTERM, function () use (&$shouldRun) {
+            $shouldRun = false;
+        });
+
+        while ($shouldRun) {
             sleep(1);
             $currentHash = $this->getProjectHash();
             if ($currentHash !== $lastHash) {
@@ -1292,6 +1401,10 @@ class CLI
         echo "  cache [action]              Cache management\n";
         echo "    clear                     Clear all framework caches\n";
         echo "    watch                     Watch for changes (used by --live)\n";
+        echo "\n";
+        echo "  format|fmt [options]        Run PHP-CS-Fixer (options passed directly, for example: --dry-run -v)\n";
+        echo "\n";
+        echo "  benchmark|bench [options]   Run wrk benchmarks against dev server (options passed directly, for example: --dry -p 8080)\n";
     }
 }
 

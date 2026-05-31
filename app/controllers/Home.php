@@ -2,12 +2,14 @@
 
 /**
  * Example controller.
- * @warn Consider removing $this->get_config();
- * to $this->get_config('key_for_wanted_config')
+ * @warn Consider removing $this->getConfig();
+ * to $this->getConfig('key_for_wanted_config')
  * for security reasons.
  */
 
-class Home extends SDF\Controller
+use SDF\Controller;
+
+class Home extends Controller
 {
     public function __construct()
     {
@@ -21,7 +23,7 @@ class Home extends SDF\Controller
      */
     public function index(): void
     {
-        $this->load->view("home", $this->get_config());
+        $this->load->view("home", $this->getConfig());
     }
 
 }

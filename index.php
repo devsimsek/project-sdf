@@ -122,7 +122,7 @@ const SDF_EH_405 = "eh_methodNotAllowed";
  * To view benchmarking open browser's developer
  * console.
  */
-const SDF_Benchmark = true;
+const SDF_BENCHMARK = true;
 
 // -----------------------------------------------
 

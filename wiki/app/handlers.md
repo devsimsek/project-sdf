@@ -24,12 +24,12 @@ Let's break down the handler:
 - `$response` - This is the response object. You can use this object to send the response data.
 - `$response->text('Hello, World!');` - This is the output of the handler.
 
-For example, let's create load_config function in `global.php` handler:
+For example, let's create loadConfig function in `global.php` handler:
 
 ```php
 <?php
 
-function load_config($config, $path): array
+function loadConfig($config, $path): array
 {
     // remove extension if exists from $config
     $config = str_replace('.php', '', $config);
@@ -52,7 +52,7 @@ function load_config($config, $path): array
 }
 ```
 
-In this example, we used the `load_config` function to load the configuration file. The function takes two
+In this example, we used the `loadConfig` function to load the configuration file. The function takes two
 parameters: `$config` and `$path`. The function loads the configuration file and returns the configuration array.
 
 ## Using Handlers in Controllers
@@ -72,13 +72,13 @@ class Home extends SDF\Controller
 
     public function index()
     {
-        $config = load_config('config', 'app/config/'); // the same functionality is already built in $this->load_config() from Controller definition
+        $config = loadConfig('config', 'app/config/'); // the same functionality is already built in $this->loadConfig() from Controller definition
         $this->response->json($config);
     }
 }
 ```
 
-In this example, we used the `load->handler()` method to load the `global.php` handler. We then used the `load_config()`
+In this example, we used the `load->handler()` method to load the `global.php` handler. We then used the `loadConfig()`
 function to load the configuration file and output it as JSON.
 
 ## Conclusion

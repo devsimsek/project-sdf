@@ -9,12 +9,15 @@ namespace SDF;
  * Add your custom model codes to this file
  * @property Loader $load
  */
-class Model extends Core
+class Model
 {
+    use CoreUtilities;
+
+
     public object $load;
 
     public function __construct()
     {
-        $this->load = &self::core_loadClass("Loader");
+        $this->load = &self::coreLoadClass("Loader");
     }
 }
