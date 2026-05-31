@@ -18,11 +18,8 @@ namespace SDF;
  * @since       Version 1.0
  * @filesource
  */
-class Request
+class Request extends Core
 {
-    use CoreUtilities;
-
-
     /**
      * Get a value from the $_GET superglobal array
      *
@@ -155,7 +152,7 @@ class Request
     public function isMobile(): bool
     {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        return (bool) preg_match('/(iPhone|iPod|iPad|Android|Huawei|Honor|BlackBerry|BB10|PlayBook|Opera Mini|Opera Mobi|OPR|Windows Phone|IEMobile|Silk|Kindle|Mobile)/i', $userAgent);
+        return (bool)preg_match('/(iPhone|iPod|iPad|Android|BlackBerry)/i', $userAgent);
     }
 
     /**
@@ -165,9 +162,8 @@ class Request
      */
     public function isRobot(): bool
     {
-        // todo: switch to a configuration based detection
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-        return (bool)preg_match('/bot|crawler|spider|scraper|curl|wget|fetch|facebook|twitter|slurp|scan|checker|monitor|gptbot/i', $userAgent);
+        return (bool)preg_match('/(GoogleBot|Slurp)/i', $userAgent);
     }
 
     /**
@@ -178,11 +174,7 @@ class Request
      */
     public function header(string $name): ?string
     {
-        if (function_exists('getallheaders')) {
-            return getallheaders()[$name] ?? null;
-        }
-
-        $key = str_replace('-', '_', strtoupper($name));
-        return $_SERVER['HTTP_' . $key] ?? $_SERVER[$key] ?? null;
+        $name = 'HTTP_' . str_replace('-', '_', strtoupper($name));
+        return $_SERVER[$name] ?? null;
     }
 }

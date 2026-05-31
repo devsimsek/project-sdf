@@ -4,6 +4,7 @@ namespace SDF;
 
 use Throwable;
 
+
 /**
  * Single-file Logger implementation that contains Level, LogRecord,
  * HandlerInterface, ConsoleHandler, BufferHandler and Logger facade/engine.
@@ -89,45 +90,43 @@ interface HandlerInterface
 class ConsoleHandler implements HandlerInterface
 {
     private array $levelColors = [
-        Level::TRACE => "\033[37m",
-        Level::DEBUG => "\033[36m",
-        Level::INFO => "\033[32m",
-        Level::WARN => "\033[33m",
-        Level::ERROR => "\033[31m",
-        Level::FATAL => "\033[1;31m",
+        Level::TRACE => "\033[37m", // white/grey
+        Level::DEBUG => "\033[36m", // cyan
+        Level::INFO => "\033[32m", // green
+        Level::WARN => "\033[33m", // yellow
+        Level::ERROR => "\033[31m", // red
+        Level::FATAL => "\033[1;31m", // bold red
     ];
 
     private bool $useColor;
-    /** @var resource|null Cached output stream handle */
-    private $out = null;
 
     public function __construct(bool $useColor = true)
     {
         $this->useColor = $useColor && $this->isTty();
-        if (PHP_SAPI === 'cli' && defined('STDOUT')) {
-            $this->out = \STDOUT;
-        } else {
-            $this->out = fopen('php://stderr', 'w');
-        }
     }
 
     public function handle(LogRecord $record): void
     {
         $line = $this->format($record);
+        // Choose appropriate output stream: CLI -> STDOUT, Web -> STDERR (avoid polluting response body)
+        if (PHP_SAPI === 'cli' && defined('STDOUT')) {
+            $out = \STDOUT;
+            $shouldClose = false;
+        } else {
+            $out = fopen('php://stderr', 'w');
+            $shouldClose = true;
+        }
 
         if ($this->useColor && PHP_SAPI === 'cli') {
             $color = $this->levelColors[$record->level] ?? "\033[0m";
             $reset = "\033[0m";
-            fwrite($this->out, $color . $line . $reset . PHP_EOL);
+            fwrite($out, $color . $line . $reset . PHP_EOL);
         } else {
-            fwrite($this->out, $line . PHP_EOL);
+            fwrite($out, $line . PHP_EOL);
         }
-    }
 
-    public function __destruct()
-    {
-        if ($this->out !== null && !(defined('STDOUT') && $this->out === \STDOUT)) {
-            fclose($this->out);
+        if ($shouldClose) {
+            fclose($out);
         }
     }
 
@@ -164,8 +163,6 @@ class ConsoleHandler implements HandlerInterface
 class FileHandler implements HandlerInterface
 {
     private string $path;
-    /** @var resource|null Cached file handle kept open for the request lifecycle */
-    private $fp = null;
 
     public function __construct(string $path)
     {
@@ -174,33 +171,26 @@ class FileHandler implements HandlerInterface
         if (!is_dir($dir)) {
             @mkdir($dir, 0755, true);
         }
-        $this->fp = @fopen($this->path, "a");
     }
 
     public function handle(LogRecord $record): void
     {
-        if (!$this->fp) {
+        $line = $this->format($record) . PHP_EOL;
+        // write with exclusive lock
+        $fp = @fopen($this->path, "a");
+        if (!$fp) {
             return;
         }
-        $line = $this->format($record) . PHP_EOL;
-        flock($this->fp, LOCK_EX);
-        fwrite($this->fp, $line);
-        fflush($this->fp);
-        flock($this->fp, LOCK_UN);
+        flock($fp, LOCK_EX);
+        fwrite($fp, $line);
+        fflush($fp);
+        flock($fp, LOCK_UN);
+        fclose($fp);
     }
 
     public function flush(): void
     {
-        if ($this->fp) {
-            fflush($this->fp);
-            fclose($this->fp);
-            $this->fp = null;
-        }
-    }
-
-    public function __destruct()
-    {
-        $this->flush();
+        // nothing for basic file handler
     }
 
     protected function format(LogRecord $r): string

@@ -17,11 +17,6 @@
             "Tests\\": "tests/"
         }
     },
-    "autoload": {
-        "psr-4": {
-            "SDF\\": "sdf/core/"
-        }
-    },
     "scripts": {
         "test": "vendor/bin/phpunit --testdox",
         "cs:fix": "vendor/bin/php-cs-fixer fix --config .php-cs-fixer.dist.php",

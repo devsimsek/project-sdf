@@ -19,12 +19,6 @@ namespace SDF;
  */
 class Fuse
 {
-    /** @var array<string, string> Static cache for resolved view paths */
-    private static array $resolvedViewCache = [];
-
-    /** @var array<string, int> Static cache for source file mtimes */
-    private static array $sourceMtimeCache = [];
-
     /**
      * Data storage.
      * @param array $data
@@ -70,16 +64,13 @@ class Fuse
         $cacheDir = defined('SDF_APP_CACHE') ? SDF_APP_CACHE . 'views/' : sys_get_temp_dir() . '/fuse_cache/';
 
         if (!is_dir($cacheDir)) {
-            mkdir($cacheDir, 0755, true);
+            mkdir($cacheDir, 0777, true);
         }
 
         $cacheFile = $cacheDir . md5($path . $viewFile) . '.php';
 
-        $sourcePath = $path . $viewFile;
-        $cacheMtime = @filemtime($cacheFile);
-        $sourceMtime = $this->getSourceMtime($sourcePath);
-        if ($cacheMtime === false || $sourceMtime > $cacheMtime) {
-            $content = file_get_contents($sourcePath);
+        if (!file_exists($cacheFile) || filemtime($path . $viewFile) > filemtime($cacheFile)) {
+            $content = file_get_contents($path . $viewFile);
             $content = $this->parseContent($content);
             file_put_contents($cacheFile, $content);
         }
@@ -91,18 +82,7 @@ class Fuse
     }
 
     /**
-     * Get source file mtime with static cache (cleared when source changes).
-     */
-    private function getSourceMtime(string $path): int
-    {
-        if (!isset(self::$sourceMtimeCache[$path])) {
-            self::$sourceMtimeCache[$path] = (int) filemtime($path);
-        }
-        return self::$sourceMtimeCache[$path];
-    }
-
-    /**
-     * Resolve the view file with static path cache.
+     * Resolve the view file
      * @param string $view View file name
      * @param string $path Directory path of the view file
      * @return string Resolved view file
@@ -110,18 +90,12 @@ class Fuse
      */
     private function resolveView(string $view, string $path): string
     {
-        $cacheKey = $path . '|' . $view;
-        if (isset(self::$resolvedViewCache[$cacheKey])) {
-            return self::$resolvedViewCache[$cacheKey];
-        }
-
         $extensions = [".php", ".phtml", ".fuse"];
+        // remove extension from view
         $view = preg_replace("/\.[a-z]+$/", "", $view);
         foreach ($extensions as $ext) {
             if (file_exists($path . $view . $ext)) {
-                $resolved = $view . $ext;
-                self::$resolvedViewCache[$cacheKey] = $resolved;
-                return $resolved;
+                return $view . $ext;
             }
         }
         throw new \Exception("View file not found: $view");

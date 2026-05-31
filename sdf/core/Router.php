@@ -17,11 +17,8 @@ namespace SDF;
  * @changelog   v2.0.0 - Implemented route caching to avoid redundant regex compilation.
  * @filesource
  */
-class Router
+class Router extends Core
 {
-    use CoreUtilities;
-
-
     /**
      * @var array
      */
@@ -32,10 +29,10 @@ class Router
      */
     protected static array $config = [
       "debug" => false,
-      "magic_routing" => true,
+      "magicRouting" => true,
       "controllersDir" => SDF_APP_CONT,
-      "pathNotFound" => null, // Callback for path not found
-      "methodNotAllowed" => null, // Callback for method not allowed
+      "pathNotFound",
+      "methodNotAllowed",
       "case_matters" => false,
       "trailing_slash_matters" => false,
       "multimatch" => false,
@@ -87,7 +84,7 @@ class Router
     /**
      * @return array
      */
-    public static function getRoutes(): array
+    public static function _getRoutes(): array
     {
         return self::$routes;
     }
@@ -122,7 +119,7 @@ class Router
             return true;
         }
         // Return false and print err.
-        self::coreTriggerError(
+        self::core_triggerError(
             SDF_E_RENDER,
             "Router config " . $field . " not needed."
         );
@@ -185,7 +182,7 @@ class Router
         $routeMatches = [];
         // SDF-2: Load cached routes if exist
         if (file_exists($cacheFile) && !self::$config["debug"]) {
-            self::$routes = unserialize(file_get_contents($cacheFile));
+            self::$routes = require $cacheFile;
         } else {
             foreach (self::$routes as &$route) {
                 if ($basepath != "" && $basepath != "/") {
@@ -194,7 +191,7 @@ class Router
                 $route['expression'] = '^' . $route['expression'] . '$';
             }
             if (!self::$config["debug"]) {
-                file_put_contents($cacheFile, serialize(self::$routes));
+                file_put_contents($cacheFile, '<?php return ' . var_export(self::$routes, true) . ';');
             }
         }
 
@@ -216,7 +213,7 @@ class Router
             }
         }
 
-        if (self::$config["magic_routing"]) {
+        if (self::$config["magicRouting"]) {
             $request = explode("/", $request_path);
             array_shift($request);
             $route_match_found = self::handleMagicRouting($request, $controllerDir, $routeMatches);

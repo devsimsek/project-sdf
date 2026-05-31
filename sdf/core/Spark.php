@@ -5,7 +5,6 @@ namespace SDF;
 use Exception;
 use PDO;
 use PDOException;
-use SDF\Spark\Pool;
 
 /**
  * Spark ORM
@@ -19,37 +18,23 @@ class Spark
     private static ?PDO $pdo = null;
 
     /**
-     * Establish database connection (lazy — actual connect on first query).
+     * Establish database connection.
      *
      * @param string $dsn      Data Source Name.
      * @param string|null $username Database username.
      * @param string|null $password Database password.
      * @param array  $options  PDO connection options.
-     * @param bool   $persistent Whether to use a persistent connection.
      * @return void
      */
-    public static function connect(string $dsn, ?string $username = null, ?string $password = null, array $options = [], bool $persistent = false): void
+    public static function connect(string $dsn, ?string $username = null, ?string $password = null, array $options = []): void
     {
-        if ($persistent) {
-            $options[PDO::ATTR_PERSISTENT] = true;
-        }
-        Pool::add('default', $dsn, $username, $password, $options);
-    }
-
-    /**
-     * Ensure the lazy connection is established.
-     */
-    private static function ensureConnected(): void
-    {
-        if (self::$pdo !== null) {
-            return;
-        }
-        if (!Pool::has('default')) {
-            throw new Exception("Spark ORM: Database not connected.");
-        }
         try {
-            self::$pdo = Pool::get('default');
+            // PDO accepts null for username/password; pass through nullable values
+            self::$pdo = new PDO($dsn, $username, $password, $options);
+            self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
+            // Log the DB error and rethrow so the application can handle it
             Logger::log(Level::FATAL, 'Spark DB Error: ' . $e->getMessage(), ['exception' => $e]);
             throw $e;
         }
@@ -58,27 +43,15 @@ class Spark
     /**
      * Get active PDO instance.
      *
-     * @param string|null $name Optional named connection (defaults to 'default').
      * @return PDO
      * @throws Exception If connection is not established.
      */
-    public static function pdo(?string $name = null): PDO
+    public static function pdo(): PDO
     {
-        if ($name !== null) {
-            return Pool::get($name);
+        if (!self::$pdo) {
+            throw new Exception("Spark ORM: Database not connected.");
         }
-        self::ensureConnected();
         return self::$pdo;
-    }
-
-    /**
-     * Get the connection pool manager.
-     *
-     * @return class-string<Pool>
-     */
-    public static function pool(): string
-    {
-        return Pool::class;
     }
 
     /**
@@ -316,7 +289,7 @@ class QueryBuilder
     public function insert(array $data): bool
     {
         $cols = array_keys($data);
-        $columns = implode(', ', array_map(fn ($c) => $this->quoteIdent($c), $cols));
+        $columns = implode(', ', array_map(fn($c) => $this->quoteIdent($c), $cols));
         $placeholders = implode(', ', array_fill(0, count($data), '?'));
 
         $sql = "INSERT INTO " . $this->quoteIdent($this->table) . " ($columns) VALUES ($placeholders)";
@@ -353,7 +326,7 @@ class QueryBuilder
      */
     public function delete(): bool
     {
-        $sql = "DELETE FROM " . $this->quoteIdent($this->table);
+        $sql = "DELETE FROM {$this->table}";
         if (!empty($this->wheres)) {
             $sql .= " WHERE " . implode(" AND ", $this->wheres);
         }

@@ -16,11 +16,8 @@ namespace SDF;
  * @since       v1.0
  * @filesource
  */
-class Benchmark
+class Benchmark extends Core
 {
-    use CoreUtilities;
-
-
     /**
      * List of all benchmark markers
      *
@@ -62,7 +59,7 @@ class Benchmark
      * an '{elapsed_string}' if $point1 is empty
      * or an empty string if $point1 is not found.
      */
-    public function elapsedTime(
+    public function elapsed_time(
         string $point1 = "",
         string $point2 = "",
         int $decimals = 4
@@ -95,7 +92,7 @@ class Benchmark
      *
      * @return string '{memory_usage}'
      */
-    public function memoryUsage(): string
+    public function memory_usage(): string
     {
         return "{memory_usage}";
     }

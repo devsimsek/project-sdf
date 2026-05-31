@@ -6,7 +6,7 @@
 index.php
   └─ sdf/__init.php
        ├─ Define constants (SDF_VERSION, SDF_ROOT, SDF_APP, ...)
-       ├─ Core::coreLoadConfigurations()   ← config cache hit? return. else load + cache.
+       ├─ Core::core_loadConfigurations()   ← config cache hit? return. else load + cache.
        ├─ Benchmark::start()
        ├─ Router::setRConfig()
        ├─ Router::add() × N                 ← register routes from routes.php
@@ -16,28 +16,28 @@ index.php
 
 ## Core Methods
 
-### `coreLoadConfigurations(string $dir = 'config')`
+### `core_loadConfigurations(string $dir = 'config')`
 
 Scans `app/config/` for `.php` and `.json` files. Merges into `Core::$config`. Result cached to `/tmp/sdf_config.cache`.
 
 ```php
 // Internal usage — called automatically at boot.
 // Access config in controllers:
-$mailHost = $this->getConfig('mail', 'host');
+$mailHost = $this->get_config('mail', 'host');
 ```
 
-### `coreGetConfig(string $file, string $key = null)`
+### `core_getConfig(string $file, string $key = null)`
 
 ```php
-$all  = Core::coreGetConfig('app');           // full app config array
-$name = Core::coreGetConfig('app', 'name');   // single value
+$all  = Core::core_getConfig('app');           // full app config array
+$name = Core::core_getConfig('app', 'name');   // single value
 ```
 
-### `coreScanDirectory(string $path, string $pattern = '.php')`
+### `core_scanDirectory(string $path, string $pattern = '.php')`
 
 Returns filenames matching `$pattern` from a directory. Used internally for config and migration loading.
 
-### `coreTriggerError(string $handler, ...)`
+### `core_triggerError(string $handler, ...)`
 
 Calls a user-defined error handler function (defined in `app/helpers/`). See [Handlers](../app/handlers.md).
 
@@ -96,7 +96,7 @@ class Example extends SDF\Controller
         $this->response->status(200)->json(['ok' => true]);
 
         // Config
-        $appName = $this->getConfig('app', 'name');
+        $appName = $this->get_config('app', 'name');
 
         // Fuse
         $this->fuse->with(compact('id'))->render('demo');

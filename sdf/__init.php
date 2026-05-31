@@ -8,21 +8,20 @@
  * @file        __init.php
  * @version     v1.5.0
  * @author      devsimsek
- * @copyright   Copyright (c) 2022-2026, smskSoft, devsimsek
+ * @copyright   Copyright (c) 2022, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
  * @url         https://github.com/devsimsek/project-sdf/
  * @since       v1.0
  * @filesource
  */
 
-use SDF\Core;
 use SDF\Level;
 
 if (!defined("SDF")) {
     print_r('PANIC: sdf is not called by it\'s own script.');
     exit(1);
 }
-const SDF_VERSION = "2.1.0";
+const SDF_VERSION = "2.0.0";
 
 // Check minimum version requirement of this framework.
 // PHP 8.0 or higher is required, framework is tested and compatible up to PHP 8.5
@@ -86,24 +85,18 @@ if (PHP_SAPI == "cli-server") {
 }
 // Add Constants
 require SDF_DIR . "constants.php";
-
-// Load Composer autoloader (PSR-4 support for SDF\ namespace)
-$composerAutoload = SDF_DIR . '../vendor/autoload.php';
-if (file_exists($composerAutoload)) {
-    require_once $composerAutoload;
-}
-
 // lets require our core, benchmark and router files.
 require SDF_DIR . "core/Core.php";
-$bm = Core::coreLoadClass("Benchmark");
+$initializer = new SDF\Core();
+$bm = $initializer::core_loadClass("Benchmark");
 // And Here We Start Benchmarking...
 $bm->mark("__sdf__init__start__");
 
 // Initialize Logger early so we can write debug marks
 require_once SDF_DIR . "core/Logger.php";
-Core::coreLoadConfigurations();
+$initializer::core_loadConfigurations();
 // Use configuration if present (do not crash if not)
-$loggerConfig = Core::coreGetConfig("logger") ?: [];
+$loggerConfig = $initializer::core_getConfig("logger") ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
 SDF\Logger::log(Level::DEBUG, "sdf init start");
 // sdf-15: better error handling and managed exceptions
@@ -113,10 +106,16 @@ set_exception_handler([\SDF\ExceptionHandler::class, "handle"]);
 // Lets include our error handlers...
 require SDF_APP . "handlers/errors.php";
 // And Router...
-$router = Core::coreLoadClass("Router");
+$router = $initializer::core_loadClass("Router");
+// And Model, Controller, Middleware...
+$initializer::core_loadClass("Controller");
+$initializer::core_loadClass("Library");
+$initializer::core_loadClass("Model");
+$initializer::core_loadClass("Guard");
 
 // Initialize Spark ORM
-$dbConfig = Core::coreGetConfig("database", "database");
+$dbConfig = $initializer::core_getConfig("database", "database");
+$initializer::core_loadClass("Spark");
 try {
     if ($dbConfig) {
         SDF\Logger::log(Level::DEBUG, "Initializing database connection", [
@@ -220,13 +219,13 @@ try {
 $router::pathNotFound(SDF_EH_404);
 $router::methodNotAllowed(SDF_EH_405);
 // Set Routing Configuration (Class config not the routes.)
-foreach (Core::coreGetConfig("app") as $config => $value) {
+foreach ($initializer::core_getConfig("app") as $config => $value) {
     if (str_starts_with($config, "rc_")) {
         $router::setRConfig(str_replace("rc_", "", $config), $value);
     }
 }
 // Initialize routes configuration
-foreach (Core::coreGetConfig("routes") as $route => $controller) {
+foreach ($initializer::core_getConfig("routes") as $route => $controller) {
     if (is_array($controller)) {
         $router::add($route, $controller[0], $controller[1]);
     } else {
@@ -237,12 +236,12 @@ $logger->log(Level::DEBUG, "Router: preparing to ignite");
 $bm->mark("__sdf__router__start__");
 $router::ignite();
 $logger->log(Level::DEBUG, "Router: ignite completed", [
-    "elapsed_ms" => $bm->elapsedTime("__sdf__router__start__"),
+    "elapsed_ms" => $bm->elapsed_time("__sdf__router__start__"),
 ]);
-if (SDF_BENCHMARK) {
+if (SDF_Benchmark) {
     print_r(
         '<script>console.log("SDF RENDERER DEBUG: Total Benchmark Result: ' .
-            $bm->elapsedTime("__sdf__router__start__") .
+            $bm->elapsed_time("__sdf__router__start__") .
             'ms.");</script>',
     );
 }

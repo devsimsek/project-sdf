@@ -1,8 +1,6 @@
 <?php
 
-use SDF\Model;
-
-class Example extends Model
+class Example extends SDF\Model
 {
     public function __construct()
     {

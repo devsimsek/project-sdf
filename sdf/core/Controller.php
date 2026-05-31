@@ -16,11 +16,8 @@ namespace SDF;
  * @since       Version 1.0
  * @filesource
  */
-class Controller
+class Controller extends Core
 {
-    use CoreUtilities;
-
-
     /**
      * Loader class instance
      * @var Loader
@@ -49,16 +46,16 @@ class Controller
     {
         // To access loaded models,
         // libraries and so.
-        $this->load = &self::coreLoadClass("Loader");
-        $this->fuse = &self::coreLoadClass("Fuse");
-        $this->request = &self::coreLoadClass("Request");
-        $this->response = &self::coreLoadClass("Response");
+        $this->load = &self::core_loadClass("Loader");
+        $this->fuse = &self::core_loadClass("Fuse");
+        $this->request = &self::core_loadClass("Request");
+        $this->response = &self::core_loadClass("Response");
     }
 
     /**
      * Get the Fuse instance.
      */
-    public function getFuse(): Fuse
+    public function get_fuse(): Fuse
     {
         return $this->fuse;
     }
@@ -68,9 +65,9 @@ class Controller
      * @param string|null $key
      * @return false|mixed
      */
-    public function getConfig(?string $key = null): mixed
+    public function get_config(?string $key = null): mixed
     {
-        return self::coreGetConfig("app", $key);
+        return self::core_getConfig("app", $key);
     }
 
     /**
@@ -79,8 +76,8 @@ class Controller
      * @param string|null $key
      * @return array
      */
-    public function loadConfig(string $config, ?string $key = null): array
+    public function load_config(string $config, ?string $key = null): array
     {
-        return self::coreGetConfig($config, $key);
+        return self::core_getConfig($config, $key);
     }
 }

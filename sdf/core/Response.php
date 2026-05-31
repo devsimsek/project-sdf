@@ -16,11 +16,8 @@ namespace SDF;
  * @since       Version 1.0
  * @filesource
  */
-class Response
+class Response extends Core
 {
-    use CoreUtilities;
-
-
     // Array to store headers
     protected array $headers = [];
 
@@ -96,7 +93,6 @@ class Response
 
     /**
      * Send the response as JSON.
-     * todo: create a ticket response methods do not halt execution
      *
      * @param mixed $object
      * @param int|null $httpCode

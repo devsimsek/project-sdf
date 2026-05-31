@@ -45,36 +45,36 @@ class CoreSurfaceTest extends TestCase
         file_put_contents($this->tmpDir . '/b.json', '{}');
         file_put_contents($this->tmpDir . '/c.txt', 'x');
 
-        $files = Core::coreScanDirectory($this->tmpDir, '.{php,json}');
+        $files = Core::core_scanDirectory($this->tmpDir, '.{php,json}');
         sort($files);
 
         $this->assertSame(['a.php', 'b.json'], $files);
     }
 
-    public function test_coreGetConfig_uses_injected_state(): void
+    public function test_core_get_config_uses_injected_state(): void
     {
         $this->setStaticProperty(Core::class, 'config', [
             'app' => ['site_name' => 'demo'],
             'database' => ['driver' => 'sqlite'],
         ]);
 
-        $this->assertSame('demo', Core::coreGetConfig('app', 'site_name'));
-        $this->assertSame(['site_name' => 'demo'], Core::coreGetConfig('app'));
-        $this->assertFalse(Core::coreGetConfig('app', 'missing'));
+        $this->assertSame('demo', Core::core_getConfig('app', 'site_name'));
+        $this->assertSame(['site_name' => 'demo'], Core::core_getConfig('app'));
+        $this->assertFalse(Core::core_getConfig('app', 'missing'));
     }
 
-    public function test_benchmark_marks_elapsedTime_and_memory_token(): void
+    public function test_benchmark_marks_elapsed_time_and_memory_token(): void
     {
         $benchmark = new Benchmark();
         $benchmark->mark('start');
         usleep(1000);
         $benchmark->mark('end');
 
-        $elapsed = $benchmark->elapsedTime('start', 'end', 6);
+        $elapsed = $benchmark->elapsed_time('start', 'end', 6);
 
         $this->assertMatchesRegularExpression('/^\d+\.\d{6}$/', $elapsed);
-        $this->assertSame('{elapsed_time}', $benchmark->elapsedTime());
-        $this->assertSame('{memory_usage}', $benchmark->memoryUsage());
+        $this->assertSame('{elapsed_time}', $benchmark->elapsed_time());
+        $this->assertSame('{memory_usage}', $benchmark->memory_usage());
     }
 
     public function test_controller_initializes_dependencies_and_reads_config(): void
@@ -91,8 +91,8 @@ class CoreSurfaceTest extends TestCase
         $this->assertInstanceOf(Request::class, $controller->request);
         $this->assertInstanceOf(\SDF\Response::class, $controller->response);
         $this->assertInstanceOf(\SDF\Fuse::class, $fuse);
-        $this->assertSame('demo', $controller->getConfig('site_name'));
-        $this->assertSame(['driver' => 'sqlite'], $controller->loadConfig('database'));
+        $this->assertSame('demo', $controller->get_config('site_name'));
+        $this->assertSame(['driver' => 'sqlite'], $controller->load_config('database'));
     }
 
     public function test_model_library_and_guard_classes_behave_as_expected(): void
@@ -161,7 +161,7 @@ class CoreSurfaceTest extends TestCase
         $this->setStaticProperty(Router::class, 'middlewares', []);
         $this->setStaticProperty(Router::class, 'config', [
             'debug' => false,
-            'magic_routing' => true,
+            'magicRouting' => true,
             'controllersDir' => SDF_APP_CONT,
             'pathNotFound' => null,
             'methodNotAllowed' => null,

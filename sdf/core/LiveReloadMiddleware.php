@@ -40,7 +40,7 @@ class LiveReloadMiddleware implements Middleware
                 }
                 lastSignal = signal;
             } catch (e) {}
-        }, 10000); // todo: consider switching to a config based approach for the interval duration
+        }, 1000);
     })();
 </script>
 JS;
