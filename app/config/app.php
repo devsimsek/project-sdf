@@ -19,7 +19,7 @@
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  * Let's begin with routing configuration.
  */
-$config["rc_magicRouting"] = false;
+$config["rc_magic_routing"] = false;
 
 /**
  * ------- ~ ------- ~ ------- ~ ------- ~ -------

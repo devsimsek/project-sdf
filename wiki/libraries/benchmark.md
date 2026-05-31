@@ -33,7 +33,7 @@ Sets a benchmark marker at the current point in time, allowing for multiple mark
   $this->benchmark->mark('end');
   ```
 
-#### `elapsed_time(string $point1 = "", string $point2 = "", int $decimals = 4): string`
+#### `elapsedTime(string $point1 = "", string $point2 = "", int $decimals = 4): string`
 
 Calculates the elapsed time between two markers. If `point2` is not provided, the current time will be used as the
 endpoint. If `point1` is empty, the method returns `{elapsed_time}`, which can be used as a placeholder in templates.
@@ -52,10 +52,10 @@ endpoint. If `point1` is empty, the method returns `{elapsed_time}`, which can b
   ```php
   $this->benchmark->mark('start');
   // some code execution
-  echo $this->benchmark->elapsed_time('start', 'end'); // Outputs the time elapsed
+  echo $this->benchmark->elapsedTime('start', 'end'); // Outputs the time elapsed
   ```
 
-#### `memory_usage(): string`
+#### `memoryUsage(): string`
 
 Returns the `{memory_usage}` placeholder, which will be swapped out for the actual memory usage by the output class when
 rendering templates. This allows memory usage to be calculated at the end of execution.
@@ -65,12 +65,12 @@ rendering templates. This allows memory usage to be calculated at the end of exe
 
 - **Example:**
   ```php
-  echo $this->benchmark->memory_usage(); // Outputs {memory_usage} in the template
+  echo $this->benchmark->memoryUsage(); // Outputs {memory_usage} in the template
   ```
 
 ### Error Handling
 
-- If `point1` is not found in the `$marker` array, the `elapsed_time` method returns an empty string.
+- If `point1` is not found in the `$marker` array, the `elapsedTime` method returns an empty string.
 - If `point2` is not provided, the current time is automatically marked for calculating the time difference
   with `point1`.
 
