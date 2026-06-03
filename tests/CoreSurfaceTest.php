@@ -126,12 +126,30 @@ class CoreSurfaceTest extends TestCase
         $middlewares = $this->getStaticProperty(Router::class, 'middlewares');
         $config = $this->getStaticProperty(Router::class, 'config');
 
-        $this->assertArrayHasKey('/users/([0-9]+)', $routes);
-        $this->assertSame('Users/show', $routes['/users/([0-9]+)']['controller']);
+        $this->assertCount(1, $routes);
+        $this->assertSame('/users/([0-9]+)', $routes[0]['expression']);
+        $this->assertSame('Users/show', $routes[0]['controller']);
+        $this->assertSame('get', $routes[0]['method']);
         $this->assertContains(TestAppendMiddlewareA::class, $middlewares);
         $this->assertSame('eh_pathNotFound', $config['pathNotFound']);
         $this->assertSame('eh_methodNotAllowed', $config['methodNotAllowed']);
         $this->assertTrue($config['debug']);
+    }
+
+    public function test_router_supports_same_path_different_methods(): void
+    {
+        Router::add('/api/tickets', 'api/fetchTickets', 'GET');
+        Router::add('/api/tickets', 'api/createTicket', 'POST');
+
+        $routes = $this->getStaticProperty(Router::class, 'routes');
+
+        $this->assertCount(2, $routes);
+        $this->assertSame('/api/tickets', $routes[0]['expression']);
+        $this->assertSame('api/fetchTickets', $routes[0]['controller']);
+        $this->assertSame('GET', $routes[0]['method']);
+        $this->assertSame('/api/tickets', $routes[1]['expression']);
+        $this->assertSame('api/createTicket', $routes[1]['controller']);
+        $this->assertSame('POST', $routes[1]['method']);
     }
 
     public function test_live_reload_middleware_injects_reload_script(): void

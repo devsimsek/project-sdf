@@ -2,12 +2,19 @@
 
 /**
  * Example routing schema,
- * $config['path/{pattern}'] = 'controller/method';
- * Pattern Shortcuts;
- * {url}, {id}, {all}
- * or
- * $config['path/{pattern}'] = ['controller/method', 'request_type'];
- * request_type = User request type. such as post, get and delete.
+ *
+ * String — single route, matches any method:
+ *   $config['path/{pattern}'] = 'controller/method';
+ *
+ * Array — multiple methods on the same path:
+ *   $config['path/{pattern}'] = [
+ *       ['controller/method', 'GET'],
+ *       ['controller/method', 'POST'],
+ *   ];
+ *
+ * Pattern Shortcuts:
+ *   {url}, {id}, {all}
+ *
  * @var array $config
  */
 $config["/"] = "home";

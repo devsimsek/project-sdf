@@ -90,10 +90,10 @@ class Example extends SDF\Controller
     {
         // Request
         $id   = $this->request->get('id');
-        $body = $this->request->body();       // parsed JSON body
+        $body = $this->request->json();       // parsed JSON body
 
         // Response
-        $this->response->status(200)->json(['ok' => true]);
+        $this->response->json(['ok' => true], 200);
 
         // Config
         $appName = $this->getConfig('app', 'name');

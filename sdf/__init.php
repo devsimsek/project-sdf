@@ -228,7 +228,9 @@ foreach (Core::coreGetConfig("app") as $config => $value) {
 // Initialize routes configuration
 foreach (Core::coreGetConfig("routes") as $route => $controller) {
     if (is_array($controller)) {
-        $router::add($route, $controller[0], $controller[1]);
+        foreach ($controller as $item) {
+            $router::add($route, $item[0], $item[1] ?? "any");
+        }
     } else {
         $router::add($route, $controller);
     }

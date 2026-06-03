@@ -77,7 +77,7 @@ class Router
             $expression
         );
 
-        self::$routes[$expression] = [
+        self::$routes[] = [
           "expression" => $expression,
           "controller" => $controller,
           "method" => $method,
