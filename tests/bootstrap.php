@@ -51,6 +51,11 @@ require_once SDF_DIR . 'core/Auth/SessionGuard.php';
 require_once SDF_DIR . 'core/Auth/JwtGuard.php';
 require_once SDF_DIR . 'core/Auth/Auth.php';
 require_once SDF_DIR . 'core/Auth/AuthMiddleware.php';
+require_once SDF_DIR . 'core/Http/Stream.php';
+require_once SDF_DIR . 'core/Http/Uri.php';
+require_once SDF_DIR . 'core/Http/UploadedFile.php';
+require_once SDF_DIR . 'core/Http/Response.php';
+require_once SDF_DIR . 'core/Http/ServerRequest.php';
 
 // Test helpers
 require_once __DIR__ . '/TestMiddlewares.php';

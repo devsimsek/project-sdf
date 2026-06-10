@@ -26,8 +26,9 @@
   - [Cache](libraries/caching.md)
   - [Auth](libraries/auth.md)
   - [Session](libraries/session.md)
-  - [Flash Messages](libraries/flash.md)
-  - [Benchmark](libraries/benchmark.md)
+   - [Flash Messages](libraries/flash.md)
+   - [HTTP (PSR-7)](libraries/http.md)
+   - [Benchmark](libraries/benchmark.md)
 
 ---
 

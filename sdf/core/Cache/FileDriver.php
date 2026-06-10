@@ -321,7 +321,7 @@ class FileDriver implements CacheDriver
     {
         $index = $this->loadTagIndex();
         foreach ($index as $tag => $keys) {
-            $index[$tag] = array_values(array_filter($keys, fn($k) => $k !== $key));
+            $index[$tag] = array_values(array_filter($keys, fn ($k) => $k !== $key));
             if (empty($index[$tag])) {
                 unset($index[$tag]);
             }

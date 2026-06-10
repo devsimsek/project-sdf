@@ -284,12 +284,12 @@ trait CoreUtilities
  */
 class Core
 {
+    use CoreUtilities;
+
     /** @var array Stores the classes that have been loaded */
     public static array $isLoaded = [];
     /** @var array Stores the classes that have been loaded */
     public static array $classes = [];
     /** @var array Stores the configurations that have been loaded */
     public static array $config = [];
-
-    use CoreUtilities;
 }

@@ -1,6 +1,8 @@
 # Tutorial: User Authentication
 
-Implement session-based login, route protection with `AuthMiddleware`, and user registration using the built-in Auth library.
+Implement session-based login, route protection with `AuthMiddleware`, user registration, and flash messages using the built-in Auth and Flash libraries.
+
+---
 
 ## 1. Users Migration
 
@@ -37,6 +39,8 @@ class create_users_table_20240510000002
 php sdf/cli db migrate
 ```
 
+---
+
 ## 2. User Model
 
 `app/models/User.php`:
@@ -52,6 +56,8 @@ class User extends Model
 }
 ```
 
+---
+
 ## 3. Auth Controller
 
 `app/controllers/AuthController.php`:
@@ -61,6 +67,7 @@ class User extends Model
 
 use SDF\Auth\Auth;
 use SDF\Controller;
+use SDF\Flash;
 
 class AuthController extends Controller
 {
@@ -77,6 +84,7 @@ class AuthController extends Controller
         $password = $this->request->post('password');
 
         if (Auth::attempt(['email' => $email, 'password' => $password])) {
+            Flash::set('success', 'Welcome back!');
             $this->response->redirect('/dashboard');
         } else {
             $this->fuse
@@ -89,6 +97,7 @@ class AuthController extends Controller
     public function logout(): void
     {
         Auth::logout();
+        Flash::set('info', 'You have been logged out.');
         $this->response->redirect('/login');
     }
 
@@ -108,10 +117,13 @@ class AuthController extends Controller
             'password' => password_hash($body['password'], PASSWORD_BCRYPT),
         ]);
 
+        Flash::set('success', 'Account created! Please log in.');
         $this->response->redirect('/login');
     }
 }
 ```
+
+---
 
 ## 4. Protected Controller with AuthMiddleware
 
@@ -122,16 +134,20 @@ class AuthController extends Controller
 
 use SDF\Auth\Auth;
 use SDF\Controller;
+use SDF\Flash;
 
 class Dashboard extends Controller
 {
     public function index(): void
     {
         $user = Auth::user();
-        $this->fuse->with(compact('user'))->render('dashboard/index');
+        $flash = Flash::all();
+        $this->fuse->with(compact('user', 'flash'))->render('dashboard/index');
     }
 }
 ```
+
+---
 
 ## 5. AuthMiddleware (built-in)
 
@@ -143,7 +159,10 @@ Register it in your route config:
 <?php
 // app/config/routes.php
 
-Router::middleware(\SDF\Auth\AuthMiddleware::class);
+use SDF\Auth\AuthMiddleware;
+use SDF\Router;
+
+Router::middleware(AuthMiddleware::class);
 
 // All routes below require authentication
 $config['/dashboard'] = 'Dashboard/index';
@@ -155,33 +174,41 @@ $config['/logout']    = ['AuthController/logout',    'GET'];
 $config['/register']  = ['AuthController/register',  'POST'];
 ```
 
-## 6. Login View
+---
 
-`app/views/auth/login.php`:
+## 6. Flash Messages in Views
+
+Display flash messages in your base layout or login view:
 
 ```html
+<!-- app/views/dashboard/index.php -->
 <!doctype html>
 <html lang="en">
-<head><title>Login</title></head>
+<head><title>Dashboard</title></head>
 <body>
-  @If(isset($error))
-    <p style="color:red">{{ $error }}</p>
+  @If(!empty($flash))
+    @Foreach($flash as $type => $message)
+      <p class="flash flash-{{ $type }}">{{ $message }}</p>
+    @endForeach
   @endIf
 
-  <form method="POST" action="/login">
-    <label>Email <input type="email" name="email" required></label>
-    <label>Password <input type="password" name="password" required></label>
-    <button type="submit">Log In</button>
-  </form>
+  <h1>Dashboard</h1>
+  <p>Hello, {{ $user['name'] ?? 'User' }}!</p>
+  <a href="/logout">Logout</a>
 </body>
 </html>
 ```
 
-## 7. Routes
+---
+
+## 7. Full Routes File
 
 ```php
 <?php
 // app/config/routes.php
+
+use SDF\Auth\AuthMiddleware;
+use SDF\Router;
 
 // Public routes
 $config['/login']     = ['AuthController/loginForm', 'GET'];
@@ -190,13 +217,16 @@ $config['/logout']    = ['AuthController/logout',    'GET'];
 $config['/register']  = ['AuthController/register',  'POST'];
 
 // Protected routes
-Router::middleware(\SDF\Auth\AuthMiddleware::class);
+Router::middleware(AuthMiddleware::class);
 $config['/dashboard'] = 'Dashboard/index';
 ```
+
+---
 
 ## What You Learned
 
 - Using `Auth::attempt()` for credential-based login
 - Using `Auth::user()` to get the authenticated model
 - Protecting routes with `AuthMiddleware`
-- Registering middleware before protected routes
+- Sending flash messages with `SDF\Flash` across redirects
+- Using `Session` (auto-started) for underlying state management

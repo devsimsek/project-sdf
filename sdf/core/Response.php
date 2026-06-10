@@ -379,4 +379,40 @@ class Response
         $this->sendHeaders();
         echo $this->content;
     }
+
+    /**
+     * Create a PSR-7 Response from this legacy response.
+     *
+     * @return \Psr\Http\Message\ResponseInterface
+     */
+    public function toPsr(): \Psr\Http\Message\ResponseInterface
+    {
+        $headers = $this->namedHeaders;
+
+        return new \SDF\Http\Response(
+            $this->httpCode ?? 200,
+            $headers,
+            new \SDF\Http\Stream($this->content),
+            '1.1',
+        );
+    }
+
+    /**
+     * Build a legacy Response from a PSR-7 ResponseInterface.
+     *
+     * @param \Psr\Http\Message\ResponseInterface $psr
+     * @return self
+     */
+    public static function fromPsr(\Psr\Http\Message\ResponseInterface $psr): self
+    {
+        $res = new self();
+        $res->setHttpCode($psr->getStatusCode());
+        $res->content = (string) $psr->getBody();
+
+        foreach ($psr->getHeaders() as $name => $values) {
+            $res->setHeader($name, implode(', ', $values));
+        }
+
+        return $res;
+    }
 }

@@ -591,4 +591,78 @@ class Request
     {
         return $this->scheme() . "://" . $this->host();
     }
+
+    /**
+     * Create a PSR-7 ServerRequest from this legacy request.
+     *
+     * @return \Psr\Http\Message\ServerRequestInterface
+     */
+    public function toPsr(): \Psr\Http\Message\ServerRequestInterface
+    {
+        $uri = new \SDF\Http\Uri($this->origin() . $this->uri());
+
+        $headers = $this->headers();
+        $bodyStr = file_get_contents('php://input') ?: '';
+
+        $psrRequest = new \SDF\Http\ServerRequest(
+            $this->method(),
+            $uri,
+            $headers,
+            new \SDF\Http\Stream($bodyStr),
+            $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.1',
+            $_SERVER,
+        );
+
+        $psrRequest = $psrRequest
+            ->withQueryParams($_GET)
+            ->withCookieParams($_COOKIE)
+            ->withParsedBody($_POST ?: null)
+            ->withUploadedFiles($this->parseFilesToPsr());
+
+        return $psrRequest;
+    }
+
+    /**
+     * Build a legacy Request from a PSR-7 ServerRequest.
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $psr
+     * @return self
+     */
+    public static function fromPsr(\Psr\Http\Message\ServerRequestInterface $psr): self
+    {
+        $req = new self();
+
+        // Override superglobals to match PSR-7 input
+        $_GET = $psr->getQueryParams();
+        $_POST = (array) $psr->getParsedBody();
+        $_COOKIE = $psr->getCookieParams();
+        $_SERVER['REQUEST_METHOD'] = $psr->getMethod();
+        $_SERVER['REQUEST_URI'] = (string) $psr->getUri();
+
+        return $req;
+    }
+
+    /**
+     * Parse $_FILES into PSR-7 UploadedFile array.
+     *
+     * @return array<string, \Psr\Http\Message\UploadedFileInterface>
+     */
+    private function parseFilesToPsr(): array
+    {
+        $result = [];
+
+        foreach ($_FILES as $key => $spec) {
+            if (isset($spec['tmp_name'])) {
+                $result[$key] = new \SDF\Http\UploadedFile(
+                    $spec['tmp_name'],
+                    $spec['error'] ?? \UPLOAD_ERR_NO_FILE,
+                    $spec['name'] ?? null,
+                    $spec['type'] ?? null,
+                    $spec['size'] ?? null,
+                );
+            }
+        }
+
+        return $result;
+    }
 }

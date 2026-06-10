@@ -297,7 +297,7 @@ class MemcachedDriver implements CacheDriver
     {
         $tagIndex = $this->loadTagIndex();
         foreach ($tagIndex as $tag => $keys) {
-            $tagIndex[$tag] = array_values(array_filter($keys, fn($k) => $k !== $key));
+            $tagIndex[$tag] = array_values(array_filter($keys, fn ($k) => $k !== $key));
             if (empty($tagIndex[$tag])) {
                 unset($tagIndex[$tag]);
             }

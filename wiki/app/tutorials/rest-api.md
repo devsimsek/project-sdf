@@ -1,6 +1,6 @@
 # Tutorial: Building a REST API
 
-Build a fully working JSON REST API for a `products` resource using SDF routes, controllers, and Spark ORM.
+Build a fully working JSON REST API for a `products` resource using SDF routes, controllers, Spark ORM, and the Cache facade.
 
 ---
 
@@ -91,6 +91,7 @@ php sdf/cli g controller api/ProductController
 ```php
 <?php
 
+use SDF\Cache\Cache;
 use SDF\Controller;
 
 class ProductController extends Controller
@@ -98,19 +99,25 @@ class ProductController extends Controller
     /** GET /api/products */
     public function index(): void
     {
-        $products = Product::all();
+        $products = Cache::remember('api.products.all', 300, function () {
+            return Product::all();
+        });
         $this->response->json($products);
     }
 
     /** GET /api/products/{id} */
     public function show(int $id): void
     {
-        $rows = Product::query()->where('id', '=', $id)->get();
-        if (empty($rows)) {
+        $product = Cache::remember("api.products.$id", 300, function () use ($id) {
+            $rows = Product::query()->where('id', '=', $id)->get();
+            return $rows[0] ?? null;
+        });
+
+        if (!$product) {
             $this->response->status(404)->json(['error' => 'Product not found']);
             return;
         }
-        $this->response->json($rows[0]);
+        $this->response->json($product);
     }
 
     /** POST /api/products */
@@ -132,6 +139,7 @@ class ProductController extends Controller
             'stock' => (int) ($body['stock'] ?? 0),
         ]);
 
+        Cache::forget('api.products.all');
         $this->response->status(201)->json(['created' => true]);
     }
 
@@ -156,6 +164,8 @@ class ProductController extends Controller
             $id,
         ]);
 
+        Cache::forget('api.products.all');
+        Cache::forget("api.products.$id");
         $this->response->json(['updated' => true]);
     }
 
@@ -166,10 +176,16 @@ class ProductController extends Controller
         $stmt = $pdo->prepare('DELETE FROM products WHERE id = ?');
         $stmt->execute([$id]);
 
+        Cache::forget('api.products.all');
+        Cache::forget("api.products.$id");
         $this->response->status(204)->json([]);
     }
 }
 ```
+
+> **PSR-7 alternative:** Use `\SDF\Http\ServerRequest::fromGlobals()` to get a PSR-7 `ServerRequestInterface`
+> and access parsed JSON body via `$request->getParsedBody()`. The legacy
+> `$this->request->body()` remains fully supported for BC.
 
 ---
 
@@ -204,3 +220,4 @@ curl -X DELETE http://localhost:8080/api/products/1
 - Generating models, controllers, and migrations via CLI
 - Using `Spark::pdo()` for raw UPDATE/DELETE queries
 - Returning proper HTTP status codes with `$this->response->status()`
+- Caching GET responses with `Cache::remember()` and invalidating on mutation
