@@ -25,10 +25,10 @@ if (!defined("SDF")) {
 const SDF_VERSION = "2.1.0";
 
 // Check minimum version requirement of this framework.
-// PHP 8.0 or higher is required, framework is tested and compatible up to PHP 8.5
-if (version_compare(PHP_VERSION, "8.0.0") < 0) {
+// PHP 8.2 or higher is required, framework is tested and compatible up to PHP 8.5
+if (version_compare(PHP_VERSION, "8.2.0") < 0) {
     die(
-        "FATAL ERROR: Sdf is designed to work with php 8.0 and upper versions. Please update your php version."
+        "FATAL ERROR: Sdf is designed to work with php 8.2 and upper versions. Please update your php version."
     );
 }
 
@@ -105,7 +105,16 @@ Core::coreLoadConfigurations();
 // Use configuration if present (do not crash if not)
 $loggerConfig = Core::coreGetConfig("logger") ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
-SDF\Logger::log(Level::DEBUG, "sdf init start");
+
+// Initialize Cache facade
+require_once SDF_DIR . "core/Cache/CacheDriver.php";
+require_once SDF_DIR . "core/Cache/Cache.php";
+require_once SDF_DIR . "core/Cache/FileDriver.php";
+require_once SDF_DIR . "core/Cache/RedisDriver.php";
+require_once SDF_DIR . "core/Cache/MemcachedDriver.php";
+$cacheDriver = Core::coreGetConfig("cache", "driver") ?: "file";
+SDF\Logger::log(Level::DEBUG, "Cache facade initialized", ["driver" => $cacheDriver]);
+
 // sdf-15: better error handling and managed exceptions
 require_once SDF_DIR . "core/Exceptions.php"; // https://github.com/devsimsek/project-sdf/pull/12#discussion_r3299746185
 require_once SDF_DIR . "core/ExceptionHandler.php";
@@ -116,23 +125,28 @@ require SDF_APP . "handlers/errors.php";
 $router = Core::coreLoadClass("Router");
 
 // Initialize Spark ORM
-$dbConfig = Core::coreGetConfig("database", "database");
+$dbConfig = Core::coreGetConfig("database");
 try {
     if ($dbConfig) {
         SDF\Logger::log(Level::DEBUG, "Initializing database connection", [
             "driver" => $dbConfig["driver"] ?? null,
         ]);
+        // perf: use a static variable to hold dsn
+        static $dsn = null;
         switch ($dbConfig["driver"]) {
             case "mysql":
+                if ($dsn === null) {
+                    $dsn = "mysql:host=" .
+                      $dbConfig["host"] .
+                      ";dbname=" .
+                      $dbConfig["name"] .
+                      ";port=" .
+                      ($dbConfig["port"] ?? "3306") .
+                      ";charset=" .
+                      ($dbConfig["charset"] ?? "utf8mb4");
+                }
                 \SDF\Spark::connect(
-                    "mysql:host=" .
-                        $dbConfig["host"] .
-                        ";dbname=" .
-                        $dbConfig["name"] .
-                        ";port=" .
-                        ($dbConfig["port"] ?? "3306") .
-                        ";charset=" .
-                        ($dbConfig["charset"] ?? "utf8mb4"),
+                    $dsn,
                     $dbConfig["user"],
                     $dbConfig["password"],
                 );
@@ -140,13 +154,17 @@ try {
             case "psql":
             case "pgsql":
             case "postgres":
+                if ($dsn === null) {
+                    $dsn = "pgsql:host=" .
+                      $dbConfig["host"] .
+                      ";dbname=" .
+                      $dbConfig["name"] .
+                      ";port=" .
+                      ($dbConfig["port"] ?? "5432");
+                }
+
                 \SDF\Spark::connect(
-                    "pgsql:host=" .
-                        $dbConfig["host"] .
-                        ";dbname=" .
-                        $dbConfig["name"] .
-                        ";port=" .
-                        ($dbConfig["port"] ?? "5432"),
+                    $dsn,
                     $dbConfig["user"],
                     $dbConfig["password"],
                 );
@@ -175,8 +193,6 @@ try {
                             ($dbConfig["port"] ?? "1433") .
                             ";database=" .
                             $dbConfig["name"],
-                        null,
-                        null,
                     );
                 } else {
                     \SDF\Spark::connect(
@@ -205,7 +221,6 @@ try {
                     "Unsupported database driver: " . $dbConfig["driver"],
                 );
         }
-        SDF\Logger::log(Level::DEBUG, "Database initialized");
     }
 } catch (Exception $e) {
     // use logger to report fatal DB errors

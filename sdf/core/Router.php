@@ -21,6 +21,10 @@ class Router
 {
     use CoreUtilities;
 
+    /**
+    * @var bool
+    */
+    protected static bool $booted = false;
 
     /**
      * @var array
@@ -183,23 +187,27 @@ class Router
     private static function runRouting($basepath, $parsed_url, $request_path, $request_method, &$path_match_found, &$route_match_found, $controllerDir, $cacheFile): void
     {
         $routeMatches = [];
-        // SDF-2: Load cached routes if exist
-        if (file_exists($cacheFile) && !self::$config["debug"]) {
-            self::$routes = unserialize(file_get_contents($cacheFile));
-        } else {
-            foreach (self::$routes as &$route) {
-                if ($basepath != "" && $basepath != "/") {
-                    $route["expression"] = "(" . $basepath . ")" . $route["expression"];
+
+        if (self::$booted) {
+            // SDF-2: Load cached routes if exist
+            if (file_exists($cacheFile) && !self::$config["debug"]) {
+                self::$routes = unserialize(file_get_contents($cacheFile));
+            } else {
+                foreach (self::$routes as &$route) {
+                    if ($basepath != "" && $basepath != "/") {
+                        $route["expression"] = "(" . $basepath . ")" . $route["expression"];
+                    }
+                    $route['expression'] = '^' . $route['expression'] . '$';
                 }
-                $route['expression'] = '^' . $route['expression'] . '$';
+                if (!self::$config["debug"]) {
+                    file_put_contents($cacheFile, serialize(self::$routes));
+                }
+                unset($route);
             }
-            if (!self::$config["debug"]) {
-                file_put_contents($cacheFile, serialize(self::$routes));
-            }
+            self::$booted = true;
         }
 
         foreach (self::$routes as $route) {
-
             if (preg_match("#" . $route["expression"] . "#" . (self::$config["case_matters"] ? "" : "i") . (self::$config["multimatch"] ? "" : "u"), $request_path, $routeMatches)) {
                 $path_match_found = true;
                 if (strtolower($request_method) == strtolower($route["method"]) || $route["method"] == "any") {

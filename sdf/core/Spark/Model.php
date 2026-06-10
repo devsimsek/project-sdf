@@ -35,9 +35,9 @@ abstract class Model
     protected array $original = [];
 
     /**
-     * @param array $data       Initial attribute data.
-     * @param bool  $isOriginal Whether the data originates from the database.
-     */
+       * @param array $data       Initial attribute data.
+       * @param bool  $isOriginal Whether the data originates from the database.
+       */
     public function __construct(array $data = [], bool $isOriginal = false)
     {
         $this->fill($data);
@@ -106,13 +106,9 @@ abstract class Model
      */
     public function getDirty(): array
     {
-        $dirty = [];
-        foreach ($this->attributes as $key => $value) {
-            if (!array_key_exists($key, $this->original) || $value !== $this->original[$key]) {
-                $dirty[$key] = $value;
-            }
-        }
-        return $dirty;
+        return array_filter($this->attributes, function ($value, $key) {
+            return !array_key_exists($key, $this->original) || $value !== $this->original[$key];
+        }, ARRAY_FILTER_USE_BOTH);
     }
 
     /**
@@ -120,6 +116,7 @@ abstract class Model
      * depending on whether the primary key is already set.
      *
      * @return bool
+     * @throws \Exception
      */
     public function save(): bool
     {
@@ -267,5 +264,62 @@ abstract class Model
             $query->where($column, $value);
         }
         return $query->delete();
+    }
+
+    // todo: write documentation & tests
+    public function toArray(): array
+    {
+        $data = $this->attributes;
+
+        $infer = function ($v) {
+            if (is_null($v) || is_bool($v) || is_int($v) || is_float($v) || is_array($v) || is_object($v)) {
+                return $v;
+            }
+
+            if (is_string($v)) {
+                $s = trim($v);
+
+                // null-ish
+                if ($s === '') {
+                    return $v;
+                }
+
+                // boolean-ish
+                $lower = strtolower($s);
+                if (in_array($lower, ['true','false','1','0','yes','no'], true)) {
+                    return in_array($lower, ['true','1','yes'], true);
+                }
+
+                // integer
+                if (ctype_digit($s) || preg_match('/^[+-]?\d+$/', $s)) {
+                    // protect large ints: intval is fine for typical ranges
+                    return (int)$s;
+                }
+
+                // float (decimal or exponent)
+                if (is_numeric($s) && (str_contains($s, '.') || stripos($s, 'e') !== false)) {
+                    return (float)$s;
+                }
+
+                // json array/object -> decode
+                if (($json = json_decode($s, true)) !== null && json_last_error() === JSON_ERROR_NONE) {
+                    return $json;
+                }
+            }
+
+            return $v;
+        };
+
+        foreach ($data as $k => $v) {
+            $data[$k] = $infer($v);
+        }
+
+        return $data;
+    }
+
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }

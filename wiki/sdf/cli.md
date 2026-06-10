@@ -23,14 +23,27 @@ The following commands are available in the cli:
   - `migration (or migrate)` - Generates a migration.
   - `route (or r)` - Generates a route.
   - `config (or cfg)` - Generates a configuration file.
+  - `seeder (or s)` - Generates a database seeder.
+  - `middleware (or mw)` - Generates a request middleware.
+  - `guard (or g)` - Generates an authorization guard.
+  - `test (or t)` - Generates a PHPUnit test scaffold.
+    - `--type=` (unit, controller, model, integration)
+    - `--namespace=` (FQCN for the target class)
+    - `--force` (overwrite existing file)
 - `database (or db)` - Manages the database.
   - `migrate` - Migrates the database.
   - `rollback` - Rolls back the last migration.
   - `seed` - Seeds the database.
   - `reset` - Resets the database.
+- `cache` - Manages framework caches.
+  - `clear` - Clears all framework caches.
+  - `watch` - Watches files and automatically clears caches (used by `--live`).
+- `format (or fmt)` - Runs PHP-CS-Fixer. Accepts any PHP-CS-Fixer arguments.
+- `benchmark (or bench)` - Runs `wrk` benchmarks against the dev server.
 - `serve (or devserver)` - Runs the application in development mode.
   - `-q` - Runs the application in quiet mode.
   - `-p` - Specifies the port to run the application on. Default is 8000.
+  - `--live` - Enables live-reload watcher.
 
 ### Generate
 

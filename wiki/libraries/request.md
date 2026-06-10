@@ -27,15 +27,21 @@ Retrieves a value from the `$_GET` array.
   $this->request->get('page', 1);
   ```
 
-#### `post(string $key, mixed $default = null): mixed`
+#### `post(?string $key, mixed $default = null): mixed`
 
-Retrieves a value from the `$_POST` array.
+Retrieves POST data. For `application/json` content-types, parses the JSON body. For standard form submissions, reads from `$_POST`. Pass `null` as key to retrieve all parsed data.
 
 - **Parameters:**
-  - `string $key`: The key of the value in the `$_POST` array.
-  - `mixed $default`: The default value to return if the key does not exist (default is `null`).
+  - `string|null $key`: The key to retrieve, or `null` for all data.
+  - `mixed $default`: The default value if the key does not exist (default is `null`).
 
 - **Returns:** `mixed`
+
+- **Example:**
+  ```php
+  $name = $this->request->post('name');
+  $all  = $this->request->post(null);
+  ```
 
 #### `request(string $key, mixed $default = null): mixed`
 
@@ -102,6 +108,31 @@ Get query string parameters. Returns the full `$_GET` array when called without 
   $allQuery = $this->request->query();           // all GET params
   $page     = $this->request->query('page', 1);  // single param
   ```
+
+#### `put(?string $key = null, mixed $default = null): mixed`
+
+Retrieves PUT data from `php://input`. Supports JSON and URL-encoded payloads based on Content-Type. Pass `null` as key to retrieve all parsed data.
+
+- **Parameters:**
+  - `string|null $key`: The key to retrieve, or `null` for all data.
+  - `mixed $default`: Default value if key is not found.
+
+- **Returns:** `mixed`
+
+- **Example:**
+  ```php
+  $name = $this->request->put('name');
+  ```
+
+#### `patch(?string $key = null, mixed $default = null): mixed`
+
+Retrieves PATCH data from `php://input`. Behaves identically to `put()`.
+
+- **Parameters:**
+  - `string|null $key`: The key to retrieve, or `null` for all data.
+  - `mixed $default`: Default value if key is not found.
+
+- **Returns:** `mixed`
 
 #### `input(string $key, mixed $default = null): mixed`
 

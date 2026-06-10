@@ -38,6 +38,11 @@ require_once SDF_DIR . 'core/Exceptions.php';
 require_once SDF_DIR . 'core/ExceptionHandler.php';
 require_once SDF_DIR . 'core/Response.php';
 require_once SDF_DIR . 'core/Logger.php';
+require_once SDF_DIR . 'core/Cache/CacheDriver.php';
+require_once SDF_DIR . 'core/Cache/Cache.php';
+require_once SDF_DIR . 'core/Cache/FileDriver.php';
+require_once SDF_DIR . 'core/Cache/RedisDriver.php';
+require_once SDF_DIR . 'core/Cache/MemcachedDriver.php';
 
 // Test helpers
 require_once __DIR__ . '/TestMiddlewares.php';

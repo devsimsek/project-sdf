@@ -23,6 +23,7 @@
   - [Middleware & Guards](libraries/middleware.md)
   - [Request](libraries/request.md)
   - [Response](libraries/response.md)
+  - [Cache](libraries/caching.md)
   - [Benchmark](libraries/benchmark.md)
 
 ---

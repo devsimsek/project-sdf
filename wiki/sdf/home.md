@@ -37,4 +37,5 @@ start developing with the sdf core framework.
     - [Model (SOON!)](sdf/core.md#model)
     - [Library (SOON!)](sdf/core.md#library)
     - [Middleware (SOON!)]()
+    - [Cache](libraries/caching.md)
     - [Service (SOON!)]()

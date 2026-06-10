@@ -3,10 +3,10 @@
 /**
  * Example routing schema,
  *
- * String — single route, matches any method:
+ * String - single route, matches any method:
  *   $config['path/{pattern}'] = 'controller/method';
  *
- * Array — multiple methods on the same path:
+ * Array - multiple methods on the same path:
  *   $config['path/{pattern}'] = [
  *       ['controller/method', 'GET'],
  *       ['controller/method', 'POST'],

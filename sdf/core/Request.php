@@ -41,8 +41,22 @@ class Request
      * @param mixed $default
      * @return mixed
      */
-    public function post(string $key, mixed $default = null): mixed
+    public function post(?string $key, mixed $default = null): mixed
     {
+        $contentType = $this->header('Content-Type') ?? "";
+
+        if (str_contains($contentType, "/json") || str_contains($contentType, "+json")) {
+            if (!$this->isPost()) {
+                return $default;
+            }
+            $body = file_get_contents("php://input");
+            $data = json_decode($body, true);
+            if ($key === null) {
+                return $data ?? $default;
+            }
+            return (is_array($data) && array_key_exists($key, $data)) ? $data[$key] : $default;
+        }
+
         return $_POST[$key] ?? $default;
     }
 
@@ -52,64 +66,85 @@ class Request
      * Note: Since PHP does not natively support PUT/PATCH/DELETE data parsing, this method reads the raw input stream.
      * You would need to parse the input manually (e.g., json_decode for JSON payload
      * or parse_str for URL-encoded data) depending on the Content-Type of the request.
-     * @param mixed $default
-     */
-    public function put(mixed $default = null): mixed
-    {
-        if ($this->isPut()) {
-            $contentType = $this->header("Content-Type") ?? "";
-            $body = file_get_contents("php://input");
-            if (
-                str_contains($contentType, "/json") ||
-                str_contains($contentType, "+json")
-            ) {
-                return json_decode($body, true) ?? $default;
-            } elseif (
-                str_contains($contentType, "application/x-www-form-urlencoded")
-            ) {
-                $parsed = [];
-                parse_str($body, $parsed);
-                return $parsed;
-            }
-            return $body ?: $default;
-        }
-        return $default;
-    }
-
-    /**
-     * Get a value from patch requests (similar to PUT)
      *
-     * @param mixed $default
-     */
-    public function patch(mixed $default = null): mixed
-    {
-        if ($this->isPatch()) {
-            $contentType = $this->header("Content-Type") ?? "";
-            $body = file_get_contents("php://input");
-            if (
-                str_contains($contentType, "/json") ||
-                str_contains($contentType, "+json")
-            ) {
-                return json_decode($body, true) ?? $default;
-            } elseif (
-                str_contains($contentType, "application/x-www-form-urlencoded")
-            ) {
-                $parsed = [];
-                parse_str($body, $parsed);
-                return $parsed;
-            }
-            return $body ?: $default;
-        }
-        return $default;
-    }
-
-    /**
-     * Get a value from the $_REQUEST superglobal array
-     *
-     * @param string $key
-     * @param mixed $default
+     * @param string|null $key
+     * @param mixed       $default
      * @return mixed
      */
+    public function put(?string $key = null, mixed $default = null): mixed
+    {
+        if (! $this->isPut()) {
+            return $default;
+        }
+
+        $contentType = $this->header("Content-Type") ?? "";
+        $body = file_get_contents("php://input");
+
+        if (str_contains($contentType, "/json") || str_contains($contentType, "+json")) {
+            $data = json_decode($body, true);
+            if ($key === null) {
+                return $data ?? $default;
+            }
+            return (is_array($data) && array_key_exists($key, $data)) ? $data[$key] : $default;
+        }
+
+        if (str_contains($contentType, "application/x-www-form-urlencoded")) {
+            $parsed = [];
+            parse_str($body, $parsed);
+            if ($key === null) {
+                return $parsed ?: $default;
+            }
+            return array_key_exists($key, $parsed) ? $parsed[$key] : $default;
+        }
+
+        return $body !== "" ? $body : $default;
+    }
+
+
+    /**
+     * Get a value from PATCH requests
+     *
+     * @param string|null $key
+     * @param mixed       $default
+     * @return mixed
+     */
+    public function patch(?string $key = null, mixed $default = null): mixed
+    {
+        if (! $this->isPatch()) {
+            return $default;
+        }
+
+        $contentType = $this->header("Content-Type") ?? "";
+        $body = file_get_contents("php://input");
+
+        if (str_contains($contentType, "/json") || str_contains($contentType, "+json")) {
+            $data = json_decode($body, true);
+            if ($key === null) {
+                return $data ?? $default;
+            }
+            return (is_array($data) && array_key_exists($key, $data)) ? $data[$key] : $default;
+        }
+
+        if (str_contains($contentType, "application/x-www-form-urlencoded")) {
+            $parsed = [];
+            parse_str($body, $parsed);
+            if ($key === null) {
+                return $parsed ?: $default;
+            }
+            return array_key_exists($key, $parsed) ? $parsed[$key] : $default;
+        }
+
+        return $body !== "" ? $body : $default;
+    }
+
+
+    /**
+       * Get a value from the $_REQUEST superglobal array
+       *
+       * @param string $key
+       * @param mixed $default
+       * @return mixed
+       */
     public function request(string $key, mixed $default = null): mixed
     {
         return $_REQUEST[$key] ?? $default;
@@ -170,7 +205,7 @@ class Request
      */
     public function isPost(): bool
     {
-        return $_SERVER["REQUEST_METHOD"] === "POST";
+        return ($_SERVER["REQUEST_METHOD"] ?? "") === "POST";
     }
 
     /**
@@ -180,7 +215,7 @@ class Request
      */
     public function isGet(): bool
     {
-        return $_SERVER["REQUEST_METHOD"] === "GET";
+        return ($_SERVER["REQUEST_METHOD"] ?? "") === "GET";
     }
 
     /**
@@ -192,7 +227,7 @@ class Request
      */
     public function isPut(): bool
     {
-        return $_SERVER["REQUEST_METHOD"] === "PUT";
+        return ($_SERVER["REQUEST_METHOD"] ?? "") === "PUT";
     }
 
     /**
@@ -204,7 +239,7 @@ class Request
      */
     public function isPatch(): bool
     {
-        return $_SERVER["REQUEST_METHOD"] === "PATCH";
+        return ($_SERVER["REQUEST_METHOD"] ?? "") === "PATCH";
     }
 
     /**
@@ -214,7 +249,7 @@ class Request
      */
     public function isDelete(): bool
     {
-        return $_SERVER["REQUEST_METHOD"] === "PATCH";
+        return ($_SERVER["REQUEST_METHOD"] ?? "") === "DELETE";
     }
 
     /**

@@ -2,6 +2,8 @@
 
 namespace SDF;
 
+use SDF\Cache\Cache;
+
 /**
  * Fuse View Engine
  * A custom view Engine for SDF framework.
@@ -10,6 +12,7 @@ namespace SDF;
  * @file        Fuse.php
  * @version     v2.0.0
  * @changelog   v2.0.0 - Removed eval(). Templates compile to cached PHP files. XSS escaping added.
+ * @changelog   v2.1.0 - Uses Cache facade for compiled template storage.
  * @author      devsimsek
  * @copyright   Copyright (C) 2023 smskSoft and devsimsek
  * @license     https://devsimsek.mit-license.org
@@ -67,22 +70,30 @@ class Fuse
         string $path = SDF_APP_VIEW
     ): string {
         $viewFile = $this->resolveView($view, $path);
-        $cacheDir = defined('SDF_APP_CACHE') ? SDF_APP_CACHE . 'views/' : sys_get_temp_dir() . '/fuse_cache/';
+        $cacheKey = 'fuse_' . md5($path . $viewFile);
 
+        $sourcePath = $path . $viewFile;
+        $sourceMtime = $this->getSourceMtime($sourcePath);
+        $cached = Cache::get($cacheKey);
+        $cacheValid = $cached !== null && isset($cached['mtime'], $cached['content']) && $cached['mtime'] >= $sourceMtime;
+
+        if (!$cacheValid) {
+            $content = file_get_contents($sourcePath);
+            $content = $this->parseContent($content);
+            Cache::set($cacheKey, [
+                'mtime' => $sourceMtime,
+                'content' => $content,
+            ], 3600);
+        } else {
+            $content = $cached['content'];
+        }
+
+        $cacheDir = defined('SDF_APP_CACHE') ? SDF_APP_CACHE . 'views/' : sys_get_temp_dir() . '/fuse_cache/';
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0755, true);
         }
-
         $cacheFile = $cacheDir . md5($path . $viewFile) . '.php';
-
-        $sourcePath = $path . $viewFile;
-        $cacheMtime = @filemtime($cacheFile);
-        $sourceMtime = $this->getSourceMtime($sourcePath);
-        if ($cacheMtime === false || $sourceMtime > $cacheMtime) {
-            $content = file_get_contents($sourcePath);
-            $content = $this->parseContent($content);
-            file_put_contents($cacheFile, $content);
-        }
+        file_put_contents($cacheFile, $content);
 
         extract($this->data);
         ob_start();
