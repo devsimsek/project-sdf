@@ -24,6 +24,7 @@
   - [Request](libraries/request.md)
   - [Response](libraries/response.md)
   - [Cache](libraries/caching.md)
+  - [Auth](libraries/auth.md)
   - [Session](libraries/session.md)
   - [Flash Messages](libraries/flash.md)
   - [Benchmark](libraries/benchmark.md)

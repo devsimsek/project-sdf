@@ -89,35 +89,33 @@ class AdminPanel extends SDF\Controller
 }
 ```
 
-## Real-World Auth Middleware
+## AuthMiddleware (built-in)
+
+The framework ships with `SDF\Auth\AuthMiddleware`. It rejects unauthenticated requests with a 401 status:
+
+```php
+Router::middleware(\SDF\Auth\AuthMiddleware::class);
+```
+
+To use the JWT guard instead of sessions, subclass:
 
 ```php
 <?php
 
 namespace App\Middleware;
 
-use SDF\Middleware;
-use SDF\Request;
+use SDF\Auth\AuthMiddleware;
 
-class AuthMiddleware implements Middleware
+class ApiAuthMiddleware extends AuthMiddleware
 {
-    public function handle(Request $request, \Closure $next): mixed
+    public function __construct()
     {
-        $token = $request->header('Authorization');
-        if (!$token || !str_starts_with($token, 'Bearer ')) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Unauthorized']);
-            return null;
-        }
-
-        $jwt = substr($token, 7);
-        // TODO: validate JWT via SDF-9 Auth layer
-        $request->set('user_jwt', $jwt);
-
-        return $next($request);
+        parent::__construct('jwt');
     }
 }
 ```
+
+See the [Auth documentation](auth.md) for full usage.
 
 ## Rate Limit Middleware Example
 

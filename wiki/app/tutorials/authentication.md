@@ -1,8 +1,6 @@
 # Tutorial: User Authentication
 
-Implement session-based login, a Guard to protect routes, and an auth middleware.
-
----
+Implement session-based login, route protection with `AuthMiddleware`, and user registration using the built-in Auth library.
 
 ## 1. Users Migration
 
@@ -22,7 +20,7 @@ class create_users_table_20240510000002
                 id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 name          VARCHAR(120) NOT NULL,
                 email         VARCHAR(255) NOT NULL UNIQUE,
-                password_hash VARCHAR(255) NOT NULL,
+                password      VARCHAR(255) NOT NULL,
                 created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ");
@@ -39,8 +37,6 @@ class create_users_table_20240510000002
 php sdf/cli db migrate
 ```
 
----
-
 ## 2. User Model
 
 `app/models/User.php`:
@@ -53,16 +49,8 @@ use SDF\Spark\Model;
 class User extends Model
 {
     protected static string $table = 'users';
-
-    public static function findByEmail(string $email): ?array
-    {
-        $rows = self::query()->where('email', '=', $email)->get();
-        return $rows[0] ?? null;
-    }
 }
 ```
-
----
 
 ## 3. Auth Controller
 
@@ -71,6 +59,7 @@ class User extends Model
 ```php
 <?php
 
+use SDF\Auth\Auth;
 use SDF\Controller;
 
 class AuthController extends Controller
@@ -84,38 +73,23 @@ class AuthController extends Controller
     /** POST /login — authenticate */
     public function login(): void
     {
-        session_start();
-
         $email    = $this->request->post('email');
         $password = $this->request->post('password');
 
-        $user = User::findByEmail($email);
-
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (Auth::attempt(['email' => $email, 'password' => $password])) {
+            $this->response->redirect('/dashboard');
+        } else {
             $this->fuse
                 ->with('error', 'Invalid email or password.')
                 ->render('auth/login');
-            return;
         }
-
-        // Store minimal user data in session
-        $_SESSION['user'] = [
-            'id'    => $user['id'],
-            'name'  => $user['name'],
-            'email' => $user['email'],
-        ];
-
-        header('Location: /dashboard');
-        exit;
     }
 
     /** GET /logout */
     public function logout(): void
     {
-        session_start();
-        session_destroy();
-        header('Location: /login');
-        exit;
+        Auth::logout();
+        $this->response->redirect('/login');
     }
 
     /** POST /register */
@@ -129,69 +103,57 @@ class AuthController extends Controller
         }
 
         User::query()->insert([
-            'name'          => $body['name'],
-            'email'         => $body['email'],
-            'password_hash' => password_hash($body['password'], PASSWORD_BCRYPT),
+            'name'     => $body['name'],
+            'email'    => $body['email'],
+            'password' => password_hash($body['password'], PASSWORD_BCRYPT),
         ]);
 
-        header('Location: /login');
-        exit;
+        $this->response->redirect('/login');
     }
 }
 ```
 
----
+## 4. Protected Controller with AuthMiddleware
 
-## 4. Auth Guard
-
-`app/guards/AuthGuard.php`:
+`app/controllers/Dashboard.php`:
 
 ```php
 <?php
 
-use SDF\Guard;
-use SDF\Request;
-
-class AuthGuard extends Guard
-{
-    public function authorize(Request $request): bool
-    {
-        session_start();
-        return isset($_SESSION['user']);
-    }
-}
-```
-
----
-
-## 5. Protected Controller
-
-Any controller that needs auth applies the guard:
-
-```php
-<?php
-
+use SDF\Auth\Auth;
 use SDF\Controller;
 
 class Dashboard extends Controller
 {
     public function index(): void
     {
-        $guard = new AuthGuard();
-        if (!$guard->authorize($this->request)) {
-            header('Location: /login');
-            exit;
-        }
-
-        session_start();
-        $user = $_SESSION['user'];
-
+        $user = Auth::user();
         $this->fuse->with(compact('user'))->render('dashboard/index');
     }
 }
 ```
 
----
+## 5. AuthMiddleware (built-in)
+
+The framework ships with `SDF\Auth\AuthMiddleware`. It checks the session guard and throws a 401 if unauthenticated.
+
+Register it in your route config:
+
+```php
+<?php
+// app/config/routes.php
+
+Router::middleware(\SDF\Auth\AuthMiddleware::class);
+
+// All routes below require authentication
+$config['/dashboard'] = 'Dashboard/index';
+
+// Routes registered before middleware are public
+$config['/login']     = ['AuthController/loginForm', 'GET'];
+$config['/login']     = ['AuthController/login',     'POST'];
+$config['/logout']    = ['AuthController/logout',    'GET'];
+$config['/register']  = ['AuthController/register',  'POST'];
+```
 
 ## 6. Login View
 
@@ -215,26 +177,26 @@ class Dashboard extends Controller
 </html>
 ```
 
----
-
 ## 7. Routes
 
 ```php
 <?php
 // app/config/routes.php
 
+// Public routes
 $config['/login']     = ['AuthController/loginForm', 'GET'];
 $config['/login']     = ['AuthController/login',     'POST'];
 $config['/logout']    = ['AuthController/logout',    'GET'];
 $config['/register']  = ['AuthController/register',  'POST'];
+
+// Protected routes
+Router::middleware(\SDF\Auth\AuthMiddleware::class);
 $config['/dashboard'] = 'Dashboard/index';
 ```
 
----
-
 ## What You Learned
 
-- Storing hashed passwords with `password_hash` / `password_verify`
-- Session management in SDF controllers
-- Using a `Guard` to protect any controller method
-- Rendering login errors via Fuse template variables
+- Using `Auth::attempt()` for credential-based login
+- Using `Auth::user()` to get the authenticated model
+- Protecting routes with `AuthMiddleware`
+- Registering middleware before protected routes

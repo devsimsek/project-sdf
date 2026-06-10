@@ -45,6 +45,12 @@ require_once SDF_DIR . 'core/Cache/RedisDriver.php';
 require_once SDF_DIR . 'core/Cache/MemcachedDriver.php';
 require_once SDF_DIR . 'core/Session.php';
 require_once SDF_DIR . 'core/Flash.php';
+require_once SDF_DIR . 'core/Auth/Guard.php';
+require_once SDF_DIR . 'core/Auth/UserProvider.php';
+require_once SDF_DIR . 'core/Auth/SessionGuard.php';
+require_once SDF_DIR . 'core/Auth/JwtGuard.php';
+require_once SDF_DIR . 'core/Auth/Auth.php';
+require_once SDF_DIR . 'core/Auth/AuthMiddleware.php';
 
 // Test helpers
 require_once __DIR__ . '/TestMiddlewares.php';
