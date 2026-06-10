@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <meta name="description" content="SDF Framework - A fast, modern PHP framework by devsimsek.">
-  <title>{{ $app_title ?? "SDF" }} — v{{ $app_version ?? SDF_VERSION }}</title>
+  <title>{{ $app_title ?? "SDF" }} - v{{ $app_version ?? SDF_VERSION }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>

@@ -88,7 +88,7 @@ Cache::set('bio', 'degraded', new DateInterval('PT1H')); // 1 hour
 
 ### Graceful fallback
 
-Redis and Memcached drivers degrade gracefully when their extensions are missing or the server is unreachable — they return defaults and return `false` for writes. No exceptions are thrown.
+Redis and Memcached drivers degrade gracefully when their extensions are missing or the server is unreachable - they return defaults and return `false` for writes. No exceptions are thrown.
 
 ```php
 $driver = new RedisDriver(['host' => 'unreachable']);

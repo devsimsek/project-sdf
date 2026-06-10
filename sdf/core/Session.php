@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SDF;
 
 /**
- * Project SDF Session
+ * smskSoft SDF Session
  * Copyright devsimsek
  * @package     SDF
  * @subpackage  SDF Core
  * @file        Session.php
- * @version     v2.0.0
+ * @version     v2.1.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2025, smskSoft, devsimsek
  * @license     https://opensource.org/licenses/MIT	MIT License
@@ -21,31 +23,29 @@ class Session
     /** @var self|null Singleton instance */
     private static ?Session $instance = null;
 
+    /** @var bool Whether session_start() has been called */
+    private bool $started = false;
+
+    /** @var string|null Cache expiration override */
+    private ?string $cacheExpire = null;
+
+    /** @var string|null Cache limiter override */
+    private ?string $cacheLimiter = null;
+
     /**
-     * Start or resume a session.
-     *
      * @param string|null $cacheExpire  Session cache expiration (minutes).
      * @param string|null $cacheLimiter Session cache limiter header.
      */
-    public function __construct(
+    final public function __construct(
         ?string $cacheExpire = null,
         ?string $cacheLimiter = null,
     ) {
-        if (session_status() === PHP_SESSION_NONE) {
-            if ($cacheLimiter !== null) {
-                session_cache_limiter($cacheLimiter);
-            }
-
-            if ($cacheExpire !== null) {
-                session_cache_expire((int) $cacheExpire);
-            }
-
-            session_start();
-        }
+        $this->cacheExpire = $cacheExpire;
+        $this->cacheLimiter = $cacheLimiter;
     }
 
     /**
-     * Retrieve the singleton instance.
+     * Retrieve the singleton instance (lazy - session_start on first data access).
      *
      * @param string|null $cacheExpire  Session cache expiration (minutes).
      * @param string|null $cacheLimiter Session cache limiter header.
@@ -63,6 +63,32 @@ class Session
     }
 
     /**
+     * Ensure the session has been started.
+     *
+     * @return void
+     */
+    private function ensureStarted(): void
+    {
+        if ($this->started) {
+            return;
+        }
+
+        if (session_status() === PHP_SESSION_NONE) {
+            if ($this->cacheLimiter !== null) {
+                session_cache_limiter($this->cacheLimiter);
+            }
+
+            if ($this->cacheExpire !== null) {
+                session_cache_expire((int) $this->cacheExpire);
+            }
+
+            session_start();
+        }
+
+        $this->started = true;
+    }
+
+    /**
      * Retrieve a value from the session.
      *
      * @param string $key     Session key.
@@ -71,6 +97,7 @@ class Session
      */
     public function get(string $key, mixed $default = null): mixed
     {
+        $this->ensureStarted();
         return array_key_exists($key, $_SESSION) ? $_SESSION[$key] : $default;
     }
 
@@ -83,6 +110,7 @@ class Session
      */
     public function set(string $key, mixed $value): self
     {
+        $this->ensureStarted();
         $_SESSION[$key] = $value;
         return $this;
     }
@@ -95,6 +123,7 @@ class Session
      */
     public function has(string $key): bool
     {
+        $this->ensureStarted();
         return array_key_exists($key, $_SESSION);
     }
 
@@ -106,6 +135,7 @@ class Session
      */
     public function remove(string $key): void
     {
+        $this->ensureStarted();
         unset($_SESSION[$key]);
     }
 
@@ -116,6 +146,7 @@ class Session
      */
     public function clear(): void
     {
+        $this->ensureStarted();
         session_unset();
     }
 
@@ -126,6 +157,7 @@ class Session
      */
     public function id(): string|false
     {
+        $this->ensureStarted();
         return session_id();
     }
 
@@ -137,6 +169,7 @@ class Session
      */
     public function regenerate(bool $deleteOld = false): self
     {
+        $this->ensureStarted();
         session_regenerate_id($deleteOld);
         return $this;
     }
@@ -148,6 +181,7 @@ class Session
      */
     public function destroy(): void
     {
+        $this->ensureStarted();
         $_SESSION = [];
         session_destroy();
     }

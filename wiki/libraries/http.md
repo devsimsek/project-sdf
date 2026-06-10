@@ -4,7 +4,7 @@ SDF provides a **PSR-7** (`psr/http-message` ^2.0) implementation for HTTP messa
 
 ## Installation
 
-Already included — `psr/http-message` is installed via Composer in `composer.json`.
+Already included - `psr/http-message` is installed via Composer in `composer.json`.
 
 ## Classes
 

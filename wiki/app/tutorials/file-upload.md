@@ -55,7 +55,7 @@ class UploadController extends Controller
             return;
         }
 
-        // Validate MIME — use finfo, not $_FILES['type'] (spoofable)
+        // Validate MIME - use finfo, not $_FILES['type'] (spoofable)
         $stream   = $uploaded->getStream();
         $tmpPath  = stream_get_meta_data($stream->detach())['uri'] ?? null;
 
@@ -96,7 +96,7 @@ class UploadController extends Controller
 
     public function serve(string $filename): void
     {
-        // Sanitise — no path traversal
+        // Sanitise - no path traversal
         $filename = basename($filename);
         $path     = self::UPLOAD_DIR . $filename;
 

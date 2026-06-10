@@ -40,11 +40,7 @@ class CLI
 
         // Load Cache facade so clearCache() can flush it
         if (!class_exists(\SDF\Cache\Cache::class, false)) {
-            require_once SDF_DIR . "core/Cache/CacheDriver.php";
-            require_once SDF_DIR . "core/Cache/Cache.php";
-            require_once SDF_DIR . "core/Cache/FileDriver.php";
-            require_once SDF_DIR . "core/Cache/RedisDriver.php";
-            require_once SDF_DIR . "core/Cache/MemcachedDriver.php";
+            require_once SDF_DIR . "core/Cache/__init.php";
         }
 
         $this->config = Core::coreGetConfig("database") ?: [];
@@ -89,6 +85,9 @@ class CLI
             case "benchmark":
             case "bench":
                 $this->handleBenchmark();
+                break;
+            case "swagger":
+                $this->handleSwagger();
                 break;
             default:
                 $this->printUsage();
@@ -1106,7 +1105,7 @@ class CLI
     // ─── Benchmark ────────────────────────────────────────────────────────────
 
     /**
-     * Route to database sub-commands.
+     * Route to benchmark sub-commands.
      */
     private function handleBenchmark(): void
     {
@@ -1125,6 +1124,9 @@ class CLI
         }
     }
 
+    /**
+     * Run wrk benchmark and save results to benchmark_results.txt.
+     */
     private function runBenchmark(): void
     {
         // Run wrk against the dev server and print results with 30s duration and 10 concurrent connections
@@ -1147,6 +1149,9 @@ class CLI
         exit($exit);
     }
 
+    /**
+     * Run wrk benchmark and print results to stdout (no file output).
+     */
     private function runBenchmarkDry(): void
     {
         // run wrk and not save results to file, just print summary to console
@@ -1163,6 +1168,40 @@ class CLI
             echo "Benchmark failed. Please ensure wrk is installed and in your PATH.\n";
         }
         exit($exit);
+    }
+
+    // ─── Swagger ───────────────────────────────────────────────────────────────
+
+    /**
+     * Handle swagger:generate command.
+     *
+     * Generates and writes openapi.json to the current directory
+     * or a specified output path.
+     */
+    private function handleSwagger(): void
+    {
+        if (count($this->argv) < 3) {
+            $this->printUsage();
+            exit(1);
+        }
+
+        if ($this->argv[2] !== "generate") {
+            echo "Usage: php sdf/cli swagger generate [output-path]\n";
+            exit(1);
+        }
+
+        $outputPath = $this->argv[3] ?? getcwd() . '/openapi.json';
+
+        $generator = new \SDF\Swagger\SwaggerGenerator(
+            title: 'SDF API',
+            apiVersion: SDF_VERSION,
+        );
+
+        $json = $generator->generate();
+        file_put_contents($outputPath, $json);
+
+        echo "OpenAPI spec written to: $outputPath\n";
+        exit(0);
     }
 
     // ─── Dev Server ───────────────────────────────────────────────────────────
@@ -1430,6 +1469,9 @@ class CLI
         echo "  format|fmt [options]        Run PHP-CS-Fixer (options passed directly, for example: --dry-run -v)\n";
         echo "\n";
         echo "  benchmark|bench [options]   Run wrk benchmarks against dev server (options passed directly, for example: --dry -p 8080)\n";
+        echo "\n";
+        echo "  swagger [action]             OpenAPI / Swagger documentation\n";
+        echo "    generate [output-path]     Generate openapi.json from controllers\n";
     }
 }
 

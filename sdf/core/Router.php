@@ -32,6 +32,12 @@ class Router
     protected static array $routes = [];
 
     /**
+     * Static route map for O(1) exact path matching.
+     * @var array<string, array{controller: string, method: string}>
+     */
+    protected static array $staticRoutes = [];
+
+    /**
      * @var array
      */
     protected static array $config = [
@@ -75,11 +81,16 @@ class Router
           "{num}" => "([0-9]+)",
           "{all}" => "(.*)",
         ];
+        $hasTokens = str_contains($expression, "{");
         $expression = str_replace(
             array_keys($patterns),
             array_values($patterns),
             $expression
         );
+
+        if (!$hasTokens) {
+            self::$staticRoutes[$expression][$method] = $controller;
+        }
 
         self::$routes[] = [
           "expression" => $expression,
@@ -190,7 +201,9 @@ class Router
 
         if (!self::$booted) {
             if (file_exists($cacheFile) && !self::$config["debug"]) {
-                self::$routes = unserialize(file_get_contents($cacheFile));
+                $cached = unserialize(file_get_contents($cacheFile));
+                self::$routes = $cached["routes"] ?? $cached;
+                self::$staticRoutes = $cached["static"] ?? self::$staticRoutes;
             } else {
                 foreach (self::$routes as &$route) {
                     if ($basepath != "" && $basepath != "/") {
@@ -198,12 +211,38 @@ class Router
                     }
                     $route['expression'] = '^' . $route['expression'] . '$';
                 }
-                if (!self::$config["debug"]) {
-                    file_put_contents($cacheFile, serialize(self::$routes));
-                }
                 unset($route);
+                if (!self::$config["debug"]) {
+                    file_put_contents($cacheFile, serialize([
+                        "routes" => self::$routes,
+                        "static" => self::$staticRoutes,
+                    ]));
+                }
             }
             self::$booted = true;
+        }
+
+        // Static route fast-path - O(1) hash lookup, avoids preg_match
+        $request_method_lower = strtolower($request_method);
+        $staticMatch = null;
+        if (isset(self::$staticRoutes[$request_path])) {
+            $staticCandidates = self::$staticRoutes[$request_path];
+            if (isset($staticCandidates[$request_method_lower])) {
+                $staticMatch = $staticCandidates[$request_method_lower];
+            } elseif (isset($staticCandidates["any"])) {
+                $staticMatch = $staticCandidates["any"];
+            }
+        }
+        if ($staticMatch !== null) {
+            $path_match_found = true;
+            $route_match_found = true;
+            if (is_callable($staticMatch)) {
+                call_user_func($staticMatch);
+                return;
+            }
+            if (self::handleController($staticMatch, $controllerDir, [])) {
+                return;
+            }
         }
 
         foreach (self::$routes as $route) {
@@ -268,26 +307,28 @@ class Router
      */
     private static function adjustSearchPath($search_path, $request): mixed
     {
-        if (!file_exists($search_path)) {
+        if (!is_dir($search_path)) {
             $search_path = self::$config["controllersDir"] . join("/", array_slice(array_map("ucfirst", $request), 0, -2));
         }
         return $search_path;
     }
 
     /**
-     * Require a controller file.
+     * Require a controller file (suppresses E_WARNING for missing files).
      * @param $search_path
      * @param $controller
      * @return bool
      */
     private static function requireControllerFile($search_path, $controller): bool
     {
-        if (file_exists($search_path . "/" . $controller . ".php")) {
-            require $search_path . "/" . $controller . ".php";
+        $path = $search_path . "/" . $controller . ".php";
+        if (is_file($path)) {
+            require $path;
             return true;
         }
-        if (file_exists($search_path . "/" . ucfirst($controller) . ".php")) {
-            require $search_path . "/" . ucfirst($controller) . ".php";
+        $path = $search_path . "/" . ucfirst($controller) . ".php";
+        if (is_file($path)) {
+            require $path;
             return true;
         }
         return false;

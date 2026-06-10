@@ -1,6 +1,6 @@
 # Deploying SDF with Docker & FrankenPHP
 
-[FrankenPHP](https://frankenphp.dev/) is a modern PHP application server built on top of Caddy. It provides automatic HTTPS, HTTP/2, HTTP/3, worker mode, and a production-ready PHP runtime — no separate web server or PHP-FPM needed.
+[FrankenPHP](https://frankenphp.dev/) is a modern PHP application server built on top of Caddy. It provides automatic HTTPS, HTTP/2, HTTP/3, worker mode, and a production-ready PHP runtime - no separate web server or PHP-FPM needed.
 
 ## Project Structure
 
@@ -61,7 +61,7 @@ ENV APP_ENV=prod
 EXPOSE 80 443
 
 # FrankenPHP automatically serves index.php from /app/public
-# SDF uses index.php in the root — configure Caddy to match
+# SDF uses index.php in the root - configure Caddy to match
 CMD ["frankenphp", "run", "--config", "/app/Caddyfile"]
 ```
 
@@ -200,7 +200,7 @@ FrankenPHP can run PHP in worker mode for better performance. Create a `frankenp
 ```php
 <?php
 // frankenphp-worker.php
-// FrankenPHP worker script — runs once and handles multiple requests
+// FrankenPHP worker script - runs once and handles multiple requests
 
 const SDF = true;
 const SDF_ENV = 'production';

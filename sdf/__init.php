@@ -95,31 +95,26 @@ require SDF_DIR . "constants.php";
 
 // Load Composer autoloader (PSR-4 support for SDF\ namespace)
 $composerAutoload = SDF_DIR . '../vendor/autoload.php';
-if (file_exists($composerAutoload)) {
+if (is_file($composerAutoload)) {
     require_once $composerAutoload;
 }
 
 // lets require our core, benchmark and router files.
 require SDF_DIR . "core/Core.php";
-$bm = Core::coreLoadClass("Benchmark");
-// And Here We Start Benchmarking...
-$bm->mark("__sdf__init__start__");
+Core::coreLoadConfigurations();
 
 // Initialize Logger early so we can write debug marks
 require_once SDF_DIR . "core/Logger.php";
-Core::coreLoadConfigurations();
-// Use configuration if present (do not crash if not)
 $loggerConfig = Core::coreGetConfig("logger") ?: [];
 $logger = SDF\Logger::getInstance($loggerConfig);
 
-// Initialize Cache facade
-require_once SDF_DIR . "core/Cache/CacheDriver.php";
-require_once SDF_DIR . "core/Cache/Cache.php";
-require_once SDF_DIR . "core/Cache/FileDriver.php";
-require_once SDF_DIR . "core/Cache/RedisDriver.php";
-require_once SDF_DIR . "core/Cache/MemcachedDriver.php";
-$cacheDriver = Core::coreGetConfig("cache", "driver") ?: "file";
-SDF\Logger::log(Level::DEBUG, "Cache facade initialized", ["driver" => $cacheDriver]);
+if (SDF_BENCHMARK) {
+    $bm = Core::coreLoadClass("Benchmark");
+    $bm->mark("__sdf__init__start__");
+}
+
+// Initialize Cache facade (load required files, driver loaded on demand)
+require_once SDF_DIR . "core/Cache/__init.php";
 
 // sdf-15: better error handling and managed exceptions
 require_once SDF_DIR . "core/Exceptions.php"; // https://github.com/devsimsek/project-sdf/pull/12#discussion_r3299746185
@@ -130,115 +125,10 @@ require SDF_APP . "handlers/errors.php";
 // And Router...
 $router = Core::coreLoadClass("Router");
 
-// Initialize Spark ORM
-$dbConfig = Core::coreGetConfig("database");
-try {
-    if ($dbConfig) {
-        SDF\Logger::log(Level::DEBUG, "Initializing database connection", [
-            "driver" => $dbConfig["driver"] ?? null,
-        ]);
-        // perf: use a static variable to hold dsn
-        static $dsn = null;
-        switch ($dbConfig["driver"]) {
-            case "mysql":
-                if ($dsn === null) {
-                    $dsn = "mysql:host=" .
-                      $dbConfig["host"] .
-                      ";dbname=" .
-                      $dbConfig["name"] .
-                      ";port=" .
-                      ($dbConfig["port"] ?? "3306") .
-                      ";charset=" .
-                      ($dbConfig["charset"] ?? "utf8mb4");
-                }
-                \SDF\Spark::connect(
-                    $dsn,
-                    $dbConfig["user"],
-                    $dbConfig["password"],
-                );
-                break;
-            case "psql":
-            case "pgsql":
-            case "postgres":
-                if ($dsn === null) {
-                    $dsn = "pgsql:host=" .
-                      $dbConfig["host"] .
-                      ";dbname=" .
-                      $dbConfig["name"] .
-                      ";port=" .
-                      ($dbConfig["port"] ?? "5432");
-                }
-
-                \SDF\Spark::connect(
-                    $dsn,
-                    $dbConfig["user"],
-                    $dbConfig["password"],
-                );
-                break;
-            case "sqlite":
-                $sqlitePath = $dbConfig["path"] ?? ($dbConfig["dsn"] ?? null);
-                if ($sqlitePath === null) {
-                    throw new \Exception(
-                        "SQLite configuration missing path/dsn",
-                    );
-                }
-                // If it already looks like a DSN (contains ':'), use as-is; otherwise prepend sqlite:
-                if (str_contains($sqlitePath, ":")) {
-                    \SDF\Spark::connect($sqlitePath);
-                } else {
-                    \SDF\Spark::connect("sqlite:" . $sqlitePath);
-                }
-                break;
-            case "sqlsrv":
-                // if using windows authentication
-                if ($dbConfig["auth"]) {
-                    \SDF\Spark::connect(
-                        "sqlsrv:Server=" .
-                            $dbConfig["host"] .
-                            "," .
-                            ($dbConfig["port"] ?? "1433") .
-                            ";database=" .
-                            $dbConfig["name"],
-                    );
-                } else {
-                    \SDF\Spark::connect(
-                        "sqlsrv:Server=" .
-                            $dbConfig["host"] .
-                            "," .
-                            ($dbConfig["port"] ?? "1433") .
-                            ";database=" .
-                            $dbConfig["name"],
-                        $dbConfig["user"],
-                        $dbConfig["password"],
-                    );
-                }
-                break;
-            case "manual":
-                // Check if 'args' is provided and is an array
-                $args =
-                    isset($dbConfig["args"]) && is_array($dbConfig["args"])
-                        ? $dbConfig["args"]
-                        : [];
-
-                \SDF\Spark::connect($dbConfig["dsn"], ...$args);
-                break;
-            default:
-                throw new Exception(
-                    "Unsupported database driver: " . $dbConfig["driver"],
-                );
-        }
-    }
-} catch (Exception $e) {
-    SDF\Logger::log(
-        Level::FATAL,
-        "Database connection failed: " . $e->getMessage(),
-        ["exception" => $e],
-    );
-    throw new \SDF\HttpResponseException(
-        "Database connection failed.",
-        503,
-        $e,
-    );
+// Register Swagger routes if the Swagger controller file exists
+if (class_exists(\SDF\Swagger\SwaggerController::class) && SDF_ENV === "development") {
+    $router::add('/api/openapi.json', 'Swagger/SwaggerController/spec', 'GET');
+    $router::add('/api/docs', 'Swagger/SwaggerController/docs', 'GET');
 }
 
 $router::pathNotFound(SDF_EH_404);
@@ -259,21 +149,21 @@ foreach (Core::coreGetConfig("routes") as $route => $controller) {
         $router::add($route, $controller);
     }
 }
-// Initialize Session
-\SDF\Session::getInstance();
-SDF\Logger::log(Level::DEBUG, "Session initialized");
-
 $logger->log(Level::DEBUG, "Router: preparing to ignite");
-$bm->mark("__sdf__router__start__");
+if (SDF_BENCHMARK && isset($bm)) {
+    $bm->mark("__sdf__router__start__");
+}
 $router::ignite();
-$logger->log(Level::DEBUG, "Router: ignite completed", [
-    "elapsed_ms" => $bm->elapsedTime("__sdf__router__start__"),
-]);
-if (SDF_BENCHMARK) {
-    print_r(
-        '<script>console.log("SDF RENDERER DEBUG: Total Benchmark Result: ' .
-            $bm->elapsedTime("__sdf__router__start__") .
-            'ms.");</script>',
-    );
+if (SDF_BENCHMARK && isset($bm)) {
+    $logger->log(Level::DEBUG, "Router: ignite completed", [
+        "elapsed_ms" => $bm->elapsedTime("__sdf__router__start__"),
+    ]);
+    if (SDF_ENV === "development") {
+        print_r(
+            '<script>console.log("SDF RENDERER DEBUG: Total Benchmark Result: ' .
+                $bm->elapsedTime("__sdf__router__start__") .
+                'ms.");</script>',
+        );
+    }
 }
 // And This Is All :) Sdf must be initialized by now :)

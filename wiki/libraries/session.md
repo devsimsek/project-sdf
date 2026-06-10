@@ -94,8 +94,8 @@ $session->destroy();
 new SDF\Session(?string $cacheExpire = null, ?string $cacheLimiter = null);
 ```
 
-- `$cacheExpire` — Session cache expiration in minutes (sets `session_cache_expire()`).
-- `$cacheLimiter` — Session cache limiter header value (sets `session_cache_limiter()`).
+- `$cacheExpire` - Session cache expiration in minutes (sets `session_cache_expire()`).
+- `$cacheLimiter` - Session cache limiter header value (sets `session_cache_limiter()`).
 
 ### In Controllers
 

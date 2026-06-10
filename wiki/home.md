@@ -1,6 +1,6 @@
 # SDF Framework Documentation
 
-> **v2.0.0** — Fast · Secure · PHP-native
+> **v2.0.0** - Fast · Secure · PHP-native
 
 ## Navigation
 
@@ -18,7 +18,7 @@
   - [Core internals](sdf/core.md)
   - [CLI reference](sdf/cli.md)
 - **Libraries**
-  - [Fuse — View Engine](libraries/fuse.md)
+  - [Fuse - View Engine](libraries/fuse.md)
   - [Spark ORM](libraries/spark.md)
   - [Middleware & Guards](libraries/middleware.md)
   - [Request](libraries/request.md)
@@ -28,6 +28,7 @@
   - [Session](libraries/session.md)
    - [Flash Messages](libraries/flash.md)
    - [HTTP (PSR-7)](libraries/http.md)
+   - [Swagger / OpenAPI](libraries/swagger.md)
    - [Benchmark](libraries/benchmark.md)
 
 ---
@@ -66,7 +67,7 @@ project-sdf/
 └── index.php           # Application entrypoint
 ```
 
-### Quick Start — Hello World
+### Quick Start - Hello World
 
 **1. Create a route** in `app/config/routes.php`:
 

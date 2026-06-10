@@ -68,7 +68,7 @@ class CorsMiddleware implements Middleware
 
 ## 2. Rate Limit Middleware
 
-Limits each IP to N requests per minute using the **Cache facade** — swap drivers (`file`/`redis`/`memcached`) via config without changing code.
+Limits each IP to N requests per minute using the **Cache facade** - swap drivers (`file`/`redis`/`memcached`) via config without changing code.
 
 `app/middlewares/RateLimitMiddleware.php`:
 
@@ -116,7 +116,7 @@ class RateLimitMiddleware implements Middleware
 ```
 
 > **Why Cache?** The `Cache` facade abstracts file/Redis/Memcached behind the same API.
-> Switch to Redis in production just by changing `app/config/cache.php` — no code changes.
+> Switch to Redis in production just by changing `app/config/cache.php` - no code changes.
 
 ---
 
@@ -141,7 +141,7 @@ class LogMiddleware implements Middleware
         $ms    = round((microtime(true) - $start) * 1000, 3);
 
         $line = sprintf(
-            "[%s] %s %s — %sms from %s\n",
+            "[%s] %s %s - %sms from %s\n",
             date('Y-m-d H:i:s'),
             $_SERVER['REQUEST_METHOD'],
             $_SERVER['REQUEST_URI'],

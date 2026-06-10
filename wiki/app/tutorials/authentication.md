@@ -71,13 +71,13 @@ use SDF\Flash;
 
 class AuthController extends Controller
 {
-    /** GET /login — show form */
+    /** GET /login - show form */
     public function loginForm(): void
     {
         $this->fuse->render('auth/login');
     }
 
-    /** POST /login — authenticate */
+    /** POST /login - authenticate */
     public function login(): void
     {
         $email    = $this->request->post('email');

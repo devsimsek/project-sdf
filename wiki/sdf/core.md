@@ -21,7 +21,7 @@ index.php
 Scans `app/config/` for `.php` and `.json` files. Merges into `Core::$config`. Result cached to `/tmp/sdf_config.cache`.
 
 ```php
-// Internal usage — called automatically at boot.
+// Internal usage - called automatically at boot.
 // Access config in controllers:
 $mailHost = $this->getConfig('mail', 'host');
 ```

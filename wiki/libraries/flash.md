@@ -11,7 +11,7 @@ Flash messages use a two-bucket aging system:
 | Bucket | Purpose |
 |---|---|
 | `_sdf_flash_new` | Messages set during the current request, intended for the **next** request |
-| `_sdf_flash_cur` | Messages promoted from `_new` — available to **this** request |
+| `_sdf_flash_cur` | Messages promoted from `_new` - available to **this** request |
 
 On each `Flash` construction the aging cycle runs:
 1. `_cur` is discarded (was for the previous request).

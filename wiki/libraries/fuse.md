@@ -1,6 +1,6 @@
 # Fuse View Engine
 
-Fuse is the SDF template engine. **v2.0.0 removes `eval()`** — templates compile to PHP files cached on disk. Secure, fast, zero-overhead after first render.
+Fuse is the SDF template engine. **v2.0.0 removes `eval()`** - templates compile to PHP files cached on disk. Secure, fast, zero-overhead after first render.
 
 ## Rendering a View
 
@@ -33,7 +33,7 @@ In the view, data is available as extracted PHP variables:
 
 ## Variable Interpolation
 
-`{{ $var }}` — escaped via `htmlspecialchars`. Safe by default.
+`{{ $var }}` - escaped via `htmlspecialchars`. Safe by default.
 
 ```html
 <p>Welcome, {{ $user['name'] }}!</p>
@@ -85,7 +85,7 @@ In the view, data is available as extracted PHP variables:
 @endWhile
 ```
 
-### `@var` — Inline PHP assignment
+### `@var` - Inline PHP assignment
 
 ```html
 @var $greeting = 'Hello, ' . $user['name'] . '!';
@@ -131,7 +131,7 @@ In the view, data is available as extracted PHP variables:
 ## Cache Behaviour (v2.0.0)
 
 - First render: template compiled → written to `SDF_APP_CACHE/views/` (or `/tmp/fuse_cache/`)
-- Subsequent renders: compiled file used directly — no parsing overhead
+- Subsequent renders: compiled file used directly - no parsing overhead
 - Cache invalidated automatically when source file `mtime` changes
 
 ## Supported Extensions

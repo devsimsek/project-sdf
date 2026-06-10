@@ -111,7 +111,7 @@ class FlashTest extends TestCase
     public function test_flash_get_non_aged_message_returns_default(): void
     {
         // Message stored in _new should not be accessible via get()
-        // (it hasn't been aged yet — only available next request)
+        // (it hasn't been aged yet - only available next request)
         $flash = new Flash();
         $flash->set('key', 'value');
         $this->assertNull($flash->get('key'));

@@ -44,7 +44,7 @@ $config['auth'] = [
 | Option | Default | Description |
 |---|---|---|
 | `default` | `session` | Active guard (`session` or `jwt`) |
-| `guards.jwt.secret` | — | HMAC-SHA256 secret key for signing JWTs |
+| `guards.jwt.secret` | - | HMAC-SHA256 secret key for signing JWTs |
 | `guards.jwt.ttl` | `3600` | Access token lifetime in seconds |
 | `guards.jwt.refresh_ttl` | `604800` | Refresh token lifetime in seconds (7 days) |
 | `providers.*.model` | `\App\Models\User::class` | User model class with static `find()` and `where()` |
@@ -168,7 +168,7 @@ Rejects unauthenticated requests with a `401` HTTP status.
 Router::middleware(\SDF\Auth\AuthMiddleware::class);
 ```
 
-All routes registered after this middleware require authentication. To protect only specific routes, register the middleware in a route group or use per-route middleware arrays (not yet supported by the Router — subclass or customise as needed).
+All routes registered after this middleware require authentication. To protect only specific routes, register the middleware in a route group or use per-route middleware arrays (not yet supported by the Router - subclass or customise as needed).
 
 ## Testing
 

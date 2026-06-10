@@ -19,7 +19,7 @@ class Spark
     private static ?PDO $pdo = null;
 
     /**
-     * Establish database connection (lazy — actual connect on first query).
+     * Establish database connection (lazy - actual connect on first query).
      *
      * @param string $dsn      Data Source Name.
      * @param string|null $username Database username.
@@ -37,12 +37,74 @@ class Spark
     }
 
     /**
+     * Auto-initialize from app/config/database.php if no pool config exists.
+     */
+    private static function connectFromConfig(): void
+    {
+        if (Pool::has('default')) {
+            return;
+        }
+        $dbConfig = Core::coreGetConfig('database');
+        if (!$dbConfig || !isset($dbConfig['driver'])) {
+            return;
+        }
+        self::configureFromArray($dbConfig);
+    }
+
+    /**
+     * Parse a config array and call connect() with the right DSN.
+     */
+    private static function configureFromArray(array $dbConfig): void
+    {
+        switch ($dbConfig['driver']) {
+            case 'mysql':
+                $dsn = 'mysql:host=' . ($dbConfig['host'] ?? '127.0.0.1')
+                     . ';dbname=' . ($dbConfig['name'] ?? '')
+                     . ';port=' . ($dbConfig['port'] ?? '3306')
+                     . ';charset=' . ($dbConfig['charset'] ?? 'utf8mb4');
+                self::connect($dsn, $dbConfig['user'] ?? null, $dbConfig['password'] ?? null);
+                break;
+            case 'psql':
+            case 'pgsql':
+            case 'postgres':
+                $dsn = 'pgsql:host=' . ($dbConfig['host'] ?? '127.0.0.1')
+                     . ';dbname=' . ($dbConfig['name'] ?? '')
+                     . ';port=' . ($dbConfig['port'] ?? '5432');
+                self::connect($dsn, $dbConfig['user'] ?? null, $dbConfig['password'] ?? null);
+                break;
+            case 'sqlite':
+                $path = $dbConfig['path'] ?? ($dbConfig['dsn'] ?? null);
+                if ($path === null) {
+                    throw new \Exception('SQLite configuration missing path/dsn');
+                }
+                self::connect(str_contains($path, ':') ? $path : 'sqlite:' . $path);
+                break;
+            case 'sqlsrv':
+                $server = $dbConfig['host'] . ',' . ($dbConfig['port'] ?? '1433');
+                $dsn = 'sqlsrv:Server=' . $server . ';database=' . ($dbConfig['name'] ?? '');
+                if (!empty($dbConfig['auth'])) {
+                    self::connect($dsn);
+                } else {
+                    self::connect($dsn, $dbConfig['user'] ?? null, $dbConfig['password'] ?? null);
+                }
+                break;
+            case 'manual':
+                $args = isset($dbConfig['args']) && is_array($dbConfig['args']) ? $dbConfig['args'] : [];
+                self::connect($dbConfig['dsn'] ?? '', ...$args);
+                break;
+        }
+    }
+
+    /**
      * Ensure the lazy connection is established.
      */
     private static function ensureConnected(): void
     {
         if (self::$pdo !== null) {
             return;
+        }
+        if (!Pool::has('default')) {
+            self::connectFromConfig();
         }
         if (!Pool::has('default')) {
             throw new Exception("Spark ORM: Database not connected.");
@@ -110,8 +172,15 @@ class QueryBuilder
         $parts = explode('.', $identifier);
         $out = [];
         foreach ($parts as $part) {
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $part)) {
+            $len = strlen($part);
+            if ($len === 0) {
                 throw new \InvalidArgumentException('Invalid identifier: ' . $identifier);
+            }
+            for ($i = 0; $i < $len; $i++) {
+                $c = $part[$i];
+                if (!($c >= 'a' && $c <= 'z') && !($c >= 'A' && $c <= 'Z') && !($c >= '0' && $c <= '9') && $c !== '_') {
+                    throw new \InvalidArgumentException('Invalid identifier: ' . $identifier);
+                }
             }
             $out[] = "`" . $part . "`";
         }
