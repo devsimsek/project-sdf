@@ -188,8 +188,7 @@ class Router
     {
         $routeMatches = [];
 
-        if (self::$booted) {
-            // SDF-2: Load cached routes if exist
+        if (!self::$booted) {
             if (file_exists($cacheFile) && !self::$config["debug"]) {
                 self::$routes = unserialize(file_get_contents($cacheFile));
             } else {

@@ -9,3 +9,4 @@ Hands-on guides for common SDF patterns.
 | [Blog Application](blog.md) | Full MVC blog: routes, controller, Fuse templates, Spark queries |
 | [File Upload](file-upload.md) | Validate and store file uploads securely |
 | [Custom Middleware](custom-middleware.md) | Rate limiting, CORS, and logging middlewares |
+| [Docker & FrankenPHP](docker-frankenphp.md) | Production deployment with FrankenPHP + Docker |

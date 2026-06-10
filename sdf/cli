@@ -38,6 +38,15 @@ class CLI
         require_once SDF_DIR . "core/Core.php";
         Core::coreLoadConfigurations();
 
+        // Load Cache facade so clearCache() can flush it
+        if (!class_exists(\SDF\Cache\Cache::class, false)) {
+            require_once SDF_DIR . "core/Cache/CacheDriver.php";
+            require_once SDF_DIR . "core/Cache/Cache.php";
+            require_once SDF_DIR . "core/Cache/FileDriver.php";
+            require_once SDF_DIR . "core/Cache/RedisDriver.php";
+            require_once SDF_DIR . "core/Cache/MemcachedDriver.php";
+        }
+
         $this->config = Core::coreGetConfig("database") ?: [];
     }
 
@@ -1291,7 +1300,7 @@ class CLI
             }
         }
 
-        // Clear fuse cache
+        // Clear fuse cache (legacy raw files)
         $fuseCache = $temp . "/fuse_cache";
         if (is_dir($fuseCache)) {
             foreach (glob("$fuseCache/*") as $f) {
@@ -1299,6 +1308,22 @@ class CLI
                     unlink($f);
                 }
             }
+            $count++;
+        }
+
+        // Flush the Cache facade (FileDriver, Redis, Memcached)
+        if (class_exists(\SDF\Cache\Cache::class)) {
+            try {
+                \SDF\Cache\Cache::flush();
+                $count++;
+            } catch (\Throwable) {
+                // Cache facade may fail if config is incomplete; ignore
+            }
+        }
+
+        // Clear OPcache so changed PHP files (routes.php, etc.) are re-read
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
             $count++;
         }
 

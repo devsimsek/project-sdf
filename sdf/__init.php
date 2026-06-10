@@ -57,6 +57,9 @@ if (PHP_SAPI == "cli-server") {
         $temp = sys_get_temp_dir();
         @unlink($temp . "/sdf_routes.cache");
         @unlink($temp . "/sdf_config.cache");
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+        }
         echo "Cache cleared.";
         exit();
     }
@@ -69,6 +72,9 @@ if (PHP_SAPI == "cli-server") {
         $temp = sys_get_temp_dir();
         @unlink($temp . "/sdf_routes.cache");
         @unlink($temp . "/sdf_config.cache");
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+        }
         // Setting a reload signal will also refresh the browser
         file_put_contents($temp . "/sdf_reload.signal", time());
         echo "Cache refreshed. Browser will reload.";
