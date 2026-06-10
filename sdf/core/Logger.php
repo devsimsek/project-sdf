@@ -355,8 +355,12 @@ class AsyncHandler implements HandlerInterface
                 foreach ($batch as $r) {
                     $this->inner->handle($r);
                 }
-                // necessary to exit child process
-                exit(0);
+                // terminate child process after work is done
+                if (function_exists('posix_kill')) {
+                    posix_kill(posix_getpid(), SIGTERM);
+                }
+                // fallback if posix_kill unavailable (should not happen when pcntl_fork exists)
+                return;
             }
             // parent continues
             return;

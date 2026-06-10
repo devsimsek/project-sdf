@@ -27,7 +27,7 @@ const SDF_VERSION = "2.1.0";
 // Check minimum version requirement of this framework.
 // PHP 8.2 or higher is required, framework is tested and compatible up to PHP 8.5
 if (version_compare(PHP_VERSION, "8.2.0") < 0) {
-    die(
+    throw new \RuntimeException(
         "FATAL ERROR: Sdf is designed to work with php 8.2 and upper versions. Please update your php version."
     );
 }
@@ -223,13 +223,16 @@ try {
         }
     }
 } catch (Exception $e) {
-    // use logger to report fatal DB errors
     SDF\Logger::log(
         Level::FATAL,
         "Database connection failed: " . $e->getMessage(),
         ["exception" => $e],
     );
-    exit(1);
+    throw new \SDF\HttpResponseException(
+        "Database connection failed.",
+        503,
+        $e,
+    );
 }
 
 $router::pathNotFound(SDF_EH_404);
