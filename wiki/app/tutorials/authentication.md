@@ -223,6 +223,20 @@ $config['/dashboard'] = 'Dashboard/index';
 
 ---
 
+## New Feature Integration
+
+**CSRF protection** — Protect login/registration forms by registering `CsrfMiddleware` and using the `@csrf` helper in Fuse templates:
+```php
+Router::middleware(\SDF\Middleware\CsrfMiddleware::class);
+```
+
+**Env-based JWT secret** — Store your JWT signing key in `.env` and load it securely:
+```php
+$secret = \SDF\Env::get('JWT_SECRET');
+```
+
+---
+
 ## What You Learned
 
 - Using `Auth::attempt()` for credential-based login

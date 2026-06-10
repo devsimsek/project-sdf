@@ -252,6 +252,28 @@ class PostController extends Controller
 
 ---
 
+## New Feature Integration
+
+**CSRF protection** — Add `CsrfMiddleware` to your admin routes and include `@csrf` in Fuse forms:
+```php
+Router::middleware(\SDF\Middleware\CsrfMiddleware::class);
+```
+
+**Env-based DB config** — Set database credentials in `.env` and load them via `\SDF\Env::get()`:
+```php
+$config['db'] = [
+    'host' => \SDF\Env::get('DB_HOST'),
+    'name' => \SDF\Env::get('DB_NAME'),
+];
+```
+
+**Encryption** — Encrypt sensitive fields (e.g., user emails) with `\SDF\Encryption\Encrypter`:
+```php
+$encrypted = \SDF\Encryption\Encrypter::encrypt($email);
+```
+
+---
+
 ## What You Learned
 
 - Full MVC lifecycle in SDF

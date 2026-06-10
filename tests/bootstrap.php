@@ -56,6 +56,12 @@ require_once SDF_DIR . 'core/Http/Uri.php';
 require_once SDF_DIR . 'core/Http/UploadedFile.php';
 require_once SDF_DIR . 'core/Http/Response.php';
 require_once SDF_DIR . 'core/Http/ServerRequest.php';
+require_once SDF_DIR . 'core/Env.php';
+require_once SDF_DIR . 'core/helpers.php';
+require_once SDF_DIR . 'core/Encryption/Encrypter.php';
+require_once SDF_DIR . 'core/Middleware/CsrfMiddleware.php';
+require_once SDF_DIR . 'core/Middleware/CorsMiddleware.php';
+require_once SDF_DIR . 'core/Middleware/RateLimitMiddleware.php';
 
 // Test helpers
 require_once __DIR__ . '/TestMiddlewares.php';

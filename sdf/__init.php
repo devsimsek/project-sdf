@@ -101,6 +101,12 @@ if (is_file($composerAutoload)) {
 
 // lets require our core, benchmark and router files.
 require SDF_DIR . "core/Core.php";
+
+// Load .env before config so env vars are available during config file parsing
+require_once SDF_DIR . "core/Env.php";
+require_once SDF_DIR . "core/helpers.php";
+\SDF\Env::load(SDF_ROOT . '/.env');
+
 Core::coreLoadConfigurations();
 
 // Initialize Logger early so we can write debug marks

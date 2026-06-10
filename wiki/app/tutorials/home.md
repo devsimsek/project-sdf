@@ -10,3 +10,8 @@ Hands-on guides for common SDF patterns.
 | [File Upload](file-upload.md) | Validate and store file uploads securely |
 | [Custom Middleware](custom-middleware.md) | Rate limiting, CORS, and logging middlewares |
 | [Docker & FrankenPHP](docker-frankenphp.md) | Production deployment with FrankenPHP + Docker |
+| [Env & Configuration](env.md) | Load environment variables from `.env` files with `\SDF\Env` |
+| [Encryption](encryption.md) | Encrypt and decrypt data using the `Encrypter` facade |
+| [CSRF Middleware](csrf-middleware.md) | Protect forms with the built-in CSRF middleware |
+| [CORS Middleware](cors-middleware.md) | Handle cross-origin requests with `CorsMiddleware` |
+| [Rate Limiting](rate-limiting.md) | Throttle requests using `RateLimitMiddleware` |

@@ -185,6 +185,24 @@ $response = (new Pipeline)
 
 ---
 
+## New Feature Integration
+
+SDF now ships with three built-in middleware classes — `CsrfMiddleware`, `CorsMiddleware`, and `RateLimitMiddleware` — all under the `SDF\Middleware` namespace. Import and register them directly instead of rolling your own:
+
+```php
+use SDF\Middleware\CorsMiddleware;
+use SDF\Middleware\RateLimitMiddleware;
+use SDF\Middleware\CsrfMiddleware;
+
+Router::middleware(CorsMiddleware::class);
+Router::middleware(RateLimitMiddleware::class);
+Router::middleware(CsrfMiddleware::class);
+```
+
+The custom implementations above remain useful as a reference, but the built-in versions are recommended for new projects.
+
+---
+
 ## What You Learned
 
 - Implementing the `SDF\Middleware` interface

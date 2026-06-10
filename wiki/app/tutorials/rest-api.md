@@ -214,6 +214,25 @@ curl -X DELETE http://localhost:8080/api/products/1
 
 ---
 
+## New Feature Integration
+
+**CORS middleware** — Register `CorsMiddleware` on your API route group to allow cross-origin requests:
+```php
+Router::middleware(\SDF\Middleware\CorsMiddleware::class);
+```
+
+**Rate limiting** — Protect API endpoints from abuse with `RateLimitMiddleware`:
+```php
+Router::middleware(\SDF\Middleware\RateLimitMiddleware::class);
+```
+
+**Env-based config** — Store API keys in `.env` instead of hardcoding:
+```php
+$apiKey = \SDF\Env::get('API_KEY');
+```
+
+---
+
 ## What You Learned
 
 - Defining RESTful routes with HTTP method constraints
