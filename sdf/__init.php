@@ -259,6 +259,10 @@ foreach (Core::coreGetConfig("routes") as $route => $controller) {
         $router::add($route, $controller);
     }
 }
+// Initialize Session
+\SDF\Session::getInstance();
+SDF\Logger::log(Level::DEBUG, "Session initialized");
+
 $logger->log(Level::DEBUG, "Router: preparing to ignite");
 $bm->mark("__sdf__router__start__");
 $router::ignite();
