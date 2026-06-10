@@ -62,6 +62,8 @@ require_once SDF_DIR . 'core/Encryption/Encrypter.php';
 require_once SDF_DIR . 'core/Middleware/CsrfMiddleware.php';
 require_once SDF_DIR . 'core/Middleware/CorsMiddleware.php';
 require_once SDF_DIR . 'core/Middleware/RateLimitMiddleware.php';
+require_once SDF_DIR . 'core/Validation/Validator.php';
+require_once SDF_DIR . 'core/Spark/Paginator.php';
 
 // Test helpers
 require_once __DIR__ . '/TestMiddlewares.php';

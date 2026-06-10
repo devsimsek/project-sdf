@@ -253,6 +253,16 @@ class Request
     }
 
     /**
+     * Check if the current request is an OPTIONS request
+     *
+     * @return bool
+     */
+    public function isOptions(): bool
+    {
+        return ($_SERVER["REQUEST_METHOD"] ?? "") === "OPTIONS";
+    }
+
+    /**
      * Check if the current request is an AJAX request
      *
      * @return bool

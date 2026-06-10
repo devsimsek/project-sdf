@@ -134,6 +134,15 @@ class Spark
     }
 
     /**
+     * Disconnect and reset the default connection.
+     */
+    public static function disconnect(): void
+    {
+        self::$pdo = null;
+        Pool::remove('default');
+    }
+
+    /**
      * Get the connection pool manager.
      *
      * @return class-string<Pool>
@@ -204,6 +213,12 @@ class QueryBuilder
 
     /** @var string|null $modelClass Optional class name to hydrate results into. */
     protected ?string $modelClass = null;
+
+    /** @var string|null $columns Optional custom SELECT columns. */
+    protected ?string $columns = null;
+
+    /** @var array $joins List of JOIN clauses. */
+    protected array $joins = [];
 
     /**
      * Initialize builder with table.
@@ -285,19 +300,70 @@ class QueryBuilder
     }
 
     /**
+     * Set custom SELECT columns.
+     *
+     * @param string $columns
+     * @return self
+     */
+    public function select(string $columns): self
+    {
+        $this->columns = $columns;
+        return $this;
+    }
+
+    /**
+     * Add a JOIN clause.
+     *
+     * @param string $table    Joined table name.
+     * @param string $first    First column.
+     * @param string $operator Comparison operator.
+     * @param string $second   Second column.
+     * @param string $type     Join type (INNER, LEFT, RIGHT).
+     * @return self
+     */
+    public function join(string $table, string $first, string $operator, string $second, string $type = 'INNER'): self
+    {
+        $type = strtoupper($type);
+        $type = in_array($type, ['INNER', 'LEFT', 'RIGHT', 'FULL'], true) ? $type : 'INNER';
+        $this->joins[] = " $type JOIN " . $this->quoteIdent($table) . " ON " . $this->quoteIdent($first) . " $operator " . $this->quoteIdent($second);
+        return $this;
+    }
+
+    /**
+     * Build the SELECT clause.
+     *
+     * @return string
+     */
+    private function buildSelect(): string
+    {
+        $sql = "SELECT " . ($this->columns ?? "*") . " FROM " . $this->quoteIdent($this->table);
+
+        if (!empty($this->joins)) {
+            $sql .= implode('', $this->joins);
+        }
+
+        if (!empty($this->wheres)) {
+            $sql .= " WHERE " . implode(" AND ", $this->wheres);
+        }
+
+        $sql .= $this->orderBy ?? "";
+        $sql .= $this->limit ?? "";
+
+        return $sql;
+    }
+
+    /**
      * Get the first record matching the query.
      *
      * @return mixed
      */
     public function first(): mixed
     {
-        $sql = "SELECT * FROM " . $this->quoteIdent($this->table);
-        if (!empty($this->wheres)) {
-            $sql .= " WHERE " . implode(" AND ", $this->wheres);
-        }
-
-        $sql .= $this->orderBy ?? "";
-        $sql .= " LIMIT 1";
+        $savedLimit = $this->limit;
+        $savedBindings = $this->bindings;
+        $this->limit = " LIMIT 1";
+        $sql = $this->buildSelect();
+        $this->limit = $savedLimit;
 
         $stmt = Spark::pdo()->prepare($sql);
         $stmt->execute($this->bindings);
@@ -321,13 +387,7 @@ class QueryBuilder
      */
     public function get(): array
     {
-        $sql = "SELECT * FROM " . $this->quoteIdent($this->table);
-        if (!empty($this->wheres)) {
-            $sql .= " WHERE " . implode(" AND ", $this->wheres);
-        }
-
-        $sql .= $this->orderBy ?? "";
-        $sql .= $this->limit ?? "";
+        $sql = $this->buildSelect();
 
         $stmt = Spark::pdo()->prepare($sql);
         $stmt->execute($this->bindings);
@@ -428,5 +488,28 @@ class QueryBuilder
         }
         $stmt = Spark::pdo()->prepare($sql);
         return $stmt->execute($this->bindings);
+    }
+
+    /**
+     * Paginate the query results.
+     *
+     * @param int      $perPage Number of items per page.
+     * @param int|null $page    Current page (defaults to $_GET['page'] ?? 1).
+     * @return \SDF\Spark\Paginator
+     */
+    public function paginate(int $perPage = 15, ?int $page = null): \SDF\Spark\Paginator
+    {
+        $page = $page ?: (int)($_GET['page'] ?? 1);
+        $page = max(1, $page);
+
+        $total = $this->count();
+
+        $offset = ($page - 1) * $perPage;
+        $this->limit = " LIMIT $perPage OFFSET $offset";
+
+        $items = $this->get();
+        $this->limit = null;
+
+        return new \SDF\Spark\Paginator($items, $total, $perPage, $page);
     }
 }
