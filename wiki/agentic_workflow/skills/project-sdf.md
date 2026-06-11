@@ -29,7 +29,8 @@ php sdf/cli format --dry-run -v        # run cs-fixer via CLI
 - **No DI container** — classes use `Core::coreLoadClass()` singleton-style loading.
 - **Router cache**: `sys_get_temp_dir()/sdf_routes.cache`.
 - **Cache facade**: `SDF\Cache\Cache` — PSR-16 proxy. Driver (`file`/`redis`/`memcached`) set in `app/config/cache.php`.
-- **Fuse view engine**: compiles templates via Cache facade; raw files also written to `sys_get_temp_dir()/fuse_cache/` for `require`.
+- **Fuse view engine**: compiles templates via Cache facade; raw files also written to `sys_get_temp_dir()/fuse_cache/` for `require`. Supports Blade-style `@extends`, `@section/@endsection`, `@yield`, `@include`.
+- **New features**: PSR-3 Logger adapter (`SDF\Log\`), PSR-14 Events (`SDF\Events\`), Schema Builder (`SDF\Schema\`), Localization (`SDF\Localization\`), Mail (`SDF\Mail\`), Queues (`SDF\Queue\`).
 
 ## Testing quirks
 - PHPUnit 10, bootstrap `tests/bootstrap.php` defines framework constants + requires all core files.
@@ -107,7 +108,7 @@ When working on this codebase, always run tests before committing (`vendor/bin/p
 
 ## Wiki
 Full documentation is at `wiki/`:
-- `wiki/libraries/` — lib docs (auth, cache, csrf, cors, ratelimit, encryption, validation, session, flash, request, http, swagger, benchmark).
+- `wiki/libraries/` — lib docs (auth, cache, csrf, cors, ratelimit, encryption, validation, session, flash, request, http, swagger, benchmark, log, schema, events, localization, mail, queue).
 - `wiki/app/tutorials/` — tutorials (authentication, blog, docker-frankenphp).
 - `wiki/sdf/` — CLI docs.
 - `wiki/agentic_workflow/` — agentic development workflows.
