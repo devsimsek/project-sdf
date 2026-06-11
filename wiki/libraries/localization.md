@@ -90,7 +90,7 @@ echo $t->choice('app.apples', 5); // "many apples"
 ```php
 // app/lang/en/app.php
 return [
-    'apples' => '{0} none|[1,9] some apples|[10,*] many apples',
+    'apples' => '{0} none|{1,9} some apples|{10,*} many apples',
 ];
 
 echo $t->choice('app.apples', 0);  // "none"
@@ -98,12 +98,12 @@ echo $t->choice('app.apples', 3);  // "some apples"
 echo $t->choice('app.apples', 15); // "many apples"
 ```
 
-The `:count` placeholder is automatically available:
+The `:count` placeholder is automatically available — use it without the colon prefix:
 
 ```php
 return [
-    'apples' => '{0} none|[1,9] :count apples|[10,*] :count apples',
+    'apples' => '{0} none|{1,9} :count apples|{10,*} :count apples',
 ];
 
-echo $t->choice('app.apples', 3); // "3 apples"
+echo $t->choice('app.apples', 3, ['count' => 3]); // "3 apples"
 ```

@@ -20,7 +20,7 @@ class SendEmail extends Job {
 
 ## Queue Interface
 
-All queue drivers implement `SDF\Queue\QueueInterface`:
+All queue drivers implement `SDF\Queue\Queue`:
 
 | Method       | Description                                  |
 |-------------|----------------------------------------------|
