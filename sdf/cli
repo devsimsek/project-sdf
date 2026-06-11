@@ -1227,7 +1227,13 @@ class CLI
             $this->startWatcher();
         }
 
-        passthru("php -S localhost:$port index.php");
+        $frankenphpBin = trim(shell_exec("which frankenphp 2>/dev/null") ?? "");
+
+        if ($frankenphpBin !== "") {
+            passthru("frankenphp php-server --listen :$port");
+        } else {
+            passthru("php -S localhost:$port index.php");
+        }
 
         if (!$quiet) {
             echo "[INFO] Development server stopped.\n";

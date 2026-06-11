@@ -258,19 +258,19 @@
 
     <div class="bench-grid">
       <div class="bench-item">
-        <div class="bench-value">~57%</div>
-        <div class="bench-label">Faster avg render</div>
-        <div class="bench-sub">0.000157ms vs 0.000363ms</div>
+        <div class="bench-value">10,046</div>
+        <div class="bench-label">Req/sec</div>
+        <div class="bench-sub">FrankenPHP php-server</div>
       </div>
       <div class="bench-item">
-        <div class="bench-value">0.0001ms</div>
-        <div class="bench-label">Min response time</div>
-        <div class="bench-sub">down from 0.0002ms</div>
+        <div class="bench-value">1.46ms</div>
+        <div class="bench-label">Avg latency</div>
+        <div class="bench-sub">σ 5.08ms variance</div>
       </div>
       <div class="bench-item">
-        <div class="bench-value">61%</div>
-        <div class="bench-label">Less variance</div>
-        <div class="bench-sub">σ 0.000056ms vs 0.000143ms</div>
+        <div class="bench-value">543MB/s</div>
+        <div class="bench-label">Transfer rate</div>
+        <div class="bench-sub">full stack w/ Fuse view</div>
       </div>
     </div>
 
