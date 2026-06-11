@@ -8,7 +8,7 @@ $config['auth'] = [
         ],
         'jwt' => [
             'provider' => 'users',
-            'secret' => 'sdf-jwt-secret-change-me',
+            'secret' => env('JWT_SECRET', ''),
             'ttl' => 3600,
             'refresh_ttl' => 604800,
             'algo' => 'HS256',

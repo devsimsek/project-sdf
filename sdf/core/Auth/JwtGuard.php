@@ -49,6 +49,9 @@ class JwtGuard implements Guard
         int $ttl = 3600,
         int $refreshTtl = 604800,
     ) {
+        if ($secret === '') {
+            throw new \RuntimeException('JWT guard: secret must not be empty. Set JWT_SECRET in .env or config/auth.php.');
+        }
         $this->provider = $provider;
         $this->request = $request;
         $this->secret = $secret;

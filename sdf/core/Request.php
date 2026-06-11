@@ -647,7 +647,10 @@ class Request
         $_POST = (array) $psr->getParsedBody();
         $_COOKIE = $psr->getCookieParams();
         $_SERVER['REQUEST_METHOD'] = $psr->getMethod();
-        $_SERVER['REQUEST_URI'] = (string) $psr->getUri();
+        $uri = $psr->getUri();
+        $path = $uri->getPath() ?: '/';
+        $query = $uri->getQuery();
+        $_SERVER['REQUEST_URI'] = $query ? $path . '?' . $query : $path;
 
         return $req;
     }

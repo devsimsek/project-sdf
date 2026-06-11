@@ -121,10 +121,16 @@ class CorsMiddleware implements Middleware
     protected function setCorsHeaders(string $origin, array $config): void
     {
         $allowAll = in_array('*', $config['allowed_origins'] ?? [], true);
+        $allowCredentials = !empty($config['allow_credentials']);
 
-        header('Access-Control-Allow-Origin: ' . ($allowAll ? '*' : $origin));
+        if ($allowAll && $allowCredentials) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Vary: Origin');
+        } else {
+            header('Access-Control-Allow-Origin: ' . ($allowAll ? '*' : $origin));
+        }
 
-        if (!empty($config['allow_credentials'])) {
+        if ($allowCredentials) {
             header('Access-Control-Allow-Credentials: true');
         }
 
@@ -142,12 +148,24 @@ class CorsMiddleware implements Middleware
      */
     protected function setPreflightHeaders(string $origin, array $config): void
     {
-        $originHeader = in_array('*', $config['allowed_origins'] ?? [], true) ? '*' : $origin;
+        $allowAll = in_array('*', $config['allowed_origins'] ?? [], true);
+        $allowCredentials = !empty($config['allow_credentials']);
 
-        header('Access-Control-Allow-Origin: ' . $originHeader);
+        if ($allowAll && $allowCredentials) {
+            header('Access-Control-Allow-Origin: ' . $origin);
+            header('Vary: Origin');
+        } else {
+            header('Access-Control-Allow-Origin: ' . ($allowAll ? '*' : $origin));
+        }
+
         header('Access-Control-Allow-Methods: ' . implode(', ', $config['allowed_methods'] ?? []));
         header('Access-Control-Allow-Headers: ' . implode(', ', $config['allowed_headers'] ?? []));
         header('Access-Control-Max-Age: ' . ($config['max_age'] ?? 86400));
+
+        if ($allowCredentials) {
+            header('Access-Control-Allow-Credentials: true');
+        }
+
         header('HTTP/1.1 204 No Content');
     }
 }

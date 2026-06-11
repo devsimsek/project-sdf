@@ -89,7 +89,7 @@ class Router
         );
 
         if (!$hasTokens) {
-            self::$staticRoutes[$expression][$method] = $controller;
+            self::$staticRoutes[$expression][strtolower($method)] = $controller;
         }
 
         self::$routes[] = [
@@ -201,10 +201,11 @@ class Router
 
         if (!self::$booted) {
             if (file_exists($cacheFile) && !self::$config["debug"]) {
-                $cached = unserialize(file_get_contents($cacheFile));
+                $cached = unserialize(file_get_contents($cacheFile), ['allowed_classes' => false]);
                 self::$routes = $cached["routes"] ?? $cached;
                 self::$staticRoutes = $cached["static"] ?? self::$staticRoutes;
             } else {
+                $prefixedStatic = [];
                 foreach (self::$routes as &$route) {
                     if ($basepath != "" && $basepath != "/") {
                         $route["expression"] = "(" . $basepath . ")" . $route["expression"];
@@ -212,6 +213,12 @@ class Router
                     $route['expression'] = '^' . $route['expression'] . '$';
                 }
                 unset($route);
+                if ($basepath != "" && $basepath != "/") {
+                    foreach (self::$staticRoutes as $path => $methods) {
+                        $prefixedStatic[$basepath . $path] = $methods;
+                    }
+                    self::$staticRoutes = $prefixedStatic;
+                }
                 if (!self::$config["debug"]) {
                     file_put_contents($cacheFile, serialize([
                         "routes" => self::$routes,

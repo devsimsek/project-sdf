@@ -118,7 +118,7 @@ trait CoreUtilities
         if (is_file($cacheFile)) {
             $raw = file_get_contents($cacheFile);
             // Try new format (serialize) first, fall back to old format (var_export)
-            $config = @unserialize($raw);
+            $config = @unserialize($raw, ['allowed_classes' => false]);
             if ($config !== false) {
                 \SDF\Core::$config = $config;
                 return;

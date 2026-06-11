@@ -160,11 +160,12 @@ class PostController extends Controller
             'excerpt' => $body['excerpt'] ?? '',
             'content' => $body['content'],
             'status'  => $body['status'] ?? 'draft',
-            'user_id' => Auth::user()['id'],
+            'user_id' => Auth::user()->id,
         ]);
 
         Cache::forget('blog.published');
-        Flash::set('success', 'Post created!');
+        $flash = new \SDF\Flash();
+        $flash->set('success', 'Post created!');
         $this->response->redirect('/');
     }
 
@@ -188,7 +189,8 @@ class PostController extends Controller
         $stmt->execute([$body['title'], $body['content'], $body['status'], $id]);
 
         Cache::forget('blog.published');
-        Flash::set('success', 'Post updated!');
+        $flash = new \SDF\Flash();
+        $flash->set('success', 'Post updated!');
         $this->response->json(['updated' => true]);
     }
 
@@ -199,7 +201,8 @@ class PostController extends Controller
         $stmt->execute([$id]);
 
         Cache::forget('blog.published');
-        Flash::set('info', 'Post deleted.');
+        $flash = new \SDF\Flash();
+        $flash->set('info', 'Post deleted.');
         $this->response->status(204)->json([]);
     }
 }

@@ -45,7 +45,9 @@ class Flash
      */
     public function set(string $key, mixed $value): self
     {
-        $_SESSION[self::NEW_KEY][$key] = $value;
+        $bucket = $this->session->get(self::NEW_KEY, []);
+        $bucket[$key] = $value;
+        $this->session->set(self::NEW_KEY, $bucket);
         return $this;
     }
 
@@ -58,9 +60,11 @@ class Flash
      */
     public function get(string $key, mixed $default = null): mixed
     {
-        if (isset($_SESSION[self::CUR_KEY][$key])) {
-            $value = $_SESSION[self::CUR_KEY][$key];
-            unset($_SESSION[self::CUR_KEY][$key]);
+        $bucket = $this->session->get(self::CUR_KEY, []);
+        if (array_key_exists($key, $bucket)) {
+            $value = $bucket[$key];
+            unset($bucket[$key]);
+            $this->session->set(self::CUR_KEY, $bucket);
             return $value;
         }
 
@@ -75,8 +79,9 @@ class Flash
      */
     public function has(string $key): bool
     {
-        return isset($_SESSION[self::CUR_KEY][$key])
-            || isset($_SESSION[self::NEW_KEY][$key]);
+        $new = $this->session->get(self::NEW_KEY, []);
+        $cur = $this->session->get(self::CUR_KEY, []);
+        return isset($cur[$key]) || isset($new[$key]);
     }
 
     /**
@@ -87,8 +92,8 @@ class Flash
     public function all(): array
     {
         return array_merge(
-            $_SESSION[self::NEW_KEY] ?? [],
-            $_SESSION[self::CUR_KEY] ?? [],
+            $this->session->get(self::NEW_KEY, []),
+            $this->session->get(self::CUR_KEY, []),
         );
     }
 
@@ -100,9 +105,13 @@ class Flash
      */
     public function keep(string $key): self
     {
-        if (isset($_SESSION[self::CUR_KEY][$key])) {
-            $_SESSION[self::NEW_KEY][$key] = $_SESSION[self::CUR_KEY][$key];
-            unset($_SESSION[self::CUR_KEY][$key]);
+        $cur = $this->session->get(self::CUR_KEY, []);
+        if (isset($cur[$key])) {
+            $new = $this->session->get(self::NEW_KEY, []);
+            $new[$key] = $cur[$key];
+            $this->session->set(self::NEW_KEY, $new);
+            unset($cur[$key]);
+            $this->session->set(self::CUR_KEY, $cur);
         }
 
         return $this;
@@ -117,7 +126,9 @@ class Flash
      */
     public function now(string $key, mixed $value): self
     {
-        $_SESSION[self::CUR_KEY][$key] = $value;
+        $bucket = $this->session->get(self::CUR_KEY, []);
+        $bucket[$key] = $value;
+        $this->session->set(self::CUR_KEY, $bucket);
         return $this;
     }
 
@@ -141,13 +152,15 @@ class Flash
      */
     private function age(): void
     {
-        if (isset($_SESSION[self::CUR_KEY])) {
-            unset($_SESSION[self::CUR_KEY]);
+        $cur = $this->session->get(self::CUR_KEY);
+        if ($cur !== null) {
+            $this->session->remove(self::CUR_KEY);
         }
 
-        if (isset($_SESSION[self::NEW_KEY])) {
-            $_SESSION[self::CUR_KEY] = $_SESSION[self::NEW_KEY];
-            unset($_SESSION[self::NEW_KEY]);
+        $new = $this->session->get(self::NEW_KEY);
+        if ($new !== null) {
+            $this->session->set(self::CUR_KEY, $new);
+            $this->session->remove(self::NEW_KEY);
         }
     }
 }

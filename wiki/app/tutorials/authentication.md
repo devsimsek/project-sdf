@@ -84,7 +84,8 @@ class AuthController extends Controller
         $password = $this->request->post('password');
 
         if (Auth::attempt(['email' => $email, 'password' => $password])) {
-            Flash::set('success', 'Welcome back!');
+            $flash = new \SDF\Flash();
+            $flash->set('success', 'Welcome back!');
             $this->response->redirect('/dashboard');
         } else {
             $this->fuse
@@ -97,7 +98,8 @@ class AuthController extends Controller
     public function logout(): void
     {
         Auth::logout();
-        Flash::set('info', 'You have been logged out.');
+        $flash = new \SDF\Flash();
+        $flash->set('info', 'You have been logged out.');
         $this->response->redirect('/login');
     }
 
@@ -117,7 +119,8 @@ class AuthController extends Controller
             'password' => password_hash($body['password'], PASSWORD_BCRYPT),
         ]);
 
-        Flash::set('success', 'Account created! Please log in.');
+        $flash = new \SDF\Flash();
+        $flash->set('success', 'Account created! Please log in.');
         $this->response->redirect('/login');
     }
 }
@@ -193,7 +196,7 @@ Display flash messages in your base layout or login view:
   @endIf
 
   <h1>Dashboard</h1>
-  <p>Hello, {{ $user['name'] ?? 'User' }}!</p>
+  <p>Hello, {{ $user->name ?? 'User' }}!</p>
   <a href="/logout">Logout</a>
 </body>
 </html>

@@ -31,6 +31,9 @@ class Encrypter
     private string $key;
     private string $cipher;
 
+    private const HMAC_ALGO = 'sha256';
+    private const HMAC_LEN = 32;
+
     /**
      * @param string      $key    Base64-encoded 32-byte key (or raw 32 bytes).
      * @param string|null $cipher OpenSSL cipher method (default: AES-256-CBC).
@@ -54,10 +57,12 @@ class Encrypter
     }
 
     /**
-     * Encrypt a value.
+     * Encrypt a value (encrypt-then-MAC).
+     *
+     * Format: base64( iv || ciphertext || hmac )
      *
      * @param string $value Plaintext.
-     * @return string Base64-encoded ciphertext (IV + encrypted data).
+     * @return string Base64-encoded ciphertext with HMAC integrity tag.
      */
     public function encrypt(string $value): string
     {
@@ -70,13 +75,15 @@ class Encrypter
             throw new RuntimeException('Encryption failed.');
         }
 
-        return base64_encode($iv . $encrypted);
+        $hmac = hash_hmac(self::HMAC_ALGO, $iv . $encrypted, $this->key, true);
+
+        return base64_encode($iv . $encrypted . $hmac);
     }
 
     /**
-     * Decrypt a value.
+     * Decrypt a value (verify-then-decrypt).
      *
-     * @param string $payload Base64-encoded ciphertext (IV + encrypted data).
+     * @param string $payload Base64-encoded IV + ciphertext + HMAC.
      * @return string Plaintext.
      */
     public function decrypt(string $payload): string
@@ -88,17 +95,24 @@ class Encrypter
 
         $ivLen = openssl_cipher_iv_length($this->cipher);
 
-        if (strlen($data) < $ivLen) {
+        if (strlen($data) < $ivLen + self::HMAC_LEN) {
             throw new RuntimeException('Invalid encrypted payload (too short).');
         }
 
         $iv = substr($data, 0, $ivLen);
-        $encrypted = substr($data, $ivLen);
+        $encrypted = substr($data, $ivLen, -self::HMAC_LEN);
+        $expectedMac = substr($data, -self::HMAC_LEN);
+
+        $actualMac = hash_hmac(self::HMAC_ALGO, $iv . $encrypted, $this->key, true);
+
+        if (!hash_equals($expectedMac, $actualMac)) {
+            throw new RuntimeException('Decryption failed (MAC mismatch — data tampered or wrong key).');
+        }
 
         $decrypted = openssl_decrypt($encrypted, $this->cipher, $this->key, OPENSSL_RAW_DATA, $iv);
 
         if ($decrypted === false) {
-            throw new RuntimeException('Decryption failed (wrong key or corrupted data).');
+            throw new RuntimeException('Decryption failed (corrupted data).');
         }
 
         return $decrypted;

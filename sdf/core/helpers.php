@@ -26,11 +26,12 @@ if (!function_exists('csrf_token')) {
     /**
      * Get the current CSRF token (generates one if missing).
      *
+     * @param string $sessionKey Session key (default: '_csrf_token').
      * @return string
      */
-    function csrf_token(): string
+    function csrf_token(string $sessionKey = '_csrf_token'): string
     {
-        return \SDF\Middleware\CsrfMiddleware::token();
+        return \SDF\Middleware\CsrfMiddleware::token($sessionKey);
     }
 }
 
@@ -38,10 +39,11 @@ if (!function_exists('csrf_field')) {
     /**
      * Render a hidden CSRF token input field.
      *
+     * @param string $sessionKey Session key (default: '_csrf_token').
      * @return string
      */
-    function csrf_field(): string
+    function csrf_field(string $sessionKey = '_csrf_token'): string
     {
-        return \SDF\Middleware\CsrfMiddleware::field();
+        return \SDF\Middleware\CsrfMiddleware::field($sessionKey);
     }
 }

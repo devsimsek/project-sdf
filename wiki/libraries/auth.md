@@ -76,7 +76,6 @@ class User extends Model
 
 ```php
 use SDF\Auth\Auth;
-use SDF\Auth\Auth;
 
 // Check authentication
 if (Auth::check()) {

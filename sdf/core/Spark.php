@@ -77,7 +77,7 @@ class Spark
                 if ($path === null) {
                     throw new \Exception('SQLite configuration missing path/dsn');
                 }
-                self::connect(str_contains($path, ':') ? $path : 'sqlite:' . $path);
+                self::connect(str_starts_with($path, 'sqlite:') ? $path : 'sqlite:' . $path);
                 break;
             case 'sqlsrv':
                 $server = $dbConfig['host'] . ',' . ($dbConfig['port'] ?? '1433');

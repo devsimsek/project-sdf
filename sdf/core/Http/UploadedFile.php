@@ -131,7 +131,11 @@ class UploadedFile implements UploadedFileInterface
             throw new RuntimeException("Target directory does not exist: $dir");
         }
 
-        if (rename($this->file, $targetPath) === false) {
+        if (is_uploaded_file($this->file)) {
+            if (!move_uploaded_file($this->file, $targetPath)) {
+                throw new RuntimeException("Unable to move uploaded file to: $targetPath");
+            }
+        } elseif (rename($this->file, $targetPath) === false) {
             if (!copy($this->file, $targetPath)) {
                 throw new RuntimeException("Unable to move file to: $targetPath");
             }

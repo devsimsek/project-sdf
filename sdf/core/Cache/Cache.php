@@ -216,7 +216,8 @@ class Cache
         }
 
         $fqcn = __NAMESPACE__ . '\\' . $class;
-        return new $fqcn($config[$driver] ?? []);
+        $configKey = ($class === 'FileDriver') ? 'file' : $driver;
+        return new $fqcn($config[$configKey] ?? []);
     }
 
     /**

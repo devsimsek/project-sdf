@@ -144,8 +144,13 @@ class Env
      */
     private static function unquote(string $value): string
     {
-        $first = $value[0] ?? '';
-        $last = $value[-1] ?? '';
+        $len = strlen($value);
+        if ($len < 2) {
+            return $value;
+        }
+
+        $first = $value[0];
+        $last = $value[$len - 1];
 
         if (($first === '"' && $last === '"') || ($first === "'" && $last === "'")) {
             return substr($value, 1, -1);

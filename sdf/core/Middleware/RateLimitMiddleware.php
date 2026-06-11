@@ -116,6 +116,7 @@ class RateLimitMiddleware implements Middleware
 
         $decoded = json_decode($data, true);
         if (!is_array($decoded) || !isset($decoded['attempts'], $decoded['expires_at'])) {
+            Cache::delete($key);
             return 0;
         }
 
@@ -148,7 +149,12 @@ class RateLimitMiddleware implements Middleware
         }
 
         $decoded = json_decode($data, true);
-        if (!is_array($decoded)) {
+        if (!is_array($decoded) || !isset($decoded['attempts'])) {
+            $payload = json_encode([
+                'attempts' => 1,
+                'expires_at' => $now + $this->decaySeconds,
+            ]);
+            Cache::set($key, $payload, $this->decaySeconds);
             return;
         }
 
