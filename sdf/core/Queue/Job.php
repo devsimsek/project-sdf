@@ -61,10 +61,11 @@ abstract class Job
         $params = $ctor->getParameters();
         $payload = [];
         foreach ($params as $param) {
-            if ($param->isDefaultValueAvailable()) {
-                $payload[$param->getName()] = $param->getDefaultValue();
-            } else {
-                $payload[$param->getName()] = $this->{$param->getName()} ?? null;
+            $name = $param->getName();
+            if (property_exists($this, $name)) {
+                $payload[$name] = $this->{$name};
+            } elseif ($param->isDefaultValueAvailable()) {
+                $payload[$name] = $param->getDefaultValue();
             }
         }
         return $payload;

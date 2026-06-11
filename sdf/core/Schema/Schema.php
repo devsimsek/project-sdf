@@ -182,8 +182,14 @@ class Schema
 
         $primaryKeys = $blueprint->getPrimaryKeys();
         if (!empty($primaryKeys)) {
-            $pkCols = array_map(fn ($c) => $quote . $c . $quote, $primaryKeys);
-            $parts[] = 'PRIMARY KEY (' . implode(', ', $pkCols) . ')';
+            $autoIncrementCols = array_map(
+                fn ($c) => $c['name'],
+                array_filter($blueprint->getColumns(), fn ($c) => ($c['extra'] ?? null) === 'auto_increment')
+            );
+            $pkCols = array_map(fn ($c) => $quote . $c . $quote, array_diff($primaryKeys, $autoIncrementCols));
+            if (!empty($pkCols)) {
+                $parts[] = 'PRIMARY KEY (' . implode(', ', $pkCols) . ')';
+            }
         }
 
         foreach ($blueprint->getForeignKeys() as $fk) {

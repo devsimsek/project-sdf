@@ -129,7 +129,9 @@ class Translator
         $result = $this->matchPluralSegment($segments, $number) ?? end($segments);
         $result = $result !== false ? (string) $result : (string) end($segments);
 
-        return $this->makeReplacements($result, [':count' => $number] + $replace);
+        $replacements = ['count' => $number] + $replace;
+
+        return $this->makeReplacements($result, $replacements);
     }
 
     private function resolveKey(string $key, string $locale): ?string
@@ -231,13 +233,13 @@ class Translator
                 return $number >= (int) $start && $number <= (int) $end;
             }
 
-            if ($start === '...' && ctype_digit(ltrim($end, '-'))) {
-                return $number <= (int) $end;
-            }
+        if ($start === '...' && ctype_digit(ltrim($end, '-'))) {
+            return $number <= (int) $end;
+        }
 
-            if (ctype_digit(ltrim($start, '-')) && $end === '...') {
-                return $number >= (int) $start;
-            }
+        if (ctype_digit(ltrim($start, '-')) && ($end === '...' || $end === '*')) {
+            return $number >= (int) $start;
+        }
         }
 
         if (ctype_digit($rule)) {

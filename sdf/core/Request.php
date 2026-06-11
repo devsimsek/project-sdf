@@ -40,7 +40,7 @@ class Request
     /**
      * Get a value from the $_POST superglobal array
      *
-     * @param string $key
+     * @param ?string $key
      * @param mixed $default
      * @return mixed
      */
