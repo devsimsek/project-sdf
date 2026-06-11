@@ -2,6 +2,8 @@
 
 [FrankenPHP](https://frankenphp.dev/) is a modern PHP application server built on top of Caddy. It provides automatic HTTPS, HTTP/2, HTTP/3, worker mode, and a production-ready PHP runtime - no separate web server or PHP-FPM needed.
 
+The SDF CLI (`sdf/cli serve`) auto-detects FrankenPHP — if the `frankenphp` binary is found, it runs `frankenphp php-server`, otherwise falls back to the PHP built-in server.
+
 ## Project Structure
 
 ```

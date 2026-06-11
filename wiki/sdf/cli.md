@@ -131,7 +131,8 @@ The generated file will be `tests/UserTest.php` or `tests/UserControllerTest.php
 ## Serve
 
 The serve command allows you to run the application in development mode. The application is run on `localhost:8000` by
-default.
+default. It auto-detects a `frankenphp` binary — if found it uses `frankenphp php-server`, otherwise falls back to the
+PHP built-in server (`php -S`).
 
 ```bash
 ./sdf/cli serve
