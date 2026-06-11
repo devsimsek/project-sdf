@@ -252,6 +252,8 @@ class QueryBuilder
         // Handle explicit NULL comparisons
         if ($value === null && strtoupper($operator) === '=') {
             $this->wheres[] = "$col IS NULL";
+        } elseif ($value === null && strtoupper($operator) === 'IS NOT') {
+            $this->wheres[] = "$col IS NOT NULL";
         } else {
             $this->wheres[] = "$col $operator ?";
             $this->bindings[] = $value;

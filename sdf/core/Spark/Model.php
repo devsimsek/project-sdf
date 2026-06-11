@@ -28,6 +28,18 @@ abstract class Model
     /** @var string Primary key column name. */
     protected static string $primaryKey = 'id';
 
+    /** @var bool Automatically manage created_at/updated_at columns. */
+    protected static bool $timestamps = true;
+
+    /** @var bool Use soft deletes (deleted_at column) instead of hard deletes. */
+    protected static bool $softDeletes = false;
+
+    /** @var bool Include soft-deleted records in queries. */
+    protected static bool $withTrashed = false;
+
+    /** @var bool Only query soft-deleted records. */
+    protected static bool $onlyTrashed = false;
+
     /** @var array Current model attribute values. */
     protected array $attributes = [];
 
@@ -122,6 +134,10 @@ abstract class Model
     {
         $pk = static::$primaryKey;
 
+        if (static::$timestamps) {
+            $now = date('Y-m-d H:i:s');
+        }
+
         if (isset($this->original[$pk])) {
             $dirty = $this->getDirty();
             if (empty($dirty)) {
@@ -129,6 +145,11 @@ abstract class Model
             }
 
             unset($dirty[$pk]);
+
+            if (static::$timestamps) {
+                $dirty['updated_at'] = $now;
+                $this->attributes['updated_at'] = $now;
+            }
 
             $success = static::query()
                 ->where($pk, $this->original[$pk])
@@ -138,6 +159,15 @@ abstract class Model
                 $this->original = $this->attributes;
             }
             return $success;
+        }
+
+        if (static::$timestamps) {
+            if (!isset($this->attributes['created_at'])) {
+                $this->attributes['created_at'] = $now;
+            }
+            if (!isset($this->attributes['updated_at'])) {
+                $this->attributes['updated_at'] = $now;
+            }
         }
 
         $success = static::query()->insert($this->attributes);
@@ -162,7 +192,49 @@ abstract class Model
             return false;
         }
 
+        if (static::$softDeletes) {
+            $now = date('Y-m-d H:i:s');
+            $success = static::query()
+                ->where($pk, $this->attributes[$pk])
+                ->update(['deleted_at' => $now]);
+            if ($success) {
+                $this->attributes['deleted_at'] = $now;
+                $this->original['deleted_at'] = $now;
+            }
+            return $success;
+        }
+
         return static::query()->where($pk, $this->attributes[$pk])->delete();
+    }
+
+    public function forceDelete(): bool
+    {
+        $pk = static::$primaryKey;
+        if (!isset($this->attributes[$pk])) {
+            return false;
+        }
+        return static::withTrashed()->where($pk, $this->attributes[$pk])->delete();
+    }
+
+    public function trashed(): bool
+    {
+        return static::$softDeletes && isset($this->attributes['deleted_at']);
+    }
+
+    public function restore(): bool
+    {
+        if (!static::$softDeletes || !$this->trashed()) {
+            return false;
+        }
+        $pk = static::$primaryKey;
+        $success = static::withTrashed()
+            ->where($pk, $this->attributes[$pk])
+            ->update(['deleted_at' => null]);
+        if ($success) {
+            $this->attributes['deleted_at'] = null;
+            $this->original['deleted_at'] = null;
+        }
+        return $success;
     }
 
     /**
@@ -187,7 +259,30 @@ abstract class Model
      */
     public static function query(): QueryBuilder
     {
-        return Spark::table(static::getTable())->as(static::class);
+        $query = Spark::table(static::getTable())->as(static::class);
+
+        if (static::$onlyTrashed) {
+            $query->where('deleted_at', 'IS NOT', null);
+            static::$onlyTrashed = false;
+        } elseif (static::$softDeletes && !static::$withTrashed) {
+            $query->where('deleted_at', null);
+        }
+
+        static::$withTrashed = false;
+
+        return $query;
+    }
+
+    public static function withTrashed(): QueryBuilder
+    {
+        static::$withTrashed = true;
+        return static::query();
+    }
+
+    public static function onlyTrashed(): QueryBuilder
+    {
+        static::$onlyTrashed = true;
+        return static::query();
     }
 
     /**

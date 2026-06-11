@@ -37,6 +37,7 @@
    - [Mail](libraries/mail.md)
    - [Queue](libraries/queue.md)
    - [Storage](libraries/storage.md)
+   - [Timestamps & Soft Deletes](libraries/timestamps.md)
 - **Agentic Workflow**
   - [Introduction](agentic_workflow/introduction.md)
   - [Setup Guide](agentic_workflow/tutorials/setup.md)

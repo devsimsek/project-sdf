@@ -225,3 +225,25 @@ php sdf/cli db rollback
 | `Spark::pdo()` | Get raw PDO instance |
 | `Model::all()` | Fetch all rows for a model |
 | `Model::query()` | Start a QueryBuilder for a model |
+
+## Timestamps & Soft Deletes
+
+Models auto-manage `created_at`/`updated_at` by default. Set `$softDeletes = true` on your model class to enable soft deletes via a `deleted_at` column.
+
+```php
+class Post extends Model
+{
+    protected static string $table = 'posts';
+    protected static bool $softDeletes = true;
+}
+
+$post = Post::find(1);
+$post->delete();         // soft delete (sets deleted_at)
+$post->restore();        // undo soft delete
+$post->forceDelete();    // permanent removal
+
+Post::withTrashed()->get();   // include soft-deleted
+Post::onlyTrashed()->get();   // only soft-deleted
+```
+
+See [Timestamps & Soft Deletes](libraries/timestamps.md) for full documentation.
