@@ -22,6 +22,9 @@ class Request
 {
     use CoreUtilities;
 
+    /** @var array|null Cached parsed JSON body */
+    private ?array $jsonCache = null;
+
     /**
      * Get a value from the $_GET superglobal array
      *
@@ -253,6 +256,16 @@ class Request
     }
 
     /**
+     * Check if the current request is an OPTIONS request
+     *
+     * @return bool
+     */
+    public function isOptions(): bool
+    {
+        return ($_SERVER["REQUEST_METHOD"] ?? "") === "OPTIONS";
+    }
+
+    /**
      * Check if the current request is an AJAX request
      *
      * @return bool
@@ -425,10 +438,15 @@ class Request
      */
     public function ip(): ?string
     {
-        $proxies = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? null;
-        if ($proxies) {
-            $ips = explode(",", $proxies);
-            return trim($ips[0]);
+        $forwarded = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? "";
+        if ($forwarded !== "") {
+            $ips = explode(",", $forwarded);
+            foreach ($ips as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
         }
         return $_SERVER["HTTP_CLIENT_IP"] ?? ($_SERVER["REMOTE_ADDR"] ?? null);
     }
@@ -554,18 +572,21 @@ class Request
      */
     public function json(): mixed
     {
+        if ($this->jsonCache !== null) {
+            return $this->jsonCache;
+        }
         $contentType = $this->header("Content-Type") ?? "";
         if (
             !str_contains($contentType, "/json") &&
             !str_contains($contentType, "+json")
         ) {
-            return null;
+            return $this->jsonCache = null;
         }
         $body = file_get_contents("php://input");
         if (empty($body)) {
-            return null;
+            return $this->jsonCache = null;
         }
-        return json_decode($body, true);
+        return $this->jsonCache = json_decode($body, true);
     }
 
     /**
@@ -590,5 +611,82 @@ class Request
     public function origin(): string
     {
         return $this->scheme() . "://" . $this->host();
+    }
+
+    /**
+     * Create a PSR-7 ServerRequest from this legacy request.
+     *
+     * @return \Psr\Http\Message\ServerRequestInterface
+     */
+    public function toPsr(): \Psr\Http\Message\ServerRequestInterface
+    {
+        $uri = new \SDF\Http\Uri($this->origin() . $this->uri());
+
+        $headers = $this->headers();
+        $bodyStr = file_get_contents('php://input') ?: '';
+
+        $psrRequest = new \SDF\Http\ServerRequest(
+            $this->method(),
+            $uri,
+            $headers,
+            new \SDF\Http\Stream($bodyStr),
+            $_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.1',
+            $_SERVER,
+        );
+
+        $psrRequest = $psrRequest
+            ->withQueryParams($_GET)
+            ->withCookieParams($_COOKIE)
+            ->withParsedBody($_POST ?: null)
+            ->withUploadedFiles($this->parseFilesToPsr());
+
+        return $psrRequest;
+    }
+
+    /**
+     * Build a legacy Request from a PSR-7 ServerRequest.
+     *
+     * @param \Psr\Http\Message\ServerRequestInterface $psr
+     * @return self
+     */
+    public static function fromPsr(\Psr\Http\Message\ServerRequestInterface $psr): self
+    {
+        $req = new self();
+
+        // Override superglobals to match PSR-7 input
+        $_GET = $psr->getQueryParams();
+        $_POST = (array) $psr->getParsedBody();
+        $_COOKIE = $psr->getCookieParams();
+        $_SERVER['REQUEST_METHOD'] = $psr->getMethod();
+        $uri = $psr->getUri();
+        $path = $uri->getPath() ?: '/';
+        $query = $uri->getQuery();
+        $_SERVER['REQUEST_URI'] = $query ? $path . '?' . $query : $path;
+
+        return $req;
+    }
+
+    /**
+     * Parse $_FILES into PSR-7 UploadedFile array.
+     *
+     * @return array<string, \Psr\Http\Message\UploadedFileInterface>
+     */
+    private function parseFilesToPsr(): array
+    {
+        $result = [];
+
+        foreach ($_FILES as $key => $spec) {
+            if (isset($spec['tmp_name'])) {
+                $result[$key] = new \SDF\Http\UploadedFile(
+                    $spec['tmp_name'],
+                    $spec['error'] ?? \UPLOAD_ERR_NO_FILE,
+                    $spec['name'] ?? null,
+                    $spec['type'] ?? null,
+                    $spec['size'] ?? null,
+                );
+            }
+        }
+
+        return $result;
     }
 }

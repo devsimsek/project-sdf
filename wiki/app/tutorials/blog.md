@@ -1,6 +1,6 @@
 # Tutorial: Blog Application
 
-Full end-to-end blog: routes, Spark ORM, controllers, and Fuse templates.
+Full end-to-end blog: routes, Spark ORM, controllers, Fuse templates, Auth, Flash, Session, and Cache.
 
 ---
 
@@ -78,8 +78,15 @@ class Post extends Model
 <?php
 // app/config/routes.php
 
+use SDF\Auth\AuthMiddleware;
+use SDF\Router;
+
+// Public routes
 $config['/']                = 'Blog/index';
 $config['/post/{url}']      = ['Blog/show',   'GET'];
+
+// Admin routes (protected)
+Router::middleware(AuthMiddleware::class);
 $config['/admin/post']      = ['Admin\PostController/create', 'GET'];
 $config['/admin/post']      = ['Admin\PostController/store',  'POST'];
 $config['/admin/post/{id}'] = ['Admin\PostController/edit',   'GET'];
@@ -96,13 +103,16 @@ $config['/admin/post/{id}'] = ['Admin\PostController/destroy','DELETE'];
 ```php
 <?php
 
+use SDF\Cache\Cache;
 use SDF\Controller;
 
 class Blog extends Controller
 {
     public function index(): void
     {
-        $posts = Post::published();
+        $posts = Cache::remember('blog.published', 300, function () {
+            return Post::published();
+        });
         $this->fuse->with(compact('posts'))->render('blog/index');
     }
 
@@ -127,7 +137,10 @@ class Blog extends Controller
 ```php
 <?php
 
+use SDF\Auth\Auth;
+use SDF\Cache\Cache;
 use SDF\Controller;
+use SDF\Flash;
 
 class PostController extends Controller
 {
@@ -138,7 +151,7 @@ class PostController extends Controller
 
     public function store(): void
     {
-        $body = $_POST;
+        $body = $this->request->body() ?: $_POST;
         $slug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $body['title']));
 
         Post::query()->insert([
@@ -147,11 +160,13 @@ class PostController extends Controller
             'excerpt' => $body['excerpt'] ?? '',
             'content' => $body['content'],
             'status'  => $body['status'] ?? 'draft',
-            'user_id' => $_SESSION['user']['id'],
+            'user_id' => Auth::user()->id,
         ]);
 
-        header('Location: /');
-        exit;
+        Cache::forget('blog.published');
+        $flash = new \SDF\Flash();
+        $flash->set('success', 'Post created!');
+        $this->response->redirect('/');
     }
 
     public function edit(int $id): void
@@ -172,6 +187,10 @@ class PostController extends Controller
             'UPDATE posts SET title=?, content=?, status=? WHERE id=?'
         );
         $stmt->execute([$body['title'], $body['content'], $body['status'], $id]);
+
+        Cache::forget('blog.published');
+        $flash = new \SDF\Flash();
+        $flash->set('success', 'Post updated!');
         $this->response->json(['updated' => true]);
     }
 
@@ -180,6 +199,10 @@ class PostController extends Controller
         $pdo  = \SDF\Spark::pdo();
         $stmt = $pdo->prepare('DELETE FROM posts WHERE id = ?');
         $stmt->execute([$id]);
+
+        Cache::forget('blog.published');
+        $flash = new \SDF\Flash();
+        $flash->set('info', 'Post deleted.');
         $this->response->status(204)->json([]);
     }
 }
@@ -232,6 +255,28 @@ class PostController extends Controller
 
 ---
 
+## New Feature Integration
+
+**CSRF protection** — Add `CsrfMiddleware` to your admin routes and include `@csrf` in Fuse forms:
+```php
+Router::middleware(\SDF\Middleware\CsrfMiddleware::class);
+```
+
+**Env-based DB config** — Set database credentials in `.env` and load them via `\SDF\Env::get()`:
+```php
+$config['db'] = [
+    'host' => \SDF\Env::get('DB_HOST'),
+    'name' => \SDF\Env::get('DB_NAME'),
+];
+```
+
+**Encryption** — Encrypt sensitive fields (e.g., user emails) with `\SDF\Encryption\Encrypter`:
+```php
+$encrypted = \SDF\Encryption\Encrypter::encrypt($email);
+```
+
+---
+
 ## What You Learned
 
 - Full MVC lifecycle in SDF
@@ -239,3 +284,6 @@ class PostController extends Controller
 - Slug generation from titles
 - Admin vs public controller separation via subdirectories
 - Fuse `@Foreach` + `@If` in real templates
+- Caching the published listing with `Cache::remember()` and invalidating on mutation
+- Using `Auth::user()` instead of `$_SESSION` superglobals
+- Sending flash messages with `SDF\Flash` across redirects

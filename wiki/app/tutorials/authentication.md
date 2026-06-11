@@ -1,6 +1,6 @@
 # Tutorial: User Authentication
 
-Implement session-based login, a Guard to protect routes, and an auth middleware.
+Implement session-based login, route protection with `AuthMiddleware`, user registration, and flash messages using the built-in Auth and Flash libraries.
 
 ---
 
@@ -22,7 +22,7 @@ class create_users_table_20240510000002
                 id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 name          VARCHAR(120) NOT NULL,
                 email         VARCHAR(255) NOT NULL UNIQUE,
-                password_hash VARCHAR(255) NOT NULL,
+                password      VARCHAR(255) NOT NULL,
                 created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ");
@@ -53,12 +53,6 @@ use SDF\Spark\Model;
 class User extends Model
 {
     protected static string $table = 'users';
-
-    public static function findByEmail(string $email): ?array
-    {
-        $rows = self::query()->where('email', '=', $email)->get();
-        return $rows[0] ?? null;
-    }
 }
 ```
 
@@ -71,51 +65,42 @@ class User extends Model
 ```php
 <?php
 
+use SDF\Auth\Auth;
 use SDF\Controller;
+use SDF\Flash;
 
 class AuthController extends Controller
 {
-    /** GET /login — show form */
+    /** GET /login - show form */
     public function loginForm(): void
     {
         $this->fuse->render('auth/login');
     }
 
-    /** POST /login — authenticate */
+    /** POST /login - authenticate */
     public function login(): void
     {
-        session_start();
-
         $email    = $this->request->post('email');
         $password = $this->request->post('password');
 
-        $user = User::findByEmail($email);
-
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (Auth::attempt(['email' => $email, 'password' => $password])) {
+            $flash = new \SDF\Flash();
+            $flash->set('success', 'Welcome back!');
+            $this->response->redirect('/dashboard');
+        } else {
             $this->fuse
                 ->with('error', 'Invalid email or password.')
                 ->render('auth/login');
-            return;
         }
-
-        // Store minimal user data in session
-        $_SESSION['user'] = [
-            'id'    => $user['id'],
-            'name'  => $user['name'],
-            'email' => $user['email'],
-        ];
-
-        header('Location: /dashboard');
-        exit;
     }
 
     /** GET /logout */
     public function logout(): void
     {
-        session_start();
-        session_destroy();
-        header('Location: /login');
-        exit;
+        Auth::logout();
+        $flash = new \SDF\Flash();
+        $flash->set('info', 'You have been logged out.');
+        $this->response->redirect('/login');
     }
 
     /** POST /register */
@@ -129,112 +114,136 @@ class AuthController extends Controller
         }
 
         User::query()->insert([
-            'name'          => $body['name'],
-            'email'         => $body['email'],
-            'password_hash' => password_hash($body['password'], PASSWORD_BCRYPT),
+            'name'     => $body['name'],
+            'email'    => $body['email'],
+            'password' => password_hash($body['password'], PASSWORD_BCRYPT),
         ]);
 
-        header('Location: /login');
-        exit;
+        $flash = new \SDF\Flash();
+        $flash->set('success', 'Account created! Please log in.');
+        $this->response->redirect('/login');
     }
 }
 ```
 
 ---
 
-## 4. Auth Guard
+## 4. Protected Controller with AuthMiddleware
 
-`app/guards/AuthGuard.php`:
-
-```php
-<?php
-
-use SDF\Guard;
-use SDF\Request;
-
-class AuthGuard extends Guard
-{
-    public function authorize(Request $request): bool
-    {
-        session_start();
-        return isset($_SESSION['user']);
-    }
-}
-```
-
----
-
-## 5. Protected Controller
-
-Any controller that needs auth applies the guard:
+`app/controllers/Dashboard.php`:
 
 ```php
 <?php
 
+use SDF\Auth\Auth;
 use SDF\Controller;
+use SDF\Flash;
 
 class Dashboard extends Controller
 {
     public function index(): void
     {
-        $guard = new AuthGuard();
-        if (!$guard->authorize($this->request)) {
-            header('Location: /login');
-            exit;
-        }
-
-        session_start();
-        $user = $_SESSION['user'];
-
-        $this->fuse->with(compact('user'))->render('dashboard/index');
+        $user = Auth::user();
+        $flash = Flash::all();
+        $this->fuse->with(compact('user', 'flash'))->render('dashboard/index');
     }
 }
 ```
 
 ---
 
-## 6. Login View
+## 5. AuthMiddleware (built-in)
 
-`app/views/auth/login.php`:
+The framework ships with `SDF\Auth\AuthMiddleware`. It checks the session guard and throws a 401 if unauthenticated.
+
+Register it in your route config:
+
+```php
+<?php
+// app/config/routes.php
+
+use SDF\Auth\AuthMiddleware;
+use SDF\Router;
+
+Router::middleware(AuthMiddleware::class);
+
+// All routes below require authentication
+$config['/dashboard'] = 'Dashboard/index';
+
+// Routes registered before middleware are public
+$config['/login']     = ['AuthController/loginForm', 'GET'];
+$config['/login']     = ['AuthController/login',     'POST'];
+$config['/logout']    = ['AuthController/logout',    'GET'];
+$config['/register']  = ['AuthController/register',  'POST'];
+```
+
+---
+
+## 6. Flash Messages in Views
+
+Display flash messages in your base layout or login view:
 
 ```html
+<!-- app/views/dashboard/index.php -->
 <!doctype html>
 <html lang="en">
-<head><title>Login</title></head>
+<head><title>Dashboard</title></head>
 <body>
-  @If(isset($error))
-    <p style="color:red">{{ $error }}</p>
+  @If(!empty($flash))
+    @Foreach($flash as $type => $message)
+      <p class="flash flash-{{ $type }}">{{ $message }}</p>
+    @endForeach
   @endIf
 
-  <form method="POST" action="/login">
-    <label>Email <input type="email" name="email" required></label>
-    <label>Password <input type="password" name="password" required></label>
-    <button type="submit">Log In</button>
-  </form>
+  <h1>Dashboard</h1>
+  <p>Hello, {{ $user->name ?? 'User' }}!</p>
+  <a href="/logout">Logout</a>
 </body>
 </html>
 ```
 
 ---
 
-## 7. Routes
+## 7. Full Routes File
 
 ```php
 <?php
 // app/config/routes.php
 
+use SDF\Auth\AuthMiddleware;
+use SDF\Router;
+
+// Public routes
 $config['/login']     = ['AuthController/loginForm', 'GET'];
 $config['/login']     = ['AuthController/login',     'POST'];
 $config['/logout']    = ['AuthController/logout',    'GET'];
 $config['/register']  = ['AuthController/register',  'POST'];
+
+// Protected routes
+Router::middleware(AuthMiddleware::class);
 $config['/dashboard'] = 'Dashboard/index';
+```
+
+---
+
+## New Feature Integration
+
+**CSRF protection** — Protect login/registration forms by registering `CsrfMiddleware` and using the `@csrf` helper in Fuse templates:
+```php
+Router::middleware(\SDF\Middleware\CsrfMiddleware::class);
+```
+
+**Env-based JWT secret** — Store your JWT signing key in `.env` and load it securely:
+```php
+$secret = \SDF\Env::get('JWT_SECRET');
 ```
 
 ---
 
 ## What You Learned
 
-- Storing hashed passwords with `password_hash` / `password_verify`
-- Session management in SDF controllers
-- Using a `Guard` to protect any controller method
-- Rendering login errors via Fuse template variables
+- Using `Auth::attempt()` for credential-based login
+- Using `Auth::user()` to get the authenticated model
+- Protecting routes with `AuthMiddleware`
+- Sending flash messages with `SDF\Flash` across redirects
+- Using `Session` (auto-started) for underlying state management

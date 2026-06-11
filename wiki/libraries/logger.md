@@ -56,7 +56,7 @@ Handlers implement a minimal interface (handle(LogRecord), flush()). You may imp
 
 Design notes
 
-- Messages may be strings or callables — callables are lazily evaluated for performance.
+- Messages may be strings or callables - callables are lazily evaluated for performance.
 - Marker is an optional short tag useful for filtering and quick classification.
 - ConsoleHandler produces colored output by default when TTY available. In daemonized environments you may prefer file handlers.
 

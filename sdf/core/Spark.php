@@ -19,7 +19,7 @@ class Spark
     private static ?PDO $pdo = null;
 
     /**
-     * Establish database connection (lazy — actual connect on first query).
+     * Establish database connection (lazy - actual connect on first query).
      *
      * @param string $dsn      Data Source Name.
      * @param string|null $username Database username.
@@ -30,10 +30,70 @@ class Spark
      */
     public static function connect(string $dsn, ?string $username = null, ?string $password = null, array $options = [], bool $persistent = false): void
     {
-        if ($persistent) {
-            $options[PDO::ATTR_PERSISTENT] = true;
+        Pool::add('default', $dsn, $username, $password, $options, $persistent);
+    }
+
+    /**
+     * Auto-initialize from app/config/database.php if no pool config exists.
+     */
+    private static function connectFromConfig(): void
+    {
+        if (Pool::has('default')) {
+            return;
         }
-        Pool::add('default', $dsn, $username, $password, $options);
+        $dbConfig = Core::coreGetConfig('database');
+        if (!$dbConfig || !isset($dbConfig['driver'])) {
+            return;
+        }
+        self::configureFromArray($dbConfig);
+    }
+
+    /**
+     * Parse a config array and call connect() with the right DSN.
+     */
+    private static function configureFromArray(array $dbConfig): void
+    {
+        switch ($dbConfig['driver']) {
+            case 'mysql':
+                $dsn = 'mysql:host=' . ($dbConfig['host'] ?? '127.0.0.1')
+                     . ';dbname=' . ($dbConfig['name'] ?? '')
+                     . ';port=' . ($dbConfig['port'] ?? '3306')
+                     . ';charset=' . ($dbConfig['charset'] ?? 'utf8mb4');
+                self::connect($dsn, $dbConfig['user'] ?? null, $dbConfig['password'] ?? null);
+                break;
+            case 'psql':
+            case 'pgsql':
+            case 'postgres':
+                $dsn = 'pgsql:host=' . ($dbConfig['host'] ?? '127.0.0.1')
+                     . ';dbname=' . ($dbConfig['name'] ?? '')
+                     . ';port=' . ($dbConfig['port'] ?? '5432');
+                self::connect($dsn, $dbConfig['user'] ?? null, $dbConfig['password'] ?? null);
+                break;
+            case 'sqlite':
+                $path = $dbConfig['path'] ?? ($dbConfig['dsn'] ?? null);
+                if ($path === null) {
+                    throw new \Exception('SQLite configuration missing path/dsn');
+                }
+                self::connect(str_starts_with($path, 'sqlite:') ? $path : 'sqlite:' . $path);
+                break;
+            case 'sqlsrv':
+                $server = $dbConfig['host'] . ',' . ($dbConfig['port'] ?? '1433');
+                $dsn = 'sqlsrv:Server=' . $server . ';database=' . ($dbConfig['name'] ?? '');
+                if (!empty($dbConfig['auth'])) {
+                    self::connect($dsn);
+                } else {
+                    self::connect($dsn, $dbConfig['user'] ?? null, $dbConfig['password'] ?? null);
+                }
+                break;
+            case 'manual':
+                $dsn = $dbConfig['dsn'] ?? '';
+                if ($dsn === '') {
+                    throw new \Exception('Spark ORM: manual driver requires a non-empty dsn in config/database.php');
+                }
+                $args = isset($dbConfig['args']) && is_array($dbConfig['args']) ? $dbConfig['args'] : [];
+                self::connect($dsn, ...$args);
+                break;
+        }
     }
 
     /**
@@ -43,6 +103,9 @@ class Spark
     {
         if (self::$pdo !== null) {
             return;
+        }
+        if (!Pool::has('default')) {
+            self::connectFromConfig();
         }
         if (!Pool::has('default')) {
             throw new Exception("Spark ORM: Database not connected.");
@@ -69,6 +132,15 @@ class Spark
         }
         self::ensureConnected();
         return self::$pdo;
+    }
+
+    /**
+     * Disconnect and reset the default connection.
+     */
+    public static function disconnect(): void
+    {
+        self::$pdo = null;
+        Pool::remove('default');
     }
 
     /**
@@ -110,8 +182,15 @@ class QueryBuilder
         $parts = explode('.', $identifier);
         $out = [];
         foreach ($parts as $part) {
-            if (!preg_match('/^[A-Za-z0-9_]+$/', $part)) {
+            $len = strlen($part);
+            if ($len === 0) {
                 throw new \InvalidArgumentException('Invalid identifier: ' . $identifier);
+            }
+            for ($i = 0; $i < $len; $i++) {
+                $c = $part[$i];
+                if (!($c >= 'a' && $c <= 'z') && !($c >= 'A' && $c <= 'Z') && !($c >= '0' && $c <= '9') && $c !== '_') {
+                    throw new \InvalidArgumentException('Invalid identifier: ' . $identifier);
+                }
             }
             $out[] = "`" . $part . "`";
         }
@@ -135,6 +214,12 @@ class QueryBuilder
 
     /** @var string|null $modelClass Optional class name to hydrate results into. */
     protected ?string $modelClass = null;
+
+    /** @var string|null $columns Optional custom SELECT columns. */
+    protected ?string $columns = null;
+
+    /** @var array $joins List of JOIN clauses. */
+    protected array $joins = [];
 
     /**
      * Initialize builder with table.
@@ -216,19 +301,70 @@ class QueryBuilder
     }
 
     /**
+     * Set custom SELECT columns.
+     *
+     * @param string $columns
+     * @return self
+     */
+    public function select(string $columns): self
+    {
+        $this->columns = $columns;
+        return $this;
+    }
+
+    /**
+     * Add a JOIN clause.
+     *
+     * @param string $table    Joined table name.
+     * @param string $first    First column.
+     * @param string $operator Comparison operator.
+     * @param string $second   Second column.
+     * @param string $type     Join type (INNER, LEFT, RIGHT).
+     * @return self
+     */
+    public function join(string $table, string $first, string $operator, string $second, string $type = 'INNER'): self
+    {
+        $type = strtoupper($type);
+        $type = in_array($type, ['INNER', 'LEFT', 'RIGHT', 'FULL'], true) ? $type : 'INNER';
+        $this->joins[] = " $type JOIN " . $this->quoteIdent($table) . " ON " . $this->quoteIdent($first) . " $operator " . $this->quoteIdent($second);
+        return $this;
+    }
+
+    /**
+     * Build the SELECT clause.
+     *
+     * @return string
+     */
+    private function buildSelect(): string
+    {
+        $sql = "SELECT " . ($this->columns ?? "*") . " FROM " . $this->quoteIdent($this->table);
+
+        if (!empty($this->joins)) {
+            $sql .= implode('', $this->joins);
+        }
+
+        if (!empty($this->wheres)) {
+            $sql .= " WHERE " . implode(" AND ", $this->wheres);
+        }
+
+        $sql .= $this->orderBy ?? "";
+        $sql .= $this->limit ?? "";
+
+        return $sql;
+    }
+
+    /**
      * Get the first record matching the query.
      *
      * @return mixed
      */
     public function first(): mixed
     {
-        $sql = "SELECT * FROM " . $this->quoteIdent($this->table);
-        if (!empty($this->wheres)) {
-            $sql .= " WHERE " . implode(" AND ", $this->wheres);
-        }
-
-        $sql .= $this->orderBy ?? "";
-        $sql .= " LIMIT 1";
+        $savedLimit = $this->limit;
+        $savedBindings = $this->bindings;
+        $this->limit = " LIMIT 1";
+        $sql = $this->buildSelect();
+        $this->limit = $savedLimit;
 
         $stmt = Spark::pdo()->prepare($sql);
         $stmt->execute($this->bindings);
@@ -252,13 +388,7 @@ class QueryBuilder
      */
     public function get(): array
     {
-        $sql = "SELECT * FROM " . $this->quoteIdent($this->table);
-        if (!empty($this->wheres)) {
-            $sql .= " WHERE " . implode(" AND ", $this->wheres);
-        }
-
-        $sql .= $this->orderBy ?? "";
-        $sql .= $this->limit ?? "";
+        $sql = $this->buildSelect();
 
         $stmt = Spark::pdo()->prepare($sql);
         $stmt->execute($this->bindings);
@@ -359,5 +489,32 @@ class QueryBuilder
         }
         $stmt = Spark::pdo()->prepare($sql);
         return $stmt->execute($this->bindings);
+    }
+
+    /**
+     * Paginate the query results.
+     *
+     * @param int      $perPage Number of items per page.
+     * @param int|null $page    Current page (defaults to $_GET['page'] ?? 1).
+     * @return \SDF\Spark\Paginator
+     */
+    public function paginate(int $perPage = 15, ?int $page = null): \SDF\Spark\Paginator
+    {
+        $page = $page ?? (int)($_GET['page'] ?? 1);
+        $page = max(1, $page);
+
+        $savedLimit = $this->limit;
+        $savedBindings = $this->bindings;
+
+        $total = $this->count();
+
+        $this->bindings = $savedBindings;
+        $offset = ($page - 1) * $perPage;
+        $this->limit = " LIMIT $perPage OFFSET $offset";
+
+        $items = $this->get();
+        $this->limit = $savedLimit;
+
+        return new \SDF\Spark\Paginator($items, $total, $perPage, $page);
     }
 }

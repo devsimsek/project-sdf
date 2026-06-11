@@ -1,6 +1,6 @@
 # Tutorial: Custom Middleware
 
-Build three practical middlewares: rate limiting, CORS headers, and request logging.
+Build three practical middlewares: rate limiting (via Cache facade), CORS headers, and request logging.
 
 ---
 
@@ -61,17 +61,21 @@ class CorsMiddleware implements Middleware
 }
 ```
 
+> **PSR-7/PSR-15 alternative:** For a framework-agnostic middleware pipeline, implement `Psr\Http\Server\MiddlewareInterface`
+> and use `ServerRequestInterface`/`ResponseInterface` instead of reading `$_SERVER` superglobals.
+
 ---
 
 ## 2. Rate Limit Middleware
 
-Limits each IP to N requests per minute using file-based counters (swap for Redis in production).
+Limits each IP to N requests per minute using the **Cache facade** - swap drivers (`file`/`redis`/`memcached`) via config without changing code.
 
 `app/middlewares/RateLimitMiddleware.php`:
 
 ```php
 <?php
 
+use SDF\Cache\Cache;
 use SDF\Middleware;
 use SDF\Request;
 
@@ -81,22 +85,20 @@ class RateLimitMiddleware implements Middleware
 
     public function handle(Request $request, \Closure $next): mixed
     {
-        $ip        = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-        $cacheFile = sys_get_temp_dir() . '/rl_' . md5($ip) . '.json';
+        $ip  = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $key = 'rate_limit:' . md5($ip);
 
-        $data = file_exists($cacheFile)
-            ? json_decode(file_get_contents($cacheFile), true)
-            : null;
+        $data = Cache::get($key, ['count' => 0, 'window' => time()]);
 
         $now = time();
 
-        if (!$data || ($now - $data['window']) >= 60) {
+        if (($now - $data['window']) >= 60) {
             $data = ['count' => 1, 'window' => $now];
         } else {
             $data['count']++;
         }
 
-        file_put_contents($cacheFile, json_encode($data));
+        Cache::set($key, $data, 120);
 
         header('X-RateLimit-Limit: ' . $this->limit);
         header('X-RateLimit-Remaining: ' . max(0, $this->limit - $data['count']));
@@ -112,6 +114,9 @@ class RateLimitMiddleware implements Middleware
     }
 }
 ```
+
+> **Why Cache?** The `Cache` facade abstracts file/Redis/Memcached behind the same API.
+> Switch to Redis in production just by changing `app/config/cache.php` - no code changes.
 
 ---
 
@@ -136,7 +141,7 @@ class LogMiddleware implements Middleware
         $ms    = round((microtime(true) - $start) * 1000, 3);
 
         $line = sprintf(
-            "[%s] %s %s — %sms from %s\n",
+            "[%s] %s %s - %sms from %s\n",
             date('Y-m-d H:i:s'),
             $_SERVER['REQUEST_METHOD'],
             $_SERVER['REQUEST_URI'],
@@ -180,10 +185,29 @@ $response = (new Pipeline)
 
 ---
 
+## New Feature Integration
+
+SDF now ships with three built-in middleware classes — `CsrfMiddleware`, `CorsMiddleware`, and `RateLimitMiddleware` — all under the `SDF\Middleware` namespace. Import and register them directly instead of rolling your own:
+
+```php
+use SDF\Middleware\CorsMiddleware;
+use SDF\Middleware\RateLimitMiddleware;
+use SDF\Middleware\CsrfMiddleware;
+
+Router::middleware(CorsMiddleware::class);
+Router::middleware(RateLimitMiddleware::class);
+Router::middleware(CsrfMiddleware::class);
+```
+
+The custom implementations above remain useful as a reference, but the built-in versions are recommended for new projects.
+
+---
+
 ## What You Learned
 
 - Implementing the `SDF\Middleware` interface
 - CORS preflight handling
-- File-based rate limiting with sliding window
+- Rate limiting with the `Cache` facade (driver-agnostic)
 - Measuring and logging response times via middleware wrap
 - Chaining multiple middlewares in `Pipeline::through()`
+- The built-in `SDF\Auth\AuthMiddleware` for route authentication

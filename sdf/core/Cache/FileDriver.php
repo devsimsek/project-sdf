@@ -262,7 +262,7 @@ class FileDriver implements CacheDriver
         if ($content === false) {
             return null;
         }
-        $data = unserialize($content);
+        $data = unserialize($content, ['allowed_classes' => false]);
         if (!is_array($data)) {
             return null;
         }
@@ -321,7 +321,7 @@ class FileDriver implements CacheDriver
     {
         $index = $this->loadTagIndex();
         foreach ($index as $tag => $keys) {
-            $index[$tag] = array_values(array_filter($keys, fn($k) => $k !== $key));
+            $index[$tag] = array_values(array_filter($keys, fn ($k) => $k !== $key));
             if (empty($index[$tag])) {
                 unset($index[$tag]);
             }
@@ -342,7 +342,7 @@ class FileDriver implements CacheDriver
         if ($content === false) {
             return [];
         }
-        $data = unserialize($content);
+        $data = unserialize($content, ['allowed_classes' => false]);
         return is_array($data) ? $data : [];
     }
 

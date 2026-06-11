@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <meta name="description" content="SDF Framework - A fast, modern PHP framework by devsimsek.">
-  <title>{{ $app_title ?? "SDF" }} — v{{ $app_version ?? SDF_VERSION }}</title>
+  <title>{{ $app_title ?? "SDF" }} - v{{ $app_version ?? SDF_VERSION }}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -258,19 +258,19 @@
 
     <div class="bench-grid">
       <div class="bench-item">
-        <div class="bench-value">~57%</div>
-        <div class="bench-label">Faster avg render</div>
-        <div class="bench-sub">0.000157ms vs 0.000363ms</div>
+        <div class="bench-value">10,046</div>
+        <div class="bench-label">Req/sec</div>
+        <div class="bench-sub">FrankenPHP php-server</div>
       </div>
       <div class="bench-item">
-        <div class="bench-value">0.0001ms</div>
-        <div class="bench-label">Min response time</div>
-        <div class="bench-sub">down from 0.0002ms</div>
+        <div class="bench-value">1.46ms</div>
+        <div class="bench-label">Avg latency</div>
+        <div class="bench-sub">σ 5.08ms variance</div>
       </div>
       <div class="bench-item">
-        <div class="bench-value">61%</div>
-        <div class="bench-label">Less variance</div>
-        <div class="bench-sub">σ 0.000056ms vs 0.000143ms</div>
+        <div class="bench-value">543MB/s</div>
+        <div class="bench-label">Transfer rate</div>
+        <div class="bench-sub">full stack w/ Fuse view</div>
       </div>
     </div>
 

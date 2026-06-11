@@ -4,11 +4,31 @@ Spark is the SDF v2.0.0 database layer. It provides a clean PDO-backed QueryBuil
 
 ## Connecting
 
-Call `Spark::connect()` once — typically in `index.php` or a bootstrap config:
+Spark auto-connects from `app/config/database.php` on the first query — no manual `connect()` call needed:
 
 ```php
+// app/config/database.php
 <?php
+$config['database'] = [
+    'driver'   => 'sqlite',      // mysql | pgsql | sqlite | sqlsrv | manual
+    'host'     => '127.0.0.1',
+    'name'     => 'myapp',
+    'user'     => 'dbuser',
+    'password' => 'secret',
+    'port'     => 3306,
+    'charset'  => 'utf8mb4',
+    // For sqlite use either a path or :memory:
+    'path'     => ':memory:',
+];
+```
 
+The PDO connection is created lazily when `Spark::pdo()`, `Spark::table()`, or any query runs. Pages that never hit the database pay zero connection overhead.
+
+### Manual connect (advanced)
+
+For runtime DSN overrides or multiple connections:
+
+```php
 use SDF\Spark;
 
 Spark::connect(
@@ -17,35 +37,13 @@ Spark::connect(
     password: 'secret',
     options:  [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
 );
-```
 
-For SQLite:
-
-```php
-Spark::connect('sqlite:' . SDF_ROOT . '/database.sqlite');
+Spark::connect('sqlite:/var/www/db.sqlite');
 ```
 
 Configuration and DSN notes
 
-- Recommended database config file shape (top-level keys):
-
-```php
-// app/config/database.php
-<?php
-$config = [
-  'driver'  => 'sqlite',      // mysql | pgsql | sqlite | sqlsrv | manual
-  'host'    => '127.0.0.1',
-  'name'    => 'myapp',
-  'user'    => 'dbuser',
-  'password'=> 'secret',
-  'port'    => 3306,
-  'charset' => 'utf8mb4',
-  // For sqlite use either a path or :memory:
-  'path'    => ':memory:'
-];
-```
-
-- The initializer accepts either a full DSN (e.g. `sqlite::memory:` or `mysql:...`) provided via `dsn`, or a `path`/`host`+`name` combination. When using SQLite, pass a filesystem path (e.g. `/var/www/db.sqlite`) or `:memory:`. The bootstrap will detect an already-formed DSN and avoid double-prefixing `sqlite:`.
+- The config accepts either a full DSN via `dsn`, or a `path`/`host`+`name` combination. SQLite paths are auto-prefixed with `sqlite:` unless they already contain a colon (e.g. `sqlite::memory:`).
 
 - `Spark::connect()` accepts nullable username/password to accommodate drivers (e.g., Windows-auth SQL Server or DSN-only connections).
 
@@ -65,7 +63,7 @@ use SDF\Spark\Model;
 
 class User extends Model
 {
-    protected static string $table = 'users'; // optional — defaults to 'users'
+    protected static string $table = 'users'; // optional - defaults to 'users'
 }
 ```
 
@@ -121,7 +119,7 @@ $stmt->execute(['pending']);
 $count = $stmt->fetchColumn();
 ```
 
-## Real-World Example — Blog Controller
+## Real-World Example - Blog Controller
 
 ```php
 <?php

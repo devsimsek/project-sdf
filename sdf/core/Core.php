@@ -115,9 +115,22 @@ trait CoreUtilities
         string $directory = "config",
     ): void {
         $cacheFile = sys_get_temp_dir() . "/sdf_config.cache";
-        if (file_exists($cacheFile)) {
-            \SDF\Core::$config = require $cacheFile;
-            return;
+        if (is_file($cacheFile)) {
+            $raw = file_get_contents($cacheFile);
+            // Try new format (serialize) first, fall back to old format (var_export)
+            $config = @unserialize($raw, ['allowed_classes' => false]);
+            if ($config !== false) {
+                \SDF\Core::$config = $config;
+                return;
+            }
+            // Old format: PHP return statement from var_export
+            $config = require $cacheFile;
+            if (is_array($config)) {
+                \SDF\Core::$config = $config;
+                // Rewrite in new format for next time
+                file_put_contents($cacheFile, serialize($config));
+                return;
+            }
         }
 
         foreach (
@@ -132,7 +145,7 @@ trait CoreUtilities
                 $directory .
                 DIRECTORY_SEPARATOR .
                 $file;
-            if (file_exists($filePath)) {
+            if (is_file($filePath)) {
                 if (str_ends_with($file, ".json")) {
                     $config = json_decode(file_get_contents($filePath), true);
                 } else {
@@ -165,7 +178,7 @@ trait CoreUtilities
         }
         file_put_contents(
             $cacheFile,
-            "<?php return " . var_export(\SDF\Core::$config, true) . ";",
+            serialize(\SDF\Core::$config),
         );
         chmod($cacheFile, 0600);
     }
@@ -284,12 +297,12 @@ trait CoreUtilities
  */
 class Core
 {
+    use CoreUtilities;
+
     /** @var array Stores the classes that have been loaded */
     public static array $isLoaded = [];
     /** @var array Stores the classes that have been loaded */
     public static array $classes = [];
     /** @var array Stores the configurations that have been loaded */
     public static array $config = [];
-
-    use CoreUtilities;
 }

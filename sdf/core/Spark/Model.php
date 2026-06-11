@@ -198,17 +198,7 @@ abstract class Model
      */
     public static function find(mixed $id): ?static
     {
-        $data = static::query()->where(static::$primaryKey, $id)->first();
-        if ($data instanceof static) {
-            return $data;
-        }
-
-        if (is_array($data)) {
-            $class = static::class;
-            return new $class($data, true);
-        }
-
-        return null;
+        return static::query()->where(static::$primaryKey, $id)->first();
     }
 
     /**
@@ -221,7 +211,11 @@ abstract class Model
      */
     public static function where(string $column, mixed $operator, mixed $value = null): QueryBuilder
     {
-        return self::query()->where($column, $operator, $value);
+        $qb = static::query();
+        if (func_num_args() === 2) {
+            return $qb->where($column, $operator);
+        }
+        return $qb->where($column, $operator, $value);
     }
 
     /**
@@ -266,7 +260,138 @@ abstract class Model
         return $query->delete();
     }
 
-    // todo: write documentation & tests
+    /**
+     * Define a one-to-one relationship.
+     *
+     * @param string      $related    Related model class name.
+     * @param string|null $foreignKey Foreign key on the related table.
+     * @param string|null $localKey   Local key on this model's table.
+     * @return static|null
+     */
+    public function hasOne(string $related, ?string $foreignKey = null, ?string $localKey = null): ?object
+    {
+        $instance = new $related();
+        $localKey = $localKey ?? static::$primaryKey;
+        $foreignKey = $foreignKey ?? self::classToSnake(static::class) . '_id';
+
+        return $instance::where($foreignKey, $this->attributes[$localKey] ?? null)->first();
+    }
+
+    /**
+     * Define a one-to-many relationship.
+     *
+     * @param string      $related    Related model class name.
+     * @param string|null $foreignKey Foreign key on the related table.
+     * @param string|null $localKey   Local key on this model's table.
+     * @return object[]
+     */
+    public function hasMany(string $related, ?string $foreignKey = null, ?string $localKey = null): array
+    {
+        $instance = new $related();
+        $localKey = $localKey ?? static::$primaryKey;
+        $foreignKey = $foreignKey ?? self::classToSnake(static::class) . '_id';
+
+        return $instance::where($foreignKey, $this->attributes[$localKey] ?? null)->get();
+    }
+
+    /**
+     * Define an inverse one-to-one or many relationship.
+     *
+     * @param string      $related   Parent model class name.
+     * @param string|null $foreignKey Foreign key on this model's table.
+     * @param string|null $ownerKey  Owner key on the parent table.
+     * @return object|null
+     */
+    public function belongsTo(string $related, ?string $foreignKey = null, ?string $ownerKey = null): ?object
+    {
+        $instance = new $related();
+        $ownerKey = $ownerKey ?? $instance->getPrimaryKey();
+        $foreignKey = $foreignKey ?? $this->guessForeignKey($related);
+
+        return $instance::where($ownerKey, $this->attributes[$foreignKey] ?? null)->first();
+    }
+
+    /**
+     * Define a many-to-many relationship.
+     *
+     * @param string      $related         Related model class name.
+     * @param string|null $pivotTable      Pivot table name.
+     * @param string|null $foreignPivotKey Foreign key on the pivot table for this model.
+     * @param string|null $relatedPivotKey Foreign key on the pivot table for the related model.
+     * @return static[]
+     */
+    public function belongsToMany(string $related, ?string $pivotTable = null, ?string $foreignPivotKey = null, ?string $relatedPivotKey = null): array
+    {
+        $instance = new $related();
+        $pivotTable = $pivotTable ?? $this->guessPivotTable(static::class, $related);
+        $foreignPivotKey = $foreignPivotKey ?? $this->guessForeignKey(static::class);
+        $relatedPivotKey = $relatedPivotKey ?? $this->guessForeignKey($related);
+        $localValue = $this->attributes[static::$primaryKey] ?? null;
+
+        if ($localValue === null) {
+            return [];
+        }
+
+        $relatedTable = $instance::getTable();
+        $relatedPk = $instance->getPrimaryKey();
+
+        $query = Spark::table($pivotTable)
+            ->select("{$relatedTable}.*")
+            ->as($related)
+            ->join($relatedTable, "{$relatedTable}.{$relatedPk}", '=', "{$pivotTable}.{$relatedPivotKey}")
+            ->where("{$pivotTable}.{$foreignPivotKey}", $localValue);
+
+        return $query->get();
+    }
+
+    /**
+     * Get the primary key column name.
+     *
+     * @return string
+     */
+    public function getPrimaryKey(): string
+    {
+        return static::$primaryKey;
+    }
+
+    /**
+     * Convert a PascalCase class name to snake_case table name.
+     *
+     * @param string $class
+     * @return string
+     */
+    private static function classToSnake(string $class): string
+    {
+        $parts = explode('\\', $class);
+        $name = end($parts);
+        return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $name));
+    }
+
+    /**
+     * Guess the foreign key column name for a given class.
+     *
+     * @param string $class
+     * @return string
+     */
+    private function guessForeignKey(string $class): string
+    {
+        return self::classToSnake($class) . '_id';
+    }
+
+    /**
+     * Guess the pivot table name from two class names.
+     *
+     * @param string $class1
+     * @param string $class2
+     * @return string
+     */
+    private function guessPivotTable(string $class1, string $class2): string
+    {
+        $tables = [self::classToSnake($class1), self::classToSnake($class2)];
+        sort($tables);
+        return implode('_', $tables);
+    }
+
     public function toArray(): array
     {
         $data = $this->attributes;
@@ -279,29 +404,23 @@ abstract class Model
             if (is_string($v)) {
                 $s = trim($v);
 
-                // null-ish
                 if ($s === '') {
                     return $v;
                 }
 
-                // boolean-ish
-                $lower = strtolower($s);
-                if (in_array($lower, ['true','false','1','0','yes','no'], true)) {
-                    return in_array($lower, ['true','1','yes'], true);
-                }
-
-                // integer
                 if (ctype_digit($s) || preg_match('/^[+-]?\d+$/', $s)) {
-                    // protect large ints: intval is fine for typical ranges
-                    return (int)$s;
+                    return (int) $s;
                 }
 
-                // float (decimal or exponent)
-                if (is_numeric($s) && (str_contains($s, '.') || stripos($s, 'e') !== false)) {
-                    return (float)$s;
+                if (is_numeric($s)) {
+                    return (float) $s;
                 }
 
-                // json array/object -> decode
+                $lower = strtolower($s);
+                if (in_array($lower, ['true','false','yes','no'], true)) {
+                    return in_array($lower, ['true','yes'], true);
+                }
+
                 if (($json = json_decode($s, true)) !== null && json_last_error() === JSON_ERROR_NONE) {
                     return $json;
                 }

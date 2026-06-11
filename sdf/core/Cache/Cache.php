@@ -22,7 +22,7 @@ use DateTime;
 use SDF\Core;
 
 /**
- * Cache facade — PSR-16 (SimpleCache) compliant static proxy.
+ * Cache facade - PSR-16 (SimpleCache) compliant static proxy.
  *
  * Usage:
  *   Cache::set('key', $value, 3600);
@@ -204,11 +204,20 @@ class Cache
         $config = Core::coreGetConfig('cache') ?: [];
         $driver = $config['driver'] ?? 'file';
 
-        return match ($driver) {
-            'redis' => new RedisDriver($config['redis'] ?? []),
-            'memcached' => new MemcachedDriver($config['memcached'] ?? []),
-            default => new FileDriver($config['file'] ?? []),
-        };
+        $driverMap = [
+            'redis' => 'RedisDriver',
+            'memcached' => 'MemcachedDriver',
+            'file' => 'FileDriver',
+        ];
+        $class = $driverMap[$driver] ?? 'FileDriver';
+        $file = __DIR__ . '/' . $class . '.php';
+        if (is_file($file)) {
+            require_once $file;
+        }
+
+        $fqcn = __NAMESPACE__ . '\\' . $class;
+        $configKey = ($class === 'FileDriver') ? 'file' : $driver;
+        return new $fqcn($config[$configKey] ?? []);
     }
 
     /**

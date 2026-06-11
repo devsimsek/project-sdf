@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SDF Opcache Warmup Script
  * Run after deploy to pre-compile framework files into shared memory.

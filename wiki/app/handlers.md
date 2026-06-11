@@ -2,7 +2,7 @@
 
 This is the documentation for the handlers in the app. Here you can find all the information you need to get started.
 
-> Handlers provide small, reusable functions that the framework or your controllers can call — for example custom error handlers, global utility functions, or boot-time callbacks. This section documents handler conventions, recommended function signatures, how to register/load handlers from `app/handlers/`, and common examples you can copy and adapt. If you need additional examples or integrations, please open an issue.
+> Handlers provide small, reusable functions that the framework or your controllers can call - for example custom error handlers, global utility functions, or boot-time callbacks. This section documents handler conventions, recommended function signatures, how to register/load handlers from `app/handlers/`, and common examples you can copy and adapt. If you need additional examples or integrations, please open an issue.
 
 ## Basic Handler
 
