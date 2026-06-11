@@ -36,6 +36,7 @@
    - [Localization](libraries/localization.md)
    - [Mail](libraries/mail.md)
    - [Queue](libraries/queue.md)
+   - [Storage](libraries/storage.md)
 - **Agentic Workflow**
   - [Introduction](agentic_workflow/introduction.md)
   - [Setup Guide](agentic_workflow/tutorials/setup.md)

@@ -83,6 +83,10 @@ require_once SDF_DIR . 'core/Queue/Job.php';
 require_once SDF_DIR . 'core/Queue/DatabaseQueue.php';
 require_once SDF_DIR . 'core/Queue/RedisQueue.php';
 require_once SDF_DIR . 'core/Queue/Worker.php';
+require_once SDF_DIR . 'core/Storage/Contracts/StorageDriver.php';
+require_once SDF_DIR . 'core/Storage/Drivers/LocalDriver.php';
+require_once SDF_DIR . 'core/Storage/Drivers/S3Driver.php';
+require_once SDF_DIR . 'core/Storage/Storage.php';
 
 // Test helpers
 require_once __DIR__ . '/TestMiddlewares.php';

@@ -35,6 +35,11 @@ class CLI
         define("SDF_APP", SDF_ROOT . "/app/");
         define("SDF_DIR", SDF_ROOT . "/sdf/");
 
+        // Load .env and helpers before config so env() is available
+        require_once SDF_DIR . "core/Env.php";
+        require_once SDF_DIR . "core/helpers.php";
+        \SDF\Env::load(SDF_ROOT . '/.env');
+
         require_once SDF_DIR . "core/Core.php";
         Core::coreLoadConfigurations();
 

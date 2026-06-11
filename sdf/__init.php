@@ -129,6 +129,7 @@ require_once SDF_DIR . "core/Schema/__init.php";
 require_once SDF_DIR . "core/Localization/__init.php";
 require_once SDF_DIR . "core/Mail/__init.php";
 require_once SDF_DIR . "core/Queue/__init.php";
+require_once SDF_DIR . "core/Storage/__init.php";
 
 // sdf-15: better error handling and managed exceptions
 require_once SDF_DIR . "core/Exceptions.php"; // https://github.com/devsimsek/project-sdf/pull/12#discussion_r3299746185
