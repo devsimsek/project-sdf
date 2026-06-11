@@ -30,6 +30,10 @@
   - [HTTP (PSR-7)](libraries/http.md)
   - [Swagger / OpenAPI](libraries/swagger.md)
   - [Benchmark](libraries/benchmark.md)
+- **Agentic Workflow**
+  - [Introduction](agentic_workflow/introduction.md)
+  - [Setup Guide](agentic_workflow/tutorials/setup.md)
+  - [Project SDF Skill](agentic_workflow/skills/project-sdf.md)
 
 ---
 
