@@ -157,7 +157,7 @@ class Schema
             return false;
         }
 
-        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` LIKE ?");
+        $stmt = $pdo->prepare("SHOW COLUMNS FROM `{$table}` WHERE Field = ?");
         $stmt->execute([$column]);
         return (bool) $stmt->fetchColumn();
     }

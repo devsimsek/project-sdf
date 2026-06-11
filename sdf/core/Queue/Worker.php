@@ -74,6 +74,7 @@ class Worker
                 'error' => $e->getMessage(),
                 'exception' => $e,
             ]);
+            $this->queue->release($job, 5);
         }
 
         return $job;

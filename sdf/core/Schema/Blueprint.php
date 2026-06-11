@@ -57,6 +57,7 @@ class Blueprint
             'unique'   => false,
             'extra'    => 'auto_increment',
         ];
+        $this->primaryKeys[] = $name;
         return $this;
     }
 

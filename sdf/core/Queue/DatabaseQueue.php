@@ -135,26 +135,28 @@ class DatabaseQueue implements Queue
             return null;
         }
 
-        $deleteStmt = $this->pdo->prepare(
-            "DELETE FROM {$this->table} WHERE id = ?"
-        );
-        $deleteStmt->execute([$row['id']]);
-
-        $this->pdo->commit();
-
         $decoded = json_decode($row['payload'], true);
         if (!is_array($decoded) || !isset($decoded['class'], $decoded['data'])) {
+            $this->pdo->commit();
             return null;
         }
 
         $class = $decoded['class'];
         if (!class_exists($class)) {
+            $this->pdo->commit();
             return null;
         }
 
         $job = $class::fromPayload($decoded['data']);
         $job->setId((string) $row['id']);
         $job->setAttempts((int) $row['attempts']);
+
+        $deleteStmt = $this->pdo->prepare(
+            "DELETE FROM {$this->table} WHERE id = ?"
+        );
+        $deleteStmt->execute([$row['id']]);
+
+        $this->pdo->commit();
         return $job;
     }
 
