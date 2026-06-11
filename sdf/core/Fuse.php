@@ -79,6 +79,7 @@ class Fuse
 
         if (!$cacheValid) {
             $content = file_get_contents($sourcePath);
+            $content = $this->compileWithInheritance($content, $path);
             $content = $this->parseContent($content);
             Cache::set($cacheKey, [
                 'mtime' => $sourceMtime,
@@ -99,6 +100,71 @@ class Fuse
         ob_start();
         require $cacheFile;
         return ob_get_clean();
+    }
+
+    /**
+     * Compile template inheritance (@extends, @section, @yield, @include).
+     * Works at compile time: resolves the layout, injects sections, includes nested views.
+     */
+    private function compileWithInheritance(string $input, string $path): string
+    {
+        $layout = null;
+        if (preg_match('/\@extends\s*\(\s*([\'"])(.+?)\1\s*\)/', $input, $m)) {
+            $layout = $m[2];
+            $input = preg_replace('/\@extends\s*\(\s*([\'"])(.+?)\1\s*\)/', '', $input);
+        }
+
+        $sections = [];
+        $input = preg_replace_callback(
+            '/\@section\s*\(\s*([\'"])(.+?)\1\s*\)((.|\n)*?)\@endsection/',
+            function ($m) use (&$sections) {
+                $sections[$m[2]] = $m[3];
+                return '';
+            },
+            $input,
+        );
+
+        $input = preg_replace_callback(
+            '/\@include\s*\(\s*([\'"])(.+?)\1\s*\)/',
+            function ($m) use ($path) {
+                $view = $m[2];
+                try {
+                    $incFile = $this->resolveView($view, $path);
+                    $incSource = file_get_contents($path . $incFile);
+                    return $this->compileWithInheritance($incSource, $path);
+                } catch (\Exception) {
+                    return "<!-- include not found: {$view} -->";
+                }
+            },
+            $input,
+        );
+
+        if ($layout !== null) {
+            try {
+                $layoutFile = $this->resolveView($layout, $path);
+                $layoutSource = file_get_contents($path . $layoutFile);
+            } catch (\Exception) {
+                return $input;
+            }
+
+            foreach ($sections as $name => $sectionContent) {
+                $layoutSource = preg_replace(
+                    '/\@yield\s*\(\s*([\'"])' . preg_quote($name, '/') . '\1\s*(?:,\s*([\'"])(.*?)\2)?\s*\)/',
+                    $sectionContent,
+                    $layoutSource,
+                );
+            }
+
+            $layoutSource = preg_replace(
+                '/\@yield\s*\(\s*([\'"])(.+?)\1\s*(?:,\s*([\'"])(.*?)\3)?\s*\)/',
+                '$4',
+                $layoutSource,
+            );
+
+            return $this->compileWithInheritance($layoutSource, $path);
+        }
+
+        return $input;
     }
 
     /**
