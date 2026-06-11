@@ -110,22 +110,21 @@ class RateLimitMiddleware implements Middleware
     protected function getAttempts(string $key): int
     {
         $data = Cache::get($key);
-        if ($data === null) {
+        if (!is_array($data)) {
             return 0;
         }
 
-        $decoded = json_decode($data, true);
-        if (!is_array($decoded) || !isset($decoded['attempts'], $decoded['expires_at'])) {
+        if (!isset($data['attempts'], $data['expires_at'])) {
             Cache::delete($key);
             return 0;
         }
 
-        if (time() > $decoded['expires_at']) {
+        if (time() > $data['expires_at']) {
             Cache::delete($key);
             return 0;
         }
 
-        return (int) $decoded['attempts'];
+        return (int) $data['attempts'];
     }
 
     /**
@@ -139,32 +138,22 @@ class RateLimitMiddleware implements Middleware
         $data = Cache::get($key);
         $now = time();
 
-        if ($data === null) {
-            $payload = json_encode([
+        if (!is_array($data) || !isset($data['attempts'])) {
+            $data = [
                 'attempts' => 1,
                 'expires_at' => $now + $this->decaySeconds,
-            ]);
-            Cache::set($key, $payload, $this->decaySeconds);
+            ];
+            Cache::set($key, $data, $this->decaySeconds);
             return;
         }
 
-        $decoded = json_decode($data, true);
-        if (!is_array($decoded) || !isset($decoded['attempts'])) {
-            $payload = json_encode([
-                'attempts' => 1,
-                'expires_at' => $now + $this->decaySeconds,
-            ]);
-            Cache::set($key, $payload, $this->decaySeconds);
-            return;
+        if (time() > ($data['expires_at'] ?? 0)) {
+            $data['attempts'] = 0;
+            $data['expires_at'] = $now + $this->decaySeconds;
         }
 
-        if (time() > ($decoded['expires_at'] ?? 0)) {
-            $decoded['attempts'] = 0;
-            $decoded['expires_at'] = $now + $this->decaySeconds;
-        }
-
-        $decoded['attempts']++;
-        Cache::set($key, json_encode($decoded), $this->decaySeconds);
+        $data['attempts']++;
+        Cache::set($key, $data, $this->decaySeconds);
     }
 
     /**
@@ -176,15 +165,10 @@ class RateLimitMiddleware implements Middleware
     protected function retryAfter(string $key): int
     {
         $data = Cache::get($key);
-        if ($data === null) {
+        if (!is_array($data) || !isset($data['expires_at'])) {
             return $this->decaySeconds;
         }
 
-        $decoded = json_decode($data, true);
-        if (!is_array($decoded) || !isset($decoded['expires_at'])) {
-            return $this->decaySeconds;
-        }
-
-        return max(0, $decoded['expires_at'] - time());
+        return max(0, $data['expires_at'] - time());
     }
 }

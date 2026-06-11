@@ -73,7 +73,7 @@ class Router
      * @param string $method
      * @return void
      */
-    public static function add(string $expression, string $controller, string $method = "any"): void
+    public static function add(string $expression, string|callable $controller, string $method = "any"): void
     {
         $patterns = [
           "{url}" => "([0-9a-zA-Z]+)",
@@ -290,6 +290,15 @@ class Router
      */
     private static function handleController($controller, $controllerDir, $routeMatches): bool
     {
+        if (str_contains($controller, '@')) {
+            $parts = explode('@', $controller);
+            $class = $parts[0];
+            $method = $parts[1] ?? 'index';
+            if (class_exists($class) && method_exists($class, $method)) {
+                return self::callControllerMethod($class, $method, $routeMatches);
+            }
+            return false;
+        }
         $request = explode("/", $controller);
         return self::internalInvoker($request, $controllerDir, $routeMatches);
     }

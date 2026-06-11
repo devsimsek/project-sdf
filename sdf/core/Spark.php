@@ -30,10 +30,7 @@ class Spark
      */
     public static function connect(string $dsn, ?string $username = null, ?string $password = null, array $options = [], bool $persistent = false): void
     {
-        if ($persistent) {
-            $options[PDO::ATTR_PERSISTENT] = true;
-        }
-        Pool::add('default', $dsn, $username, $password, $options);
+        Pool::add('default', $dsn, $username, $password, $options, $persistent);
     }
 
     /**
@@ -89,8 +86,12 @@ class Spark
                 }
                 break;
             case 'manual':
+                $dsn = $dbConfig['dsn'] ?? '';
+                if ($dsn === '') {
+                    throw new \Exception('Spark ORM: manual driver requires a non-empty dsn in config/database.php');
+                }
                 $args = isset($dbConfig['args']) && is_array($dbConfig['args']) ? $dbConfig['args'] : [];
-                self::connect($dbConfig['dsn'] ?? '', ...$args);
+                self::connect($dsn, ...$args);
                 break;
         }
     }
@@ -499,16 +500,20 @@ class QueryBuilder
      */
     public function paginate(int $perPage = 15, ?int $page = null): \SDF\Spark\Paginator
     {
-        $page = $page ?: (int)($_GET['page'] ?? 1);
+        $page = $page ?? (int)($_GET['page'] ?? 1);
         $page = max(1, $page);
+
+        $savedLimit = $this->limit;
+        $savedBindings = $this->bindings;
 
         $total = $this->count();
 
+        $this->bindings = $savedBindings;
         $offset = ($page - 1) * $perPage;
         $this->limit = " LIMIT $perPage OFFSET $offset";
 
         $items = $this->get();
-        $this->limit = null;
+        $this->limit = $savedLimit;
 
         return new \SDF\Spark\Paginator($items, $total, $perPage, $page);
     }

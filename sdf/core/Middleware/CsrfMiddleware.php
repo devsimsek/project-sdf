@@ -37,7 +37,7 @@ use SDF\Session;
  */
 class CsrfMiddleware implements Middleware
 {
-    protected string $sessionKey = '_csrf_token';
+    protected static string $sessionKey = '_csrf_token';
 
     /**
      * @param string|null $sessionKey Optional custom session key.
@@ -45,7 +45,7 @@ class CsrfMiddleware implements Middleware
     public function __construct(?string $sessionKey = null)
     {
         if ($sessionKey !== null) {
-            $this->sessionKey = $sessionKey;
+            self::$sessionKey = $sessionKey;
         }
     }
 
@@ -80,7 +80,7 @@ class CsrfMiddleware implements Middleware
     protected function validateToken(string $token): bool
     {
         $session = Session::getInstance();
-        $stored = $session->get($this->sessionKey);
+        $stored = $session->get(self::$sessionKey);
 
         if ($stored === null) {
             return false;
@@ -95,8 +95,9 @@ class CsrfMiddleware implements Middleware
      * @param string $sessionKey Session key to store under (default: '_csrf_token').
      * @return string
      */
-    public static function generateToken(string $sessionKey = '_csrf_token'): string
+    public static function generateToken(?string $sessionKey = null): string
     {
+        $sessionKey ??= self::$sessionKey;
         $token = bin2hex(random_bytes(32));
         Session::getInstance()->set($sessionKey, $token);
         return $token;
@@ -105,11 +106,12 @@ class CsrfMiddleware implements Middleware
     /**
      * Get the current CSRF token (generates one if missing).
      *
-     * @param string $sessionKey Session key to read/store under (default: '_csrf_token').
+     * @param string|null $sessionKey Session key to read/store under (default: static::$sessionKey).
      * @return string
      */
-    public static function token(string $sessionKey = '_csrf_token'): string
+    public static function token(?string $sessionKey = null): string
     {
+        $sessionKey ??= self::$sessionKey;
         $session = Session::getInstance();
         $token = $session->get($sessionKey);
 
@@ -123,11 +125,13 @@ class CsrfMiddleware implements Middleware
     /**
      * Return an HTML hidden input field with the CSRF token.
      *
-     * @param string $sessionKey Session key (default: '_csrf_token').
+     * @param string|null $sessionKey Session key (default: static::$sessionKey).
      * @return string
      */
-    public static function field(string $sessionKey = '_csrf_token'): string
+    public static function field(?string $sessionKey = null): string
     {
-        return '<input type="hidden" name="_token" value="' . self::token($sessionKey) . '">';
+        $sessionKey ??= self::$sessionKey;
+        $token = self::token($sessionKey);
+        return '<input type="hidden" name="_token" value="' . htmlspecialchars($token, ENT_QUOTES, 'UTF-8') . '">';
     }
 }

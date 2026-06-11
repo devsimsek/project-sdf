@@ -2,6 +2,8 @@
 
 namespace SDF\Auth;
 
+use SDF\Session;
+
 /**
  * Project SDF Session Guard
  * Copyright devsimsek
@@ -20,7 +22,7 @@ namespace SDF\Auth;
 /**
  * Authenticate users via PHP sessions.
  *
- * Stores the authenticated user's ID in `$_SESSION['_auth_id']`
+ * Stores the authenticated user's ID in `session key '_auth_id'`
  * and retrieves the full model on subsequent requests.
  */
 class SessionGuard implements Guard
@@ -60,7 +62,8 @@ class SessionGuard implements Guard
             return $this->userInstance;
         }
 
-        $id = $_SESSION['_auth_id'] ?? null;
+        $session = Session::getInstance();
+        $id = $session->get('_auth_id');
 
         if ($id === null) {
             return null;
@@ -79,7 +82,9 @@ class SessionGuard implements Guard
     public function login(object $user): void
     {
         $this->userInstance = $user;
-        $_SESSION['_auth_id'] = $user->id ?? null;
+        $session = Session::getInstance();
+        $session->set('_auth_id', $user->id ?? null);
+        $session->regenerate(true);
     }
 
     /**
@@ -90,7 +95,9 @@ class SessionGuard implements Guard
     public function logout(): void
     {
         $this->userInstance = null;
-        unset($_SESSION['_auth_id']);
+        $session = Session::getInstance();
+        $session->remove('_auth_id');
+        $session->regenerate(true);
     }
 
     /**

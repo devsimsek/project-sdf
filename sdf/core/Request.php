@@ -22,6 +22,9 @@ class Request
 {
     use CoreUtilities;
 
+    /** @var array|null Cached parsed JSON body */
+    private ?array $jsonCache = null;
+
     /**
      * Get a value from the $_GET superglobal array
      *
@@ -435,10 +438,15 @@ class Request
      */
     public function ip(): ?string
     {
-        $proxies = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? null;
-        if ($proxies) {
-            $ips = explode(",", $proxies);
-            return trim($ips[0]);
+        $forwarded = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? "";
+        if ($forwarded !== "") {
+            $ips = explode(",", $forwarded);
+            foreach ($ips as $ip) {
+                $ip = trim($ip);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
         }
         return $_SERVER["HTTP_CLIENT_IP"] ?? ($_SERVER["REMOTE_ADDR"] ?? null);
     }
@@ -564,18 +572,21 @@ class Request
      */
     public function json(): mixed
     {
+        if ($this->jsonCache !== null) {
+            return $this->jsonCache;
+        }
         $contentType = $this->header("Content-Type") ?? "";
         if (
             !str_contains($contentType, "/json") &&
             !str_contains($contentType, "+json")
         ) {
-            return null;
+            return $this->jsonCache = null;
         }
         $body = file_get_contents("php://input");
         if (empty($body)) {
-            return null;
+            return $this->jsonCache = null;
         }
-        return json_decode($body, true);
+        return $this->jsonCache = json_decode($body, true);
     }
 
     /**

@@ -1131,10 +1131,7 @@ class CLI
     {
         // Run wrk against the dev server and print results with 30s duration and 10 concurrent connections
         // save results to a file named benchmark_results.txt in the current directory
-        $port = in_array("-p", $this->argv)
-            ? $this->argv[array_search("-p", $this->argv) + 1]
-            : "8080";
-
+        $port = self::getPortArg();
         $duration = 30;
         $concurrency = 10;
 
@@ -1154,10 +1151,7 @@ class CLI
      */
     private function runBenchmarkDry(): void
     {
-        // run wrk and not save results to file, just print summary to console
-        $port = in_array("-p", $this->argv)
-            ? $this->argv[array_search("-p", $this->argv) + 1]
-            : "8080";
+        $port = self::getPortArg();
         $duration = 30;
         $concurrency = 10;
 
@@ -1211,9 +1205,7 @@ class CLI
      */
     private function handleDevServer(): void
     {
-        $port = in_array("-p", $this->argv)
-            ? $this->argv[array_search("-p", $this->argv) + 1]
-            : 8080;
+        $port = self::getPortArg();
         $quiet = in_array("-q", $this->argv);
         $live = in_array("--live", $this->argv);
 
@@ -1279,18 +1271,29 @@ class CLI
     /**
      * Spawn a background process to watch files and clear cache.
      */
+    private static function getPortArg(): int
+    {
+        $argv = $GLOBALS['argv'] ?? [];
+        $pIndex = array_search("-p", $argv);
+        if ($pIndex !== false && isset($argv[$pIndex + 1])) {
+            return (int) $argv[$pIndex + 1];
+        }
+        return 8080;
+    }
+
     private function startWatcher(): void
     {
         $lockFile = sys_get_temp_dir() . "/sdf_watcher.lock";
         if (file_exists($lockFile)) {
             $pid = (int) file_get_contents($lockFile);
-            if (function_exists("posix_getpgid")) {
-                if (posix_getpgid($pid)) {
-                    return; // Already running
+            if ($pid > 0) {
+                $running = false;
+                if (PHP_OS_FAMILY === 'Linux') {
+                    $running = file_exists("/proc/$pid");
+                } elseif (function_exists("posix_kill")) {
+                    $running = @posix_kill($pid, 0);
                 }
-            } else {
-                // posix not available; best-effort check: if pid is numeric and process exists
-                if ($pid > 0 && file_exists("/proc/$pid")) {
+                if ($running) {
                     return;
                 }
             }

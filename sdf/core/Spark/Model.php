@@ -198,17 +198,7 @@ abstract class Model
      */
     public static function find(mixed $id): ?static
     {
-        $data = static::query()->where(static::$primaryKey, $id)->first();
-        if ($data instanceof static) {
-            return $data;
-        }
-
-        if (is_array($data)) {
-            $class = static::class;
-            return new $class($data, true);
-        }
-
-        return null;
+        return static::query()->where(static::$primaryKey, $id)->first();
     }
 
     /**
@@ -414,29 +404,23 @@ abstract class Model
             if (is_string($v)) {
                 $s = trim($v);
 
-                // null-ish
                 if ($s === '') {
                     return $v;
                 }
 
-                // boolean-ish
-                $lower = strtolower($s);
-                if (in_array($lower, ['true','false','1','0','yes','no'], true)) {
-                    return in_array($lower, ['true','1','yes'], true);
-                }
-
-                // integer
                 if (ctype_digit($s) || preg_match('/^[+-]?\d+$/', $s)) {
-                    // protect large ints: intval is fine for typical ranges
-                    return (int)$s;
+                    return (int) $s;
                 }
 
-                // float (decimal or exponent)
-                if (is_numeric($s) && (str_contains($s, '.') || stripos($s, 'e') !== false)) {
-                    return (float)$s;
+                if (is_numeric($s)) {
+                    return (float) $s;
                 }
 
-                // json array/object -> decode
+                $lower = strtolower($s);
+                if (in_array($lower, ['true','false','yes','no'], true)) {
+                    return in_array($lower, ['true','yes'], true);
+                }
+
                 if (($json = json_decode($s, true)) !== null && json_last_error() === JSON_ERROR_NONE) {
                     return $json;
                 }

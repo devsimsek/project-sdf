@@ -125,9 +125,12 @@ class CorsMiddleware implements Middleware
 
         if ($allowAll && $allowCredentials) {
             header('Access-Control-Allow-Origin: ' . $origin);
-            header('Vary: Origin');
         } else {
             header('Access-Control-Allow-Origin: ' . ($allowAll ? '*' : $origin));
+        }
+
+        if (!$allowAll || $allowCredentials) {
+            header('Vary: Origin');
         }
 
         if ($allowCredentials) {
@@ -153,9 +156,12 @@ class CorsMiddleware implements Middleware
 
         if ($allowAll && $allowCredentials) {
             header('Access-Control-Allow-Origin: ' . $origin);
-            header('Vary: Origin');
         } else {
             header('Access-Control-Allow-Origin: ' . ($allowAll ? '*' : $origin));
+        }
+
+        if (!$allowAll || $allowCredentials) {
+            header('Vary: Origin');
         }
 
         header('Access-Control-Allow-Methods: ' . implode(', ', $config['allowed_methods'] ?? []));

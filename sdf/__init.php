@@ -133,8 +133,8 @@ $router = Core::coreLoadClass("Router");
 
 // Register Swagger routes if the Swagger controller file exists
 if (class_exists(\SDF\Swagger\SwaggerController::class) && SDF_ENV === "development") {
-    $router::add('/api/openapi.json', 'Swagger/SwaggerController/spec', 'GET');
-    $router::add('/api/docs', 'Swagger/SwaggerController/docs', 'GET');
+    $router::add('/api/openapi.json', '\SDF\Swagger\SwaggerController@spec', 'GET');
+    $router::add('/api/docs', '\SDF\Swagger\SwaggerController@docs', 'GET');
 }
 
 $router::pathNotFound(SDF_EH_404);

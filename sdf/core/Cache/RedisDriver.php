@@ -94,7 +94,7 @@ class RedisDriver implements CacheDriver
         if ($value === false) {
             return $default;
         }
-        $data = unserialize($value);
+        $data = unserialize($value, ['allowed_classes' => false]);
         return $data !== false ? $data : $default;
     }
 
@@ -149,7 +149,13 @@ class RedisDriver implements CacheDriver
         if (!$this->available) {
             return false;
         }
-        $keys = $this->redis->keys($this->prefix . '*');
+        $iterator = null;
+        $keys = [];
+        while ($ret = $this->redis->scan($iterator, $this->prefix . '*')) {
+            foreach ($ret as $key) {
+                $keys[] = $key;
+            }
+        }
         if (!empty($keys)) {
             $this->redis->del($keys);
         }
@@ -180,7 +186,7 @@ class RedisDriver implements CacheDriver
         $result = [];
         foreach ($values as $i => $v) {
             $originalKey = $map[$prefixed[$i]];
-            $data = $v !== false ? unserialize($v) : false;
+            $data = is_string($v) ? unserialize($v, ['allowed_classes' => false]) : false;
             $result[$originalKey] = $data !== false ? $data : $default;
         }
         return $result;

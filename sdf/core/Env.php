@@ -161,10 +161,13 @@ class Env
     /**
      * Resolve ${VAR_NAME} placeholders.
      */
-    private static function resolvePlaceholders(string $value): string
+    private static function resolvePlaceholders(string $value, int $depth = 0): string
     {
-        return preg_replace_callback('/\$\{([^}]+)\}/', function ($m) {
-            return self::get($m[1], '');
+        if ($depth > 10) {
+            return $value;
+        }
+        return preg_replace_callback('/\$\{([^}]+)\}/', function ($m) use ($depth) {
+            return self::resolvePlaceholders(self::get($m[1], ''), $depth + 1);
         }, $value);
     }
 

@@ -37,8 +37,8 @@ class SwaggerController extends Controller
             description: 'SDF Framework API documentation - automatically generated from #[OA\...] attributes.',
         );
 
-        $this->response
-            ->json(json_decode($generator->generate(), true));
+        header('Content-Type: application/json');
+        echo $generator->generate();
     }
 
     /**
