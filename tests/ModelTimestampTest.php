@@ -74,7 +74,6 @@ class ModelTimestampTest extends TestCase
         $user = new TimestampUser(['name' => 'Bob']);
         $user->save();
         $id = $user->id;
-        $originalUpdated = $user->updated_at;
 
         $user->name = 'Robert';
         $user->save();

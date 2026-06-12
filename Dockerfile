@@ -27,6 +27,14 @@ RUN chown -R www-data:www-data /app/app/cache /app/logs 2>/dev/null || true
 
 FROM dunglas/frankenphp:1-php8.4 AS dev
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    unzip \
+    libicu-dev \
+    libpq-dev \
+    libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN install-php-extensions \
     pdo_mysql \
     pdo_pgsql \
@@ -43,6 +51,8 @@ RUN echo 'xdebug.mode=debug' >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.
 
 WORKDIR /app
 COPY . .
+
+RUN composer install --no-interaction
 
 ENV SDF_ENV=development
 
