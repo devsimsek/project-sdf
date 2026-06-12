@@ -50,6 +50,7 @@ Configuration and DSN notes
 QueryBuilder identifier quoting and NULL handling
 
 - QueryBuilder quotes identifiers (table/column names) to reduce injection risk. Prefer using constant column names from your code (not raw user input). For complex cases, validate/whitelist identifiers before passing them to QueryBuilder.
+- Comparison operators in `where()` and `join()` are whitelisted against `['=', '<', '>', '<=', '>=', '<>', '!=', 'LIKE', 'NOT LIKE', 'IS', 'IS NOT', 'IN', 'NOT IN']`. Unknown operators default to `=`.
 
 - To compare against NULL explicitly use the full 3-arg form (e.g. `->where('deleted_at', 'IS', null)`) or helper methods (e.g. `whereNull()`); the builder detects the number of arguments to preserve explicit NULL comparisons.
 

@@ -49,12 +49,18 @@ Router::add('/users', '\App\Controllers\UserController@index');
 // With params
 Router::add('/post/{id}', '\App\Controllers\PostController@show');
 
+// Route placeholders: {id}, {uuid}, {slug}, {date}, {all}, etc.
+Router::add('/user/{uuid}', 'UserController@show');
+Router::add('/blog/{slug}', 'BlogController@show');
+
 // HTTP method filter
 Router::add('/users', 'UserController@store', 'POST');
 
 // Named routes
 Router::add('/login', 'AuthController@login', 'GET')->name('login');
 ```
+
+See [full route docs](wiki/app/routes.md) for all 18 available placeholders (`{uuid}`, `{hex}`, `{alpha}`, `{bool}`, `{datetime}`, etc.).
 
 ## Controllers
 ```php

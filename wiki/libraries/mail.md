@@ -1,6 +1,6 @@
 # Mail
 
-SDF provides a mail facade with pluggable drivers: `LogMailer` (default, writes to file) and `SmtpMailer` (sends via PHP's `mail()`).
+SDF provides a mail facade with pluggable drivers: `LogMailer` (default, writes to file) and `NativeMailer` (sends via PHP's `mail()`).
 
 ## Configuration
 
@@ -82,14 +82,14 @@ interface Mailer
 
 The default driver. Writes every email to a log file (`sys_get_temp_dir()/sdf_mail.log` by default). Each entry includes timestamp, sender, recipients, subject, body, and attachments.
 
-### SmtpMailer
+### NativeMailer
 
 Sends via PHP's built-in `mail()` function with full MIME headers. Supports CC, BCC, and multipart attachments with base64 encoding.
 
 ```php
 // Runtime override
 $mail = Mail::getInstance();
-$mail->setMailer(new SmtpMailer([
+$mail->setMailer(new NativeMailer([
     'host' => 'smtp.example.com',
     'port' => 587,
     'username' => 'user',

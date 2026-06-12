@@ -28,10 +28,23 @@ $config['/api/users/{id}']   = ['Api/UserController/destroy','DELETE'];
 
 | Placeholder | Matches |
 |---|---|
-| `{id}` | Numeric only (`[0-9]+`) |
-| `{url}` | Any path segment (`[a-zA-Z0-9_-]+`) |
-| `{all}` | Everything (`.+`) |
-| `{num}` | Numeric (alias of `{id}`) |
+| `{id}` | Numeric (`[0-9]+`) |
+| `{num}` | Numeric (alias) |
+| `{url}` | Alphanumeric (`[0-9a-zA-Z]+`) |
+| `{all}` | Everything (`(.*)`) |
+| `{uuid}` | RFC 4122 UUID (v1–v5) |
+| `{uuid_simple}` | UUID without dashes (32 hex chars) |
+| `{hex}` | Hex digits (`[0-9a-fA-F]+`) |
+| `{alpha}` | Letters only (`[A-Za-z]+`) |
+| `{alnum}` | Letters and digits (`[A-Za-z0-9]+`) |
+| `{word}` | Word chars + hyphen (`[A-Za-z0-9_\\-]+`) |
+| `{slug}` | Lowercase slug (`[a-z0-9]+(?:-[a-z0-9]+)*`) |
+| `{segment}` | Single path segment (no slashes) |
+| `{file}` | Filename with extension |
+| `{bool}` | `0`, `1`, `true`, `false` |
+| `{date}` | `YYYY-MM-DD` |
+| `{time}` | `HH:MM:SS` |
+| `{datetime}` | ISO 8601 datetime |
 
 ```php
 <?php

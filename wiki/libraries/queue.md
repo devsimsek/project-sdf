@@ -35,6 +35,8 @@ All queue drivers implement `SDF\Queue\Queue`:
 
 Uses Spark PDO to auto-create a `jobs` table on first use. No schema migrations needed.
 
+Uses `SELECT ... FOR UPDATE` on MySQL/PostgreSQL to prevent concurrent workers from processing the same job. Automatically skips `FOR UPDATE` on SQLite (not supported).
+
 ```php
 use SDF\Queue\DatabaseQueue;
 
@@ -46,6 +48,8 @@ $job = $queue->pop();
 ## RedisQueue
 
 Requires the phpredis extension. Uses `RPUSH` for pushing and `BLPOP` with timeout for popping.
+
+Delayed jobs (via `release()` with a delay) are stored in a Redis sorted set by timestamp and migrated back to the main queue before each `pop()` call.
 
 ```php
 use SDF\Queue\RedisQueue;

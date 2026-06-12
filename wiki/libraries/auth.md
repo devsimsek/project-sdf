@@ -44,7 +44,7 @@ $config['auth'] = [
 | Option | Default | Description |
 |---|---|---|
 | `default` | `session` | Active guard (`session` or `jwt`) |
-| `guards.jwt.secret` | - | HMAC-SHA256 secret key for signing JWTs |
+| `guards.jwt.secret` | - | HMAC-SHA256 secret key for signing JWTs (minimum 32 characters) |
 | `guards.jwt.ttl` | `3600` | Access token lifetime in seconds |
 | `guards.jwt.refresh_ttl` | `604800` | Refresh token lifetime in seconds (7 days) |
 | `providers.*.model` | `\App\Models\User::class` | User model class with static `find()` and `where()` |

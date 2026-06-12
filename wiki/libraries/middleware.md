@@ -117,6 +117,35 @@ class ApiAuthMiddleware extends AuthMiddleware
 
 See the [Auth documentation](auth.md) for full usage.
 
+## CORS Middleware
+
+The built-in `CorsMiddleware` handles cross-origin requests. Configured via `app/config/cors.php`:
+
+```php
+$config['cors'] = [
+    'allowed_origins' => ['https://example.com'],  // '*' only when credentials=false
+    'allowed_origins_patterns' => [],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-TOKEN'],
+    'exposed_headers' => [],
+    'max_age' => 86400,
+    'allow_credentials' => false,
+];
+```
+
+When `allow_credentials` is `true`, wildcard origins (`*`) are rejected — you must specify explicit origins.
+
+## Rate Limit Middleware
+
+The built-in `RateLimitMiddleware` uses the Cache facade (60 req/min per IP+route by default). IP detection respects trusted proxies — configure via the `SDF_TRUSTED_PROXIES` server variable:
+
+```php
+// In index.php or .env
+$_SERVER['SDF_TRUSTED_PROXIES'] = '10.0.0.1,10.0.0.2';
+```
+
+Untrusted `X-Forwarded-For` headers are ignored.
+
 ## Rate Limit Middleware Example
 
 ```php
@@ -129,14 +158,13 @@ use SDF\Request;
 
 class RateLimitMiddleware implements Middleware
 {
-    private int $limit = 60;  // requests per minute
+    private int $limit = 60;
 
     public function handle(Request $request, \Closure $next): mixed
     {
         $ip  = $_SERVER['REMOTE_ADDR'];
         $key = 'rate:' . $ip;
 
-        // Simple file-based counter (replace with Redis in prod)
         $cacheFile = sys_get_temp_dir() . '/' . md5($key) . '.rate';
         $data = file_exists($cacheFile) ? json_decode(file_get_contents($cacheFile), true) : null;
 

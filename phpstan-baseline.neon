@@ -1,21 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Constant SDF_ENV not found\\.$#"
-			count: 1
-			path: app/cache/views/c77312d764d253f8e21d6a079d303ba4.php
-
-		-
-			message: "#^Constant SDF_VERSION not found\\.$#"
-			count: 3
-			path: app/cache/views/c77312d764d253f8e21d6a079d303ba4.php
-
-		-
-			message: "#^If condition is always false\\.$#"
-			count: 1
-			path: app/cache/views/c77312d764d253f8e21d6a079d303ba4.php
-
-		-
 			message: "#^Class App\\\\Models\\\\User not found\\.$#"
 			count: 1
 			path: sdf/core/Auth/Auth.php

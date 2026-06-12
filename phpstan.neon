@@ -5,6 +5,7 @@ includes:
 parameters:
   level: 5
   treatPhpDocTypesAsCertain: false
+  reportUnmatchedIgnoredErrors: false
   bootstrapFiles:
     - phpstan-bootstrap.php
   paths:
