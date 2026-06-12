@@ -94,6 +94,9 @@ class CLI
             case "swagger":
                 $this->handleSwagger();
                 break;
+            case "agent":
+                $this->handleAgent();
+                break;
             default:
                 $this->printUsage();
                 break;
@@ -1448,6 +1451,74 @@ class CLI
         return !empty(shell_exec("lsof -i:$port"));
     }
 
+    /** Install agent skill to local or global agents directory. */
+    private function handleAgent(): void
+    {
+        $sub = $this->argv[2] ?? null;
+
+        if ($sub !== 'install') {
+            echo "Usage: php sdf/cli agent install [local|global]\n";
+            echo "  install local (default)   Copy skill to .agents/skills/<name>/SKILL.md\n";
+            echo "  install global            Copy skill to ~/.agents/skills/<name>/SKILL.md\n";
+            exit(1);
+        }
+
+        $scope = $this->argv[3] ?? 'local';
+
+        if ($scope !== 'local' && $scope !== 'global') {
+            echo "Usage: php sdf/cli agent install [local|global]\n";
+            echo "  install local (default)   Copy skill to .agents/skills/<name>/SKILL.md\n";
+            echo "  install global            Copy skill to ~/.agents/skills/<name>/SKILL.md\n";
+            exit(1);
+        }
+
+        // Determine source (project's wiki/agentic_workflow/skills/)
+        $projectRoot = dirname(__DIR__);
+        $skillDir = ($scope === 'global')
+            ? getenv('HOME') . '/.agents/skills'
+            : getcwd() . '/.agents/skills';
+
+        // Find all skill sources in the project wiki
+        $sourceDir = $projectRoot . '/wiki/agentic_workflow/skills';
+        if (!is_dir($sourceDir)) {
+            echo "No skills found at $sourceDir. Create a .agents/skills/<name>/SKILL.md first.\n";
+            exit(1);
+        }
+
+        $installed = 0;
+        $items = scandir($sourceDir);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') continue;
+            $skillPath = $sourceDir . '/' . $item . '/SKILL.md';
+            if (!is_file($skillPath)) continue;
+
+            $destDir = $skillDir . '/' . $item;
+            $destFile = $destDir . '/SKILL.md';
+
+            // Skip if copying to the same path
+            if (realpath($skillPath) === realpath($destFile)) {
+                echo "Skill '$item' already in place at $destFile\n";
+                $installed++;
+                continue;
+            }
+
+            @mkdir($destDir, 0755, true);
+            if (copy($skillPath, $destFile)) {
+                echo "Installed skill '$item' to $destFile\n";
+                $installed++;
+            } else {
+                echo "Failed to install skill '$item' to $destFile\n";
+            }
+        }
+
+        if ($installed === 0) {
+            echo "No SKILL.md files found under $sourceDir\n";
+            exit(1);
+        }
+
+        echo "\nDone. $installed skill(s) installed.\n";
+    }
+
     /** Print banner. */
     private function showBanner(): void
     {
@@ -1494,6 +1565,8 @@ class CLI
         echo "\n";
         echo "  swagger [action]             OpenAPI / Swagger documentation\n";
         echo "    generate [output-path]     Generate openapi.json from controllers\n";
+        echo "\n";
+        echo "  agent install [local|global]  Install agent skill (default: local)\n";
     }
 }
 

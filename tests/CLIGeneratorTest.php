@@ -26,6 +26,38 @@ class CLIGeneratorTest extends TestCase
         if (is_dir($this->tmpDir)) rmdir($this->tmpDir);
     }
 
+    public function test_agent_install_local(): void
+    {
+        $script = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(getcwd() . '/sdf/cli');
+        $cmd = "cd " . escapeshellarg($this->tmpDir) . " && $script agent install";
+        exec($cmd, $out, $exit);
+        $this->assertSame(0, $exit, "CLI exited non-zero: " . implode("\n", $out));
+        $this->assertFileExists($this->tmpDir . '/.agents/skills/project-sdf/SKILL.md');
+        $content = file_get_contents($this->tmpDir . '/.agents/skills/project-sdf/SKILL.md');
+        $this->assertStringContainsString('name: project-sdf', $content);
+    }
+
+    public function test_agent_install_global(): void
+    {
+        $script = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(getcwd() . '/sdf/cli');
+        $globalDir = sys_get_temp_dir() . '/sdf_agent_global_' . uniqid();
+        putenv('HOME=' . $globalDir);
+        $cmd = "$script agent install global";
+        exec($cmd, $out, $exit);
+        $this->assertSame(0, $exit, "CLI exited non-zero: " . implode("\n", $out));
+        $this->assertFileExists($globalDir . '/.agents/skills/project-sdf/SKILL.md');
+        putenv('HOME');
+    }
+
+    public function test_agent_install_requires_subcommand(): void
+    {
+        $script = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(getcwd() . '/sdf/cli');
+        $cmd = "cd " . escapeshellarg($this->tmpDir) . " && $script agent";
+        exec($cmd, $out, $exit);
+        $this->assertNotSame(0, $exit);
+        $this->assertStringContainsString('Usage', implode('', $out));
+    }
+
     public function test_generate_unit_test_file(): void
     {
         $script = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(getcwd() . '/sdf/cli');
