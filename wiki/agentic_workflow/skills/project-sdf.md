@@ -12,13 +12,15 @@ composer cs:check
 
 ## CLI
 ```bash
-php sdf/cli serve -p 8000              # dev server (auto-detect frankenphp or PHP built-in)
-php sdf/cli serve -p 8000 --live       # with live-reload watcher
-php sdf/cli g controller Home          # generate component
+php sdf/cli serve -p 8000                    # dev server
+php sdf/cli serve -p 8000 --live             # with live-reload watcher
+php sdf/cli serve -p 8000 --clear-cache      # clear caches before starting
+php sdf/cli g controller Home                # generate component
 php sdf/cli g test UserController --type=controller --namespace=App\\Controllers\\User
-php sdf/cli db migrate                 # run pending migrations
-php sdf/cli cache clear                # clear framework caches
-php sdf/cli format --dry-run -v        # run cs-fixer via CLI
+php sdf/cli db migrate                       # run pending migrations
+php sdf/cli cache clear                      # clear framework caches
+php sdf/cli format --dry-run -v              # run cs-fixer via CLI
+php sdf/cli swagger generate                 # generate OpenAPI spec
 ```
 
 ## Architecture
@@ -103,8 +105,29 @@ php sdf/cli format --dry-run -v        # run cs-fixer via CLI
 - Before committing, inspect `git status`, `git diff`, `git log --oneline -10`; stage only intended files.
 - Write concise commit messages matching repo style.
 - Never force-push, skip hooks, or use interactive `-i`.
+- Tag after pushing to dev: `git tag v2.x && git push origin v2.x`.
 
-When working on this codebase, always run tests before committing (`vendor/bin/phpunit --testdox`). If adding new classes, run `composer dump-autoload -o --apcu`.
+## GitHub Actions
+- PR CI runs: PHPUnit (8.2/8.3/8.4), PHPStan, PHP-CS-Fixer.
+- Workflow: `.github/workflows/ci.yml`.
+- Triggered on PRs to `main`/`dev` and pushes to `dev`.
+
+## Docker
+- `Dockerfile` — multi-stage (base/dev/production) with FrankenPHP + Composer.
+- `compose.yaml` — app (FrankenPHP) + MySQL 8.4 + Redis 7-alpine + named volumes.
+- `Caddyfile` — FrankenPHP config with static serving, security headers.
+- Build: `docker compose up -d` in project root.
+
+## Code review patterns
+When reviewing, check:
+- **Security**: SQL injection (operator whitelist in where()/join()), mass assignment ($fillable/$guarded), CORS origin reflection, X-Forwarded-For trust, JWT claim validation, CSRF token session key isolation.
+- **Correctness**: unserialize allowed_classes, cache atomicity (LOCK_EX), transaction isolation (FOR UPDATE), temp file uniqueness (not getmypid()).
+- **PSR compliance**: PSR-7 immutability (with* returns new instance, old headers cleaned on casing change), PSR-16 key charset, PSR-3 level handling.
+- **Long-running processes** (FrankenPHP): static state reset between requests, no fork(), no exit().
+- **Cross-platform**: DIRECTORY_SEPARATOR, POSIX-only commands (lsof, which, pcntl).
+- **Tests**: superglobal cleanup in tearDown(), no sleep() in assertions, singleton state isolation.
+
+When working on this codebase, always run tests before committing (`vendor/bin/phpunit --testdox`). If adding new classes, run `composer dump-autoload -o --apcu`. Verify tests pass after any change.
 
 ## Wiki
 Full documentation is at `wiki/`:
