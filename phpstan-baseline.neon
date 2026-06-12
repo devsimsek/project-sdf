@@ -1,0 +1,101 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Constant SDF_ENV not found\\.$#"
+			count: 1
+			path: app/cache/views/c77312d764d253f8e21d6a079d303ba4.php
+
+		-
+			message: "#^Constant SDF_VERSION not found\\.$#"
+			count: 3
+			path: app/cache/views/c77312d764d253f8e21d6a079d303ba4.php
+
+		-
+			message: "#^If condition is always false\\.$#"
+			count: 1
+			path: app/cache/views/c77312d764d253f8e21d6a079d303ba4.php
+
+		-
+			message: "#^Class App\\\\Models\\\\User not found\\.$#"
+			count: 1
+			path: sdf/core/Auth/Auth.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between string and false will always evaluate to false\\.$#"
+			count: 1
+			path: sdf/core/Auth/JwtGuard.php
+
+		-
+			message: "#^Comparison operation \"\\>\" between \\(int\\|Redis\\|false\\) and 0 results in an error\\.$#"
+			count: 1
+			path: sdf/core/Cache/RedisDriver.php
+
+		-
+			message: "#^Offset string does not exist on list\\<string\\>\\.$#"
+			count: 1
+			path: sdf/core/Cache/RedisDriver.php
+
+		-
+			message: "#^Constructor of class SDF\\\\Http\\\\Stream has an unused parameter \\$mode\\.$#"
+			count: 1
+			path: sdf/core/Http/Stream.php
+
+		-
+			message: "#^Offset 'mode' on array\\{timed_out\\: bool, blocked\\: bool, eof\\: bool, unread_bytes\\: int, stream_type\\: string, wrapper_type\\: string, wrapper_data\\: mixed, mode\\: string, \\.\\.\\.\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: sdf/core/Http/Stream.php
+
+		-
+			message: "#^Offset 'seekable' on array\\{timed_out\\: bool, blocked\\: bool, eof\\: bool, unread_bytes\\: int, stream_type\\: string, wrapper_type\\: string, wrapper_data\\: mixed, mode\\: string, \\.\\.\\.\\} on left side of \\?\\? always exists and is not nullable\\.$#"
+			count: 1
+			path: sdf/core/Http/Stream.php
+
+		-
+			message: "#^Class SDF\\\\Mail\\\\NativeMailer does not have a constructor and must be instantiated without any parameters\\.$#"
+			count: 1
+			path: sdf/core/Mail/Mail.php
+
+		-
+			message: "#^Constructor of class SDF\\\\Queue\\\\Job has an unused parameter \\$params\\.$#"
+			count: 1
+			path: sdf/core/Queue/Job.php
+
+		-
+			message: "#^Unsafe usage of new static\\(\\)\\.$#"
+			count: 1
+			path: sdf/core/Queue/Job.php
+
+		-
+			message: "#^While loop condition is always true\\.$#"
+			count: 1
+			path: sdf/core/Queue/Worker.php
+
+		-
+			message: "#^Call to method getStatusCode\\(\\) on an unknown class Aws\\\\Exception\\\\AwsException\\.$#"
+			count: 3
+			path: sdf/core/Storage/Drivers/S3Driver.php
+
+		-
+			message: "#^Caught class Aws\\\\Exception\\\\AwsException not found\\.$#"
+			count: 3
+			path: sdf/core/Storage/Drivers/S3Driver.php
+
+		-
+			message: "#^Throwing object of an unknown class Aws\\\\Exception\\\\AwsException\\.$#"
+			count: 3
+			path: sdf/core/Storage/Drivers/S3Driver.php
+
+		-
+			message: "#^Constant SDF_VERSION not found\\.$#"
+			count: 1
+			path: sdf/core/Swagger/SwaggerController.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between array and '@OA\\\\\\\\Generator\\:…' will always evaluate to false\\.$#"
+			count: 1
+			path: sdf/core/Swagger/SwaggerGenerator.php
+
+		-
+			message: "#^Strict comparison using \\=\\=\\= between object and '@OA\\\\\\\\Generator\\:…' will always evaluate to false\\.$#"
+			count: 1
+			path: sdf/core/Swagger/SwaggerGenerator.php

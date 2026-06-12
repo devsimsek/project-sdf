@@ -49,8 +49,8 @@ class JwtGuard implements Guard
         int $ttl = 3600,
         int $refreshTtl = 604800,
     ) {
-        if ($secret === '') {
-            throw new \RuntimeException('JWT guard: secret must not be empty. Set JWT_SECRET in .env or config/auth.php.');
+        if (strlen($secret) < 32) {
+            throw new \RuntimeException('JWT guard: secret must be at least 32 characters. Set JWT_SECRET in .env or config/auth.php.');
         }
         $this->provider = $provider;
         $this->request = $request;
@@ -304,15 +304,15 @@ class JwtGuard implements Guard
      * Base64URL decode.
      *
      * @param string $data URL-safe base64 string.
-     * @return string|false Decoded data or false on failure.
+     * @return string Decoded data.
      */
-    private function base64UrlDecode(string $data): string|false
+    private function base64UrlDecode(string $data): string
     {
         $remainder = strlen($data) % 4;
         if ($remainder) {
             $data .= str_repeat('=', 4 - $remainder);
         }
 
-        return base64_decode(strtr($data, '-_', '+/'));
+        return base64_decode(strtr($data, '-_', '+/'), true) ?: '';
     }
 }

@@ -276,17 +276,15 @@ class RotatingFileHandler implements HandlerInterface
         if (file_exists($this->path)) {
             $first = $this->path . ".1";
             @rename($this->path, $first);
-            if ($this->compress && file_exists($first)) {
-                // compress file to .gz
-                $data = file_get_contents($first);
-                if ($data !== false) {
-                    if (function_exists('gzencode')) {
-                        file_put_contents($first . ".gz", gzencode($data));
-                        @unlink($first);
-                    } else {
-                        // zlib not available - keep rotated uncompressed
-                        // leave $first as-is
-                    }
+            if ($this->compress && file_exists($first) && function_exists('gzopen')) {
+                $dst = $first . '.gz';
+                $srcGz = gzopen($dst, 'wb9');
+                $srcF = fopen($first, 'rb');
+                if ($srcGz && $srcF) {
+                    stream_copy_to_stream($srcF, $srcGz);
+                    fclose($srcF);
+                    gzclose($srcGz);
+                    @unlink($first);
                 }
             }
         }
@@ -318,7 +316,7 @@ class AsyncHandler implements HandlerInterface
     ) {
         $this->inner = $inner;
         $this->batchSize = max(1, $batchSize);
-        $this->useFork = $useFork && function_exists("pcntl_fork");
+        $this->useFork = $useFork && function_exists("pcntl_fork") && PHP_SAPI !== 'frankenphp' && PHP_SAPI !== 'fpm-fcgi';
 
         // ensure flush on shutdown
         register_shutdown_function([$this, "flush"]);

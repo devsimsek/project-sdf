@@ -40,6 +40,12 @@ abstract class Model
     /** @var bool Only query soft-deleted records. */
     protected static bool $onlyTrashed = false;
 
+    /** @var array<string> Column names that are mass-assignable. Empty = all assignable. */
+    protected static array $fillable = [];
+
+    /** @var array<string> Column names that are guarded from mass assignment. */
+    protected static array $guarded = [];
+
     /** @var array Current model attribute values. */
     protected array $attributes = [];
 
@@ -67,6 +73,12 @@ abstract class Model
     public function fill(array $data): self
     {
         foreach ($data as $key => $value) {
+            if (!empty(static::$fillable) && !in_array($key, static::$fillable, true)) {
+                continue;
+            }
+            if (in_array($key, static::$guarded, true)) {
+                continue;
+            }
             $this->attributes[$key] = $value;
         }
         return $this;

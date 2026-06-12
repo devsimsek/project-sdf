@@ -18,6 +18,7 @@ namespace SDF;
  * @since       Version 1.0
  * @filesource
  */
+#[\AllowDynamicProperties]
 class Request
 {
     use CoreUtilities;
@@ -438,6 +439,17 @@ class Request
      */
     public function ip(): ?string
     {
+        $trusted = $_SERVER["SDF_TRUSTED_PROXIES"] ?? "";
+        $remote = $_SERVER["REMOTE_ADDR"] ?? null;
+
+        if ($remote !== null && $trusted !== "") {
+            $proxies = explode(",", $trusted);
+            $proxies = array_map('trim', $proxies);
+            if (!in_array($remote, $proxies, true)) {
+                return $remote;
+            }
+        }
+
         $forwarded = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? "";
         if ($forwarded !== "") {
             $ips = explode(",", $forwarded);
@@ -448,7 +460,7 @@ class Request
                 }
             }
         }
-        return $_SERVER["HTTP_CLIENT_IP"] ?? ($_SERVER["REMOTE_ADDR"] ?? null);
+        return $remote ?? ($_SERVER["HTTP_CLIENT_IP"] ?? null);
     }
 
     /**

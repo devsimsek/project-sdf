@@ -122,10 +122,12 @@ class DatabaseQueue implements Queue
         $this->pdo->beginTransaction();
         $now = time();
 
+        $driver = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $forUpdate = $driver !== 'sqlite' ? ' FOR UPDATE' : '';
         $stmt = $this->pdo->prepare(
             "SELECT id, payload, attempts FROM {$this->table}
              WHERE queue = ? AND available_at <= ?
-             ORDER BY id ASC LIMIT 1"
+             ORDER BY id ASC LIMIT 1{$forUpdate}"
         );
         $stmt->execute([$this->defaultQueue, $now]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);

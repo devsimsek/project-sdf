@@ -27,8 +27,8 @@
     }
 
     @forbidden {
-        path /app/config/*
-        path /app/cache/*
+        path /config/*
+        path /cache/*
         path /sdf/*
         path /vendor/*
         path /composer.json

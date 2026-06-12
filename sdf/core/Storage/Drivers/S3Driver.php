@@ -147,66 +147,91 @@ class S3Driver implements StorageDriver
     public function files(?string $directory = null): array
     {
         $prefix = $directory !== null ? rtrim($directory, '/') . '/' : '';
-        $results = $this->client()->listObjects([
-            'Bucket' => $this->bucket,
-            'Prefix' => $prefix,
-            'Delimiter' => '/',
-        ]);
         $files = [];
-        if (isset($results['Contents'])) {
-            foreach ($results['Contents'] as $obj) {
-                $key = $obj['Key'];
-                if ($key === $prefix) {
-                    continue;
-                }
-                $files[] = $key;
+        $continuationToken = null;
+        do {
+            $params = [
+                'Bucket' => $this->bucket,
+                'Prefix' => $prefix,
+                'Delimiter' => '/',
+            ];
+            if ($continuationToken !== null) {
+                $params['ContinuationToken'] = $continuationToken;
             }
-        }
+            $results = $this->client()->listObjectsV2($params);
+            if (isset($results['Contents'])) {
+                foreach ($results['Contents'] as $obj) {
+                    $key = $obj['Key'];
+                    if ($key === $prefix) {
+                        continue;
+                    }
+                    $files[] = $key;
+                }
+            }
+            $continuationToken = $results['NextContinuationToken'] ?? null;
+        } while ($continuationToken !== null);
         return $files;
     }
 
     public function allFiles(?string $directory = null): array
     {
         $prefix = $directory !== null ? rtrim($directory, '/') . '/' : '';
-        $results = $this->client()->listObjects([
-            'Bucket' => $this->bucket,
-            'Prefix' => $prefix,
-        ]);
         $files = [];
-        if (isset($results['Contents'])) {
-            foreach ($results['Contents'] as $obj) {
-                $key = $obj['Key'];
-                if ($key === $prefix) {
-                    continue;
-                }
-                $files[] = $key;
+        $continuationToken = null;
+        do {
+            $params = [
+                'Bucket' => $this->bucket,
+                'Prefix' => $prefix,
+            ];
+            if ($continuationToken !== null) {
+                $params['ContinuationToken'] = $continuationToken;
             }
-        }
+            $results = $this->client()->listObjectsV2($params);
+            if (isset($results['Contents'])) {
+                foreach ($results['Contents'] as $obj) {
+                    $key = $obj['Key'];
+                    if ($key === $prefix) {
+                        continue;
+                    }
+                    $files[] = $key;
+                }
+            }
+            $continuationToken = $results['NextContinuationToken'] ?? null;
+        } while ($continuationToken !== null);
         return $files;
     }
 
     public function directories(?string $directory = null): array
     {
         $prefix = $directory !== null ? rtrim($directory, '/') . '/' : '';
-        $results = $this->client()->listObjects([
-            'Bucket' => $this->bucket,
-            'Prefix' => $prefix,
-            'Delimiter' => '/',
-        ]);
         $dirs = [];
-        if (isset($results['CommonPrefixes'])) {
-            foreach ($results['CommonPrefixes'] as $dp) {
-                $dirs[] = rtrim($dp['Prefix'], '/');
+        $continuationToken = null;
+        do {
+            $params = [
+                'Bucket' => $this->bucket,
+                'Prefix' => $prefix,
+                'Delimiter' => '/',
+            ];
+            if ($continuationToken !== null) {
+                $params['ContinuationToken'] = $continuationToken;
             }
-        }
+            $results = $this->client()->listObjectsV2($params);
+            if (isset($results['CommonPrefixes'])) {
+                foreach ($results['CommonPrefixes'] as $dp) {
+                    $dirs[] = rtrim($dp['Prefix'], '/');
+                }
+            }
+            $continuationToken = $results['NextContinuationToken'] ?? null;
+        } while ($continuationToken !== null);
         return $dirs;
     }
 
     public function copy(string $from, string $to): bool
     {
+        $source = $this->bucket . '/' . ltrim($from, '/');
         $this->client()->copyObject([
             'Bucket' => $this->bucket,
-            'CopySource' => urlencode($this->bucket . '/' . $from),
+            'CopySource' => $source,
             'Key' => $to,
         ]);
         return true;
@@ -232,12 +257,25 @@ class S3Driver implements StorageDriver
     public function deleteDirectory(string $path): bool
     {
         $prefix = rtrim($path, '/') . '/';
-        $results = $this->client()->listObjects([
-            'Bucket' => $this->bucket,
-            'Prefix' => $prefix,
-        ]);
-        if (isset($results['Contents'])) {
-            $objects = array_map(fn ($o) => ['Key' => $o['Key']], $results['Contents']);
+        $objects = [];
+        $continuationToken = null;
+        do {
+            $params = [
+                'Bucket' => $this->bucket,
+                'Prefix' => $prefix,
+            ];
+            if ($continuationToken !== null) {
+                $params['ContinuationToken'] = $continuationToken;
+            }
+            $results = $this->client()->listObjectsV2($params);
+            if (isset($results['Contents'])) {
+                foreach ($results['Contents'] as $obj) {
+                    $objects[] = ['Key' => $obj['Key']];
+                }
+            }
+            $continuationToken = $results['NextContinuationToken'] ?? null;
+        } while ($continuationToken !== null);
+        if (!empty($objects)) {
             $this->client()->deleteObjects([
                 'Bucket' => $this->bucket,
                 'Delete' => ['Objects' => $objects],

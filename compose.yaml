@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      target: development
+      target: dev
     ports:
       - "80:80"
     environment:
@@ -18,7 +18,6 @@ services:
       - ./sdf:/app/sdf:delegated
       - ./index.php:/app/index.php:delegated
       - ./composer.json:/app/composer.json:delegated
-      - ./composer.lock:/app/composer.lock:delegated
     restart: unless-stopped
     depends_on:
       db:

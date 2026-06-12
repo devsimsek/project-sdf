@@ -42,10 +42,9 @@ trait CoreUtilities
         string $directory = "core",
         ?array $param = null,
     ): object {
-        $_classes = \SDF\Core::$classes;
         // Does the class exist? If so, we're done...
-        if (isset($_classes[$class])) {
-            return $_classes[$class];
+        if (isset(\SDF\Core::$classes[$class])) {
+            return \SDF\Core::$classes[$class];
         }
         $name = false;
         $fqcn = "\\SDF\\" . $class;

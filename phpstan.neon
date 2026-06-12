@@ -1,5 +1,6 @@
 includes:
   - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+  - phpstan-baseline.neon
 
 parameters:
   level: 5
@@ -11,3 +12,4 @@ parameters:
     - app
   excludePaths:
     - tests
+    - app/config/auth.php

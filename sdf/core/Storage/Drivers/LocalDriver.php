@@ -60,9 +60,6 @@ class LocalDriver implements StorageDriver
         }
         $written = stream_copy_to_stream($resource, $dest);
         fclose($dest);
-        if (is_resource($resource)) {
-            fclose($resource);
-        }
         return $written !== false;
     }
 

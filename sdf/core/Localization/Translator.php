@@ -233,13 +233,13 @@ class Translator
                 return $number >= (int) $start && $number <= (int) $end;
             }
 
-        if ($start === '...' && ctype_digit(ltrim($end, '-'))) {
-            return $number <= (int) $end;
-        }
+            if ($start === '...' && ctype_digit(ltrim($end, '-'))) {
+                return $number <= (int) $end;
+            }
 
-        if (ctype_digit(ltrim($start, '-')) && ($end === '...' || $end === '*')) {
-            return $number >= (int) $start;
-        }
+            if (ctype_digit(ltrim($start, '-')) && ($end === '...' || $end === '*')) {
+                return $number >= (int) $start;
+            }
         }
 
         if (ctype_digit($rule)) {

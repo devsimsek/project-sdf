@@ -58,9 +58,10 @@ class UserProvider
     public function retrieveByCredentials(array $credentials): ?object
     {
         $model = $this->model;
+        $allowed = ['email', 'username', 'id'];
 
         foreach ($credentials as $key => $value) {
-            if (!in_array($key, ['password', 'password_confirmation'], true)) {
+            if (!in_array($key, ['password', 'password_confirmation'], true) && in_array($key, $allowed, true)) {
                 $user = $model::where($key, $value)->first();
                 if ($user !== null) {
                     return $user;

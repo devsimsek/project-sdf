@@ -105,7 +105,7 @@ class AuthTest extends TestCase
                     'session' => ['provider' => 'users'],
                     'jwt' => [
                         'provider' => 'users',
-                        'secret' => 'test-secret-key',
+                        'secret' => 'test-secret-key-012345678901234567890123456789',
                         'ttl' => 3600,
                         'refresh_ttl' => 604800,
                     ],

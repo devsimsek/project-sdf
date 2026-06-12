@@ -22,8 +22,8 @@ class Router
     use CoreUtilities;
 
     /**
-    * @var bool
-    */
+     * @var bool
+     */
     protected static bool $booted = false;
 
     /**
@@ -41,15 +41,15 @@ class Router
      * @var array
      */
     protected static array $config = [
-      "debug" => false,
-      "magic_routing" => true,
-      "controllersDir" => SDF_APP_CONT,
-      "pathNotFound" => null, // Callback for path not found
-      "methodNotAllowed" => null, // Callback for method not allowed
-      "case_matters" => false,
-      "trailing_slash_matters" => false,
-      "multimatch" => false,
-      "basepath" => "/",
+        "debug" => false,
+        "magic_routing" => true,
+        "controllersDir" => SDF_APP_CONT,
+        "pathNotFound" => null, // Callback for path not found
+        "methodNotAllowed" => null, // Callback for method not allowed
+        "case_matters" => false,
+        "trailing_slash_matters" => false,
+        "multimatch" => false,
+        "basepath" => "/",
     ];
 
     /**
@@ -73,19 +73,39 @@ class Router
      * @param string $method
      * @return void
      */
-    public static function add(string $expression, string|callable $controller, string $method = "any"): void
-    {
+    public static function add(
+        string $expression,
+        string|callable $controller,
+        string $method = "any",
+    ): void {
         $patterns = [
-          "{url}" => "([0-9a-zA-Z]+)",
-          "{id}" => "([0-9]+)",
-          "{num}" => "([0-9]+)",
-          "{all}" => "(.*)",
+            "{url}" => "([0-9a-zA-Z]+)",
+            "{id}" => "([0-9]+)",
+            "{num}" => "([0-9]+)",
+            "{all}" => "(.*)",
+            "{uuid}" =>
+                "([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})", // RFC 4122 UUID (v1-v5)
+            "{uuid_simple}" => "([0-9a-fA-F]{32})", // UUID without dashes
+            "{hex}" => "([0-9a-fA-F]+)",
+            "{alpha}" => "([A-Za-z]+)",
+            "{alnum}" => "([A-Za-z0-9]+)",
+            "{word}" => "([A-Za-z0-9_\\-]+)",
+            "{slug}" => "([a-z0-9]+(?:-[a-z0-9]+)*)",
+            "{segment}" => "([^/]+)", // single path segment (no slashes)
+            "{file}" => "([^/]+\\.[A-Za-z0-9]+)", // filename with extension
+            "{bool}" => "(?:0|1|true|false)", // boolean-ish
+            "{date}" => "(\\d{4}-\\d{2}-\\d{2})", // YYYY-MM-DD
+            "{time}" => "(\\d{2}:\\d{2}:\\d{2})", // HH:MM:SS
+            "{datetime}" =>
+                "(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:Z|[+-]\\d{2}:?\\d{2})?)", // ISO 8601-ish
+            "{ip}" => "((?:\\d{1,3}\\.){3}\\d{1,3})",
+            "{ipv6}" => "(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4})",
         ];
         $hasTokens = str_contains($expression, "{");
         $expression = str_replace(
             array_keys($patterns),
             array_values($patterns),
-            $expression
+            $expression,
         );
 
         if (!$hasTokens) {
@@ -93,9 +113,9 @@ class Router
         }
 
         self::$routes[] = [
-          "expression" => $expression,
-          "controller" => $controller,
-          "method" => $method,
+            "expression" => $expression,
+            "controller" => $controller,
+            "method" => $method,
         ];
     }
 
@@ -139,7 +159,7 @@ class Router
         // Return false and print err.
         self::coreTriggerError(
             SDF_E_RENDER,
-            "Router config " . $field . " not needed."
+            "Router config " . $field . " not needed.",
         );
         return false;
     }
@@ -161,7 +181,10 @@ class Router
             if (self::$config["trailing_slash_matters"]) {
                 $request_path = $parsed_url["path"];
             } else {
-                $request_path = ($basepath . '/' != $parsed_url['path']) ? rtrim($parsed_url['path'], '/') : $parsed_url['path'];
+                $request_path =
+                    $basepath . "/" != $parsed_url["path"]
+                        ? rtrim($parsed_url["path"], "/")
+                        : $parsed_url["path"];
             }
         }
 
@@ -169,9 +192,9 @@ class Router
         $path_match_found = false;
         $route_match_found = false;
         $controllerDir = self::$config["controllersDir"];
-        $cacheFile = sys_get_temp_dir() . '/sdf_routes.cache';
+        $cacheFile = sys_get_temp_dir() . "/sdf_routes.cache";
 
-        if (getenv('SDF_LIVE_RELOAD') === 'true') {
+        if (getenv("SDF_LIVE_RELOAD") === "true") {
             self::middleware(\SDF\Middleware\LiveReloadMiddleware::class);
         }
 
@@ -179,53 +202,100 @@ class Router
             $pipeline = new Pipeline();
             $request = new Request();
 
-            $response = $pipeline->send($request)
-              ->through(self::$middlewares)
-              ->then(function ($request) use ($basepath, $parsed_url, &$request_path, &$request_method, &$path_match_found, &$route_match_found, $controllerDir, $cacheFile) {
-                  ob_start();
-                  self::runRouting($basepath, $parsed_url, $request_path, $request_method, $path_match_found, $route_match_found, $controllerDir, $cacheFile);
-                  return ob_get_clean();
-              });
+            $response = $pipeline
+                ->send($request)
+                ->through(self::$middlewares)
+                ->then(function ($request) use (
+                    $basepath,
+                    $parsed_url,
+                    &$request_path,
+                    &$request_method,
+                    &$path_match_found,
+                    &$route_match_found,
+                    $controllerDir,
+                    $cacheFile,
+                ) {
+                    ob_start();
+                    self::runRouting(
+                        $basepath,
+                        $parsed_url,
+                        $request_path,
+                        $request_method,
+                        $path_match_found,
+                        $route_match_found,
+                        $controllerDir,
+                        $cacheFile,
+                    );
+                    return ob_get_clean();
+                });
             echo $response;
         } else {
-            self::runRouting($basepath, $parsed_url, $request_path, $request_method, $path_match_found, $route_match_found, $controllerDir, $cacheFile);
+            self::runRouting(
+                $basepath,
+                $parsed_url,
+                $request_path,
+                $request_method,
+                $path_match_found,
+                $route_match_found,
+                $controllerDir,
+                $cacheFile,
+            );
         }
     }
 
     /**
      * Internal routing logic separated from ignite to support middleware.
      */
-    private static function runRouting($basepath, $parsed_url, $request_path, $request_method, &$path_match_found, &$route_match_found, $controllerDir, $cacheFile): void
-    {
+    private static function runRouting(
+        $basepath,
+        $parsed_url,
+        $request_path,
+        $request_method,
+        &$path_match_found,
+        &$route_match_found,
+        $controllerDir,
+        $cacheFile,
+    ): void {
         $routeMatches = [];
 
         if (!self::$booted) {
             if (file_exists($cacheFile) && !self::$config["debug"]) {
-                $cached = unserialize(file_get_contents($cacheFile), ['allowed_classes' => false]);
+                $cached = unserialize(file_get_contents($cacheFile), [
+                    "allowed_classes" => false,
+                ]);
                 self::$routes = $cached["routes"] ?? $cached;
                 self::$staticRoutes = $cached["static"] ?? self::$staticRoutes;
             } else {
-                $prefixedStatic = [];
-                foreach (self::$routes as &$route) {
-                    if ($basepath != "" && $basepath != "/") {
-                        $route["expression"] = "(" . $basepath . ")" . $route["expression"];
-                    }
-                    $route['expression'] = '^' . $route['expression'] . '$';
-                }
-                unset($route);
-                if ($basepath != "" && $basepath != "/") {
-                    foreach (self::$staticRoutes as $path => $methods) {
-                        $prefixedStatic[$basepath . $path] = $methods;
-                    }
-                    self::$staticRoutes = $prefixedStatic;
-                }
                 if (!self::$config["debug"]) {
-                    file_put_contents($cacheFile, serialize([
-                        "routes" => self::$routes,
-                        "static" => self::$staticRoutes,
-                    ]));
+                    try {
+                        file_put_contents(
+                            $cacheFile,
+                            serialize([
+                                "routes" => self::$routes,
+                                "static" => self::$staticRoutes,
+                            ]),
+                        );
+                    } catch (\Throwable) {
+                    }
                 }
             }
+
+            foreach (self::$routes as &$route) {
+                if ($basepath != "" && $basepath != "/") {
+                    $route["expression"] =
+                        "(" . $basepath . ")" . $route["expression"];
+                }
+                $route["expression"] = "^" . $route["expression"] . '$';
+            }
+            unset($route);
+            if ($basepath != "" && $basepath != "/") {
+                $prefixedStatic = [];
+                foreach (self::$staticRoutes as $path => $methods) {
+                    $prefixedStatic[$basepath . $path] = $methods;
+                }
+                self::$staticRoutes = $prefixedStatic;
+            }
+
             self::$booted = true;
         }
 
@@ -253,15 +323,36 @@ class Router
         }
 
         foreach (self::$routes as $route) {
-            if (preg_match("~" . $route["expression"] . "~" . (self::$config["case_matters"] ? "" : "i") . (self::$config["multimatch"] ? "" : "u"), $request_path, $routeMatches)) {
+            if (
+                preg_match(
+                    "~" .
+                        $route["expression"] .
+                        "~" .
+                        (self::$config["case_matters"] ? "" : "i") .
+                        (self::$config["multimatch"] ? "" : "u"),
+                    $request_path,
+                    $routeMatches,
+                )
+            ) {
                 $path_match_found = true;
-                if (strtolower($request_method) == strtolower($route["method"]) || $route["method"] == "any") {
+                if (
+                    strtolower($request_method) ==
+                        strtolower($route["method"]) ||
+                    $route["method"] == "any"
+                ) {
                     array_shift($routeMatches);
                     if (is_callable($route["controller"])) {
-                        call_user_func_array($route["controller"], $routeMatches);
+                        call_user_func_array(
+                            $route["controller"],
+                            $routeMatches,
+                        );
                         return;
                     }
-                    $route_match_found = self::handleController($route["controller"], $controllerDir, $routeMatches);
+                    $route_match_found = self::handleController(
+                        $route["controller"],
+                        $controllerDir,
+                        $routeMatches,
+                    );
                     if ($route_match_found) {
                         return;
                     }
@@ -272,13 +363,22 @@ class Router
         if (self::$config["magic_routing"]) {
             $request = explode("/", $request_path);
             array_shift($request);
-            $route_match_found = self::handleMagicRouting($request, $controllerDir, $routeMatches);
+            $route_match_found = self::handleMagicRouting(
+                $request,
+                $controllerDir,
+                $routeMatches,
+            );
             if ($route_match_found) {
                 return;
             }
         }
 
-        self::handleNotFound($route_match_found, $path_match_found, $request_path, $request_method);
+        self::handleNotFound(
+            $route_match_found,
+            $path_match_found,
+            $request_path,
+            $request_method,
+        );
     }
 
     /**
@@ -288,14 +388,21 @@ class Router
      * @param $routeMatches
      * @return bool
      */
-    private static function handleController($controller, $controllerDir, $routeMatches): bool
-    {
-        if (str_contains($controller, '@')) {
-            $parts = explode('@', $controller);
+    private static function handleController(
+        $controller,
+        $controllerDir,
+        $routeMatches,
+    ): bool {
+        if (str_contains($controller, "@")) {
+            $parts = explode("@", $controller);
             $class = $parts[0];
-            $method = $parts[1] ?? 'index';
+            $method = $parts[1] ?? "index";
             if (class_exists($class) && method_exists($class, $method)) {
-                return self::callControllerMethod($class, $method, $routeMatches);
+                return self::callControllerMethod(
+                    $class,
+                    $method,
+                    $routeMatches,
+                );
             }
             return false;
         }
@@ -310,8 +417,11 @@ class Router
      * @param $routeMatches
      * @return bool
      */
-    private static function handleMagicRouting($request, $controllerDir, $routeMatches): bool
-    {
+    private static function handleMagicRouting(
+        $request,
+        $controllerDir,
+        $routeMatches,
+    ): bool {
         return self::internalInvoker($request, $controllerDir, $routeMatches);
     }
 
@@ -324,7 +434,9 @@ class Router
     private static function adjustSearchPath($search_path, $request): mixed
     {
         if (!is_dir($search_path)) {
-            $search_path = self::$config["controllersDir"] . join("/", array_slice(array_map("ucfirst", $request), 0, -2));
+            $search_path =
+                self::$config["controllersDir"] .
+                join("/", array_slice(array_map("ucfirst", $request), 0, -2));
         }
         return $search_path;
     }
@@ -335,8 +447,10 @@ class Router
      * @param $controller
      * @return bool
      */
-    private static function requireControllerFile($search_path, $controller): bool
-    {
+    private static function requireControllerFile(
+        $search_path,
+        $controller,
+    ): bool {
         $path = $search_path . "/" . $controller . ".php";
         if (is_file($path)) {
             require $path;
@@ -357,8 +471,11 @@ class Router
      * @param $routeMatches
      * @return bool
      */
-    private static function callControllerMethod($controller, $method, $routeMatches): bool
-    {
+    private static function callControllerMethod(
+        $controller,
+        $method,
+        $routeMatches,
+    ): bool {
         if (is_callable($renderer = [new $controller(), $method])) {
             call_user_func_array($renderer, $routeMatches);
             return true;
@@ -374,22 +491,33 @@ class Router
      * @param $request_method
      * @return void
      */
-    private static function handleNotFound($route_match_found, $path_match_found, $request_path, $request_method): void
-    {
+    private static function handleNotFound(
+        $route_match_found,
+        $path_match_found,
+        $request_path,
+        $request_method,
+    ): void {
         if (!$route_match_found) {
             if ($path_match_found) {
                 header("HTTP/1.0 405 Method Not Allowed");
                 if (self::$config["methodNotAllowed"]) {
-                    call_user_func_array(self::$config["methodNotAllowed"], [$request_path, $request_method]);
+                    call_user_func_array(self::$config["methodNotAllowed"], [
+                        $request_path,
+                        $request_method,
+                    ]);
                 }
             } else {
                 header("HTTP/1.0 404 Not Found");
-                call_user_func_array(self::$config["pathNotFound"], [$request_path]);
+                call_user_func_array(self::$config["pathNotFound"], [
+                    $request_path,
+                ]);
             }
         } else {
             if (!$path_match_found) {
                 header("HTTP/1.0 404 Not Found");
-                call_user_func_array(self::$config["pathNotFound"], [$request_path]);
+                call_user_func_array(self::$config["pathNotFound"], [
+                    $request_path,
+                ]);
             }
         }
     }
@@ -401,27 +529,41 @@ class Router
      * @param $routeMatches
      * @return bool
      */
-    private static function internalInvoker($request, $controllerDir, $routeMatches): bool
-    {
+    private static function internalInvoker(
+        $request,
+        $controllerDir,
+        $routeMatches,
+    ): bool {
         if (count($request) >= 2) {
             $possible_method = $request[count($request) - 1];
             $possible_controller = $request[count($request) - 2];
-            $search_path = $controllerDir . join("/", array_slice($request, 0, -2));
+            $search_path =
+                $controllerDir . join("/", array_slice($request, 0, -2));
             $search_path = self::adjustSearchPath($search_path, $request);
 
-            if (self::requireControllerFile($search_path, $possible_controller)) {
-                return self::callControllerMethod($possible_controller, $possible_method, $routeMatches);
+            if (
+                self::requireControllerFile($search_path, $possible_controller)
+            ) {
+                return self::callControllerMethod(
+                    $possible_controller,
+                    $possible_method,
+                    $routeMatches,
+                );
             }
         } else {
             $controller = $request[count($request) - 1];
-            $search_path = $controllerDir . join("/", array_slice($request, 0, -1));
+            $search_path =
+                $controllerDir . join("/", array_slice($request, 0, -1));
             $search_path = self::adjustSearchPath($search_path, $request);
 
             if (self::requireControllerFile($search_path, $controller)) {
-                return self::callControllerMethod($controller, "index", $routeMatches);
+                return self::callControllerMethod(
+                    $controller,
+                    "index",
+                    $routeMatches,
+                );
             }
         }
         return false;
     }
-
 }

@@ -96,7 +96,7 @@ class Mail
 
         if ($driver === 'smtp') {
             $smtpConfig = $config['smtp'] ?? [];
-            $mailer = new SmtpMailer($smtpConfig);
+            $mailer = new NativeMailer($smtpConfig);
         } else {
             $logConfig = $config['log'] ?? [];
             $logPath = $logConfig['path'] ?? null;

@@ -89,7 +89,7 @@ $SDF_APP_CACHE = "cache";
  * Environment
  * ------- ~ ------- ~ ------- ~ ------- ~ -------
  */
-const SDF_ENV = "development";
+define('SDF_ENV', getenv('SDF_ENV') ?: 'development');
 
 // -----------------------------------------------
 

@@ -3,11 +3,11 @@
 namespace SDF\Mail;
 
 /**
- * Project SDF SMTP Mailer
+ * Project SDF Native Mailer
  * Copyright devsimsek
  * @package     SDF
  * @subpackage  SDF Mail
- * @file        SmtpMailer.php
+ * @file        NativeMailer.php
  * @version     v1.0.0
  * @author      devsimsek
  * @copyright   Copyright (c) 2025, smskSoft, devsimsek
@@ -16,35 +16,8 @@ namespace SDF\Mail;
  * @since       Version 2.2
  * @filesource
  */
-class SmtpMailer implements Mailer
+class NativeMailer implements Mailer
 {
-    /** @var string SMTP host. */
-    private string $host;
-
-    /** @var int SMTP port. */
-    private int $port;
-
-    /** @var string SMTP username. */
-    private string $username;
-
-    /** @var string SMTP password. */
-    private string $password;
-
-    /** @var string Encryption method (tls or ssl). */
-    private string $encryption;
-
-    /**
-     * @param array $config
-     */
-    public function __construct(array $config)
-    {
-        $this->host = $config['host'] ?? 'localhost';
-        $this->port = (int)($config['port'] ?? 587);
-        $this->username = $config['username'] ?? '';
-        $this->password = $config['password'] ?? '';
-        $this->encryption = $config['encryption'] ?? 'tls';
-    }
-
     /**
      * Send a mailable via mail() with constructed headers.
      *

@@ -96,6 +96,7 @@ class RedisQueue implements Queue
      */
     public function pop(): ?Job
     {
+        $this->migrateDelayed();
         $result = $this->redis->blPop($this->key($this->defaultQueue), 5);
 
         if (!$result || !is_array($result) || count($result) < 2) {
@@ -148,7 +149,11 @@ class RedisQueue implements Queue
         ], JSON_UNESCAPED_SLASHES);
 
         if ($delay > 0) {
-            $this->redis->rPush($this->key($this->defaultQueue) . ':delayed', $wrapped);
+            $this->redis->zAdd(
+                $this->key($this->defaultQueue) . ':delayed',
+                time() + $delay,
+                $wrapped
+            );
         } else {
             $this->redis->rPush($this->key($this->defaultQueue), $wrapped);
         }
@@ -187,5 +192,18 @@ class RedisQueue implements Queue
     public function clear(): void
     {
         $this->redis->del($this->key($this->defaultQueue));
+    }
+
+    protected function migrateDelayed(): void
+    {
+        $delayedKey = $this->key($this->defaultQueue) . ':delayed';
+        $now = time();
+        $batch = $this->redis->zRangeByScore($delayedKey, '-inf', (string) $now);
+        if (!empty($batch)) {
+            foreach ($batch as $wrapped) {
+                $this->redis->rPush($this->key($this->defaultQueue), $wrapped);
+            }
+            $this->redis->zRemRangeByScore($delayedKey, '-inf', (string) $now);
+        }
     }
 }

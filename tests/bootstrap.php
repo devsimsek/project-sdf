@@ -75,7 +75,7 @@ require_once SDF_DIR . 'core/Schema/Schema.php';
 require_once SDF_DIR . 'core/Localization/Translator.php';
 require_once SDF_DIR . 'core/Mail/Mailable.php';
 require_once SDF_DIR . 'core/Mail/Mailer.php';
-require_once SDF_DIR . 'core/Mail/SmtpMailer.php';
+require_once SDF_DIR . 'core/Mail/NativeMailer.php';
 require_once SDF_DIR . 'core/Mail/LogMailer.php';
 require_once SDF_DIR . 'core/Mail/Mail.php';
 require_once SDF_DIR . 'core/Queue/Queue.php';

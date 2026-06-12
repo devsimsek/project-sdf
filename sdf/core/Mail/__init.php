@@ -11,6 +11,6 @@
 
 require_once __DIR__ . '/Mailable.php';
 require_once __DIR__ . '/Mailer.php';
-require_once __DIR__ . '/SmtpMailer.php';
+require_once __DIR__ . '/NativeMailer.php';
 require_once __DIR__ . '/LogMailer.php';
 require_once __DIR__ . '/Mail.php';
