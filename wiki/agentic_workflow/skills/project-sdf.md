@@ -3,111 +3,206 @@
 ## Quick start
 ```bash
 composer install
-vendor/bin/phpunit --testdox
-vendor/bin/phpunit --filter=CoreSurface --testdox
-composer analyze
-composer cs:fix
-composer cs:check
+php sdf/cli serve -p 8000                # dev server at localhost:8000
+php sdf/cli serve -p 8000 --live         # with auto-reload
+php sdf/cli serve -p 8000 --clear-cache  # clear caches before serving
 ```
 
-## CLI
+## CLI reference
 ```bash
-php sdf/cli serve -p 8000              # dev server (auto-detect frankenphp or PHP built-in)
-php sdf/cli serve -p 8000 --live       # with live-reload watcher
-php sdf/cli g controller Home          # generate component
-php sdf/cli g test UserController --type=controller --namespace=App\\Controllers\\User
-php sdf/cli db migrate                 # run pending migrations
-php sdf/cli cache clear                # clear framework caches
-php sdf/cli format --dry-run -v        # run cs-fixer via CLI
+php sdf/cli g controller Home            # generate a controller
+php sdf/cli g model Post                 # generate a model
+php sdf/cli g migration create_posts_table  # generate a migration
+php sdf/cli g test HomeController --type=controller --namespace=App\\Controllers\\User
+php sdf/cli db migrate                   # run pending migrations
+php sdf/cli cache clear                  # flush all caches
+php sdf/cli format --dry-run -v          # check code style
+php sdf/cli swagger generate             # generate OpenAPI spec
 ```
 
-## Architecture
-- **Entry**: `index.php` defines constants (`SDF`, `USE_FUSE`, `SDF_ENV`, etc.) then requires `sdf/__init.php`.
-- **PSR-4**: `SDF\` → `sdf/core/`, `Tests\` → `tests/`.
-- **CoreUtilities trait** on `SDF\Core` holds shared static state (`$classes`, `$config`).
-- **Config**: `app/config/*.php` or `app/config/*.json`; files declare `$config['key'] = [...]`. Cached to `sys_get_temp_dir()/sdf_config.cache`.
-- **No DI container** — classes use `Core::coreLoadClass()` singleton-style loading.
-- **Router cache**: `sys_get_temp_dir()/sdf_routes.cache`.
-- **Cache facade**: `SDF\Cache\Cache` — PSR-16 proxy. Driver (`file`/`redis`/`memcached`) set in `app/config/cache.php`.
-- **Fuse view engine**: compiles templates via Cache facade; raw files also written to `sys_get_temp_dir()/fuse_cache/` for `require`.
+## Project structure
+```
+├── app/
+│   ├── config/          # PHP/JSON config files → $config['key'] = [...]
+│   ├── controllers/     # your controllers
+│   ├── handlers/        # error handlers (eh_pathNotFound, eh_methodNotAllowed)
+│   ├── models/          # your models
+│   └── views/           # Fuse templates (.fuse.php)
+├── sdf/                 # framework core (don't touch)
+├── public/              # static assets (images, css, js)
+├── storage/             # logs, cache, uploads
+├── tests/
+├── vendor/
+├── .env                 # environment variables
+├── index.php            # entry point (defines SDF, SDF_ENV, etc.)
+└── routes.php           # route definitions
+```
 
-## Testing quirks
-- PHPUnit 10, bootstrap `tests/bootstrap.php` defines framework constants + requires all core files.
-- Tests use `ReflectionClass` extensively to access private static properties (no public getters/setters). See `CoreSurfaceTest.php`, `QueryBuilderTest.php` for patterns.
-- **Must reset static state** in `setUp`/`tearDown` — `Core::$config`, `Router::$routes/$middlewares/$config` are shared.
-- CLI generator tests (`CLIGeneratorTest.php`) run in temp dirs.
-- SQLite in-memory connections for integration-style tests (`Spark::connect('sqlite::memory:')`).
-- Use `$this->getProperty()` / `$this->getStaticProperty()` helpers from `CoreSurfaceTest` base.
+## Routing (`routes.php`)
+```php
+// Closure
+Router::add('/', function() { return 'Hello'; });
 
-## Key constraints
-- PHP **8.2+** required (checked in `sdf/__init.php`).
-- `composer.lock` is gitignored.
-- `.php-cs-fixer.dist.php` only targets `sdf/` and `app/` dirs.
-- PHPStan level 5, excludes `tests/`, bootstraps framework constants via `phpstan-bootstrap.php`.
-- Error handlers in `app/handlers/errors.php` — functions `eh_pathNotFound`, `eh_methodNotAllowed`, `eh_errorHandler`.
-- Static files only served in development mode via `SDF_STATIC_MIMES` constant.
+// Controller@method (namespaced)
+Router::add('/users', '\App\Controllers\UserController@index');
 
-## Code conventions
-- No `die`/`exit` in kernel/core (allowed in `sdf/cli` standalone CLI script).
-- File header docblocks with `@package`, `@subpackage`, `@file`, `@version`, `@author`, `@copyright`, `@license`, `@link`, `@since`, `@filesource`.
-- Class docblocks; method docblocks with `@param`, `@return`.
-- **No inline `//` comments in method bodies** — only docblocks.
-- PSR-7 implementations must be immutable (`with*` returns new instance); live alongside legacy mutable classes for BC.
-- Session `session_start()` deferred to first `get()`/`set()`.
-- Router stores static routes in separate hash map for O(1) exact-path matching.
-- Swagger routes auto-registered only in `development` environment.
-- `zircote/swagger-php` moved to `require-dev` — not loaded in production.
-- Configuration: `app/config/*.php` files set `$config['key'] = [...]`.
-- Run `composer dump-autoload -o --apcu` after adding new classes.
+// With params
+Router::add('/post/{id}', '\App\Controllers\PostController@show');
 
-## Router
-- `add(string $expression, string|callable $controller, string $method = "any")`.
-- Supports `@` syntax for namespaced controllers: `\SDF\Swagger\SwaggerController@spec`.
-- Supports callable controllers: `function() { ... }`.
-- Supports `/` syntax: `Dir/Controller/method`.
-- Static routes (no `{param}` tokens) stored in `$staticRoutes` for O(1) lookup.
-- Routes cached to `sys_get_temp_dir()/sdf_routes.cache` via `serialize`/`unserialize` with `allowed_classes=false`.
+// Route placeholders: {id}, {uuid}, {slug}, {date}, {all}, etc.
+Router::add('/user/{uuid}', 'UserController@show');
+Router::add('/blog/{slug}', 'BlogController@show');
 
-## Auth
-- Guards: `SessionGuard` (session-based), `JwtGuard` (HS256 stateless JWT) with refresh token support.
-- Auth middleware: `AuthMiddleware` — rejects with 401 if no authenticated user.
-- Config: `app/config/auth.php`.
+// HTTP method filter
+Router::add('/users', 'UserController@store', 'POST');
 
-## Middleware
-- `CsrfMiddleware` — per-session CSRF validation, 419 on mismatch. Token via `X-CSRF-TOKEN` header or `_token` POST field.
-- `CorsMiddleware` — configurable origins/methods/headers, OPTIONS → 204. Wildcard+credentials echoes request Origin + `Vary: Origin`.
-- `RateLimitMiddleware` — per-IP/route via Cache, 429 with `Retry-After`. Malformed entries rebuilt.
-- `AuthMiddleware` — requires authenticated session/token.
+// Named routes
+Router::add('/login', 'AuthController@login', 'GET')->name('login');
+```
 
-## Key implementations
-- `sdf/core/Env.php`: `.env` loader (KV parsing, quotes, `${VAR}` placeholders, circular reference guard).
-- `sdf/core/helpers.php`: Global `env()`, `csrf_token()`, `csrf_field()` helpers.
-- `sdf/core/Encryption/Encrypter.php`: AES-256-CBC + HMAC-SHA256 encrypt-then-MAC.
-- `sdf/core/Validation/Validator.php`: 19 rules (required, email, min, max, between, numeric, integer, string, boolean, array, alpha, alpha_num, url, in, confirmed, same, different, regex, nullable), custom messages, aliases, custom rules.
-- `sdf/core/Spark/Model.php`: ORM with `hasOne()`, `hasMany()`, `belongsTo()`, `belongsToMany()`.
-- `sdf/core/Spark/Paginator.php`: Pagination result class.
-- `sdf/core/Spark.php`: QueryBuilder with `select()`, `join()`, `paginate()`, `where()` LSB fix.
+See [full route docs](wiki/app/routes.md) for all 18 available placeholders (`{uuid}`, `{hex}`, `{alpha}`, `{bool}`, `{datetime}`, etc.).
 
-## Performance
-- FrankenPHP `v1.11.2` (Homebrew) on PHP 8.5.3: ~10k req/sec on home route (full stack with Fuse view).
-- Redis SCAN instead of KEYS for cache clear.
-- RateLimitMiddleware stores raw arrays (not JSON strings) to avoid double-serialization.
-- SwaggerController echos JSON directly (no decode/encode cycle).
-- Config caching uses raw file (`sdf_config.cache`) to avoid circular dependency with Cache facade.
-- DB connection fully lazy: `Spark::ensureConnected()` auto-inits from config on first query.
-- Cache driver lazy-loaded in `resolveDriver()`.
+## Controllers
+```php
+namespace App\Controllers;
+class HomeController {
+    public function index() {
+        return view('home', ['title' => 'SDF']);
+    }
+}
+```
 
-## Git
-- Only commit/amend/push when explicitly requested.
-- Before committing, inspect `git status`, `git diff`, `git log --oneline -10`; stage only intended files.
-- Write concise commit messages matching repo style.
-- Never force-push, skip hooks, or use interactive `-i`.
+## Views (Fuse — Blade-like syntax)
+```php
+<!-- layouts/app.fuse.php -->
+<html><body>
+    @yield('content')
+</body></html>
 
-When working on this codebase, always run tests before committing (`vendor/bin/phpunit --testdox`). If adding new classes, run `composer dump-autoload -o --apcu`.
+<!-- home.fuse.php -->
+@extends('layouts.app')
+@section('content')
+    <h1>{{ $title }}</h1>
+    @include('partials.nav')
+@endsection
+```
 
-## Wiki
-Full documentation is at `wiki/`:
-- `wiki/libraries/` — lib docs (auth, cache, csrf, cors, ratelimit, encryption, validation, session, flash, request, http, swagger, benchmark).
-- `wiki/app/tutorials/` — tutorials (authentication, blog, docker-frankenphp).
-- `wiki/sdf/` — CLI docs.
-- `wiki/agentic_workflow/` — agentic development workflows.
+## Database (Spark ORM)
+### Config (`app/config/database.php`)
+```php
+$config['database'] = [
+    'driver'   => 'mysql',
+    'host'     => getenv('DB_HOST') ?: '127.0.0.1',
+    'database' => getenv('DB_NAME'),
+    'username' => getenv('DB_USER'),
+    'password' => getenv('DB_PASS'),
+    'charset'  => 'utf8mb4',
+];
+```
+
+### Query builder
+```php
+$users = Spark::table('users')->where('active', 1)->get();
+$user  = Spark::table('users')->find(1);
+$posts = Spark::table('posts')->where('user_id', $id)->paginate(15);
+```
+
+### Models
+```php
+class Post extends \SDF\Spark\Model {
+    protected string $table = 'posts';
+    protected string $primaryKey = 'id';
+    protected bool $timestamps = true;    // adds created_at/updated_at
+    protected bool $softDelete = false;   // adds deleted_at
+
+    // Relationships
+    public function author() {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function comments() {
+        return $this->hasMany(Comment::class, 'post_id');
+    }
+    public function tags() {
+        return $this->belongsToMany(Tag::class, 'post_tag', 'post_id', 'tag_id');
+    }
+}
+
+// Usage
+$post = Post::find(1);
+$post->title = 'Updated';
+$post->save();
+$post->delete();          // soft-delete if enabled
+$post->forceDelete();     // permanent delete
+Post::withTrashed()->get();
+Post::onlyTrashed()->get();
+```
+
+## Authentication
+### Guard types
+- **SessionGuard** — session-based login. Configure in `app/config/auth.php`.
+- **JwtGuard** — stateless HS256 JWT with refresh tokens.
+
+### Protecting routes
+```php
+Router::add('/dashboard', 'DashboardController@index')->middleware('auth');
+```
+
+### Auth middleware stack
+- `CsrfMiddleware` — validates `X-CSRF-TOKEN` or `_token` POST field. 419 on mismatch.
+- `CorsMiddleware` — configurable origins/methods/headers. OPTIONS → 204.
+- `RateLimitMiddleware` — 60 req/min per IP+route. 429 with `Retry-After`.
+- `AuthMiddleware` — 401 if unauthenticated.
+
+## Cache (PSR-16)
+```php
+use SDF\Cache\Cache;
+
+Cache::set('key', 'value', 3600);
+$value = Cache::get('key', 'default');
+Cache::delete('key');
+Cache::clear();
+```
+
+Drivers: `file`, `redis`, `memcached`. Set in `app/config/cache.php`.
+
+## Validation
+```php
+$validator = new \SDF\Validation\Validator($data, [
+    'email' => 'required|email',
+    'name'  => 'required|min:3|max:255',
+    'age'   => 'numeric|between:18,99',
+]);
+if ($validator->fails()) {
+    $errors = $validator->errors();
+}
+```
+
+19 rules: required, email, min, max, between, numeric, integer, string, boolean, array, alpha, alpha_num, url, in, confirmed, same, different, regex, nullable.
+
+## Components
+- **Encryption**: AES-256-CBC + HMAC-SHA256. `Encrypter::encrypt($plaintext)`, `decrypt($ciphertext)`. Key from `APP_KEY` env (32 bytes).
+- **PSR-7 HTTP**: `ServerRequest` and `Response` — immutable (`with*` returns new instance). Legacy mutable classes also available.
+- **Storage**: `Storage::disk('local')->put('file.txt', 'content')`. Drivers: `local`, `s3`.
+- **Mail**: `Mail::send(...)` via configured driver.
+- **Queues**: `Queue::dispatch(Job::class, $payload)` via `database` or `redis` driver.
+- **Events**: PSR-14 `EventDispatcher::dispatch(new UserRegistered($user))`.
+- **Logging**: PSR-3 `Logger::info('message')`, `Logger::error('message', $context)`.
+- **Schema Builder**: `Schema::create('table', function($table) { ... })` for migrations.
+- **Localization**: `__('messages.welcome')` with language files in `app/lang/`.
+
+## Deployment
+### Docker
+```bash
+docker compose up -d    # starts FrankenPHP + MySQL 8.4 + Redis 7
+```
+
+Multi-stage Dockerfile: `base` (composer --no-dev), `dev` (xdebug), `production` (OPcache). Set `SDF_ENV=production` for production mode.
+
+### Static files
+Served automatically in development mode. In production, use Caddy (included in Docker) or nginx to serve `public/`.
+
+## Wiki docs
+Full documentation at `wiki/`:
+- `wiki/libraries/` — component docs (auth, cache, csrf, cors, ratelimit, encryption, validation, session, flash, http, swagger, log, schema, events, localization, mail, queue, storage)
+- `wiki/app/tutorials/` — tutorials (authentication, blog, docker-frankenphp)
+- `wiki/sdf/` — CLI commands docs

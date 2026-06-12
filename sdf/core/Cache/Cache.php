@@ -249,6 +249,6 @@ class Cache
     public static function normalizeKey(string $key): string
     {
         $key = preg_replace('/[{}()\/\\\@:"]/', '_', $key);
-        return trim(preg_replace('/[^a-zA-Z0-9_.!-]/', '', $key));
+        return trim(preg_replace('/[^a-zA-Z0-9_.]/', '', $key));
     }
 }

@@ -22,7 +22,7 @@ if (!defined("SDF")) {
     print_r('PANIC: sdf is not called by it\'s own script.');
     exit(1);
 }
-const SDF_VERSION = "2.1.0";
+const SDF_VERSION = "2.3.0";
 
 // Check minimum version requirement of this framework.
 // PHP 8.2 or higher is required, framework is tested and compatible up to PHP 8.5
@@ -121,6 +121,15 @@ if (SDF_BENCHMARK) {
 
 // Initialize Cache facade (load required files, driver loaded on demand)
 require_once SDF_DIR . "core/Cache/__init.php";
+
+// New feature bootstraps
+require_once SDF_DIR . "core/Log/__init.php";
+require_once SDF_DIR . "core/Events/__init.php";
+require_once SDF_DIR . "core/Schema/__init.php";
+require_once SDF_DIR . "core/Localization/__init.php";
+require_once SDF_DIR . "core/Mail/__init.php";
+require_once SDF_DIR . "core/Queue/__init.php";
+require_once SDF_DIR . "core/Storage/__init.php";
 
 // sdf-15: better error handling and managed exceptions
 require_once SDF_DIR . "core/Exceptions.php"; // https://github.com/devsimsek/project-sdf/pull/12#discussion_r3299746185

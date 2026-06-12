@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SDF\Swagger;
 
 use OpenApi\Annotations\Info;
-use OpenApi\Annotations\PathItem;
 use OpenApi\Annotations\Server;
 use OpenApi\Generator;
 

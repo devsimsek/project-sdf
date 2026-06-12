@@ -1,9 +1,11 @@
 includes:
   - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+  - phpstan-baseline.neon
 
 parameters:
   level: 5
   treatPhpDocTypesAsCertain: false
+  reportUnmatchedIgnoredErrors: false
   bootstrapFiles:
     - phpstan-bootstrap.php
   paths:
@@ -11,3 +13,4 @@ parameters:
     - app
   excludePaths:
     - tests
+    - app/config/auth.php

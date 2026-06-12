@@ -46,20 +46,27 @@ class UserProvider
     }
 
     /**
-     * Retrieve a user by the given credentials (single field match).
+     * Retrieve a user by the given credentials.
      *
-     * Iterates over the credentials array and returns the first match.
+     * Iterates over the credentials array, skipping non-credential
+     * fields (e.g. 'password'), and returns the first match.
      * Typically used with ['email' => $email] or ['username' => $name].
      *
-     * @param array $credentials Key-value pair to search by.
+     * @param array $credentials Key-value pairs to search by.
      * @return object|null
      */
     public function retrieveByCredentials(array $credentials): ?object
     {
         $model = $this->model;
+        $allowed = ['email', 'username', 'id'];
 
         foreach ($credentials as $key => $value) {
-            return $model::where($key, $value)->first();
+            if (!in_array($key, ['password', 'password_confirmation'], true) && in_array($key, $allowed, true)) {
+                $user = $model::where($key, $value)->first();
+                if ($user !== null) {
+                    return $user;
+                }
+            }
         }
 
         return null;

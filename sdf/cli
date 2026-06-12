@@ -35,6 +35,11 @@ class CLI
         define("SDF_APP", SDF_ROOT . "/app/");
         define("SDF_DIR", SDF_ROOT . "/sdf/");
 
+        // Load .env and helpers before config so env() is available
+        require_once SDF_DIR . "core/Env.php";
+        require_once SDF_DIR . "core/helpers.php";
+        \SDF\Env::load(SDF_ROOT . '/.env');
+
         require_once SDF_DIR . "core/Core.php";
         Core::coreLoadConfigurations();
 
@@ -1013,7 +1018,8 @@ class CLI
 
         switch ($driver) {
             case "sqlite":
-                $dsn = "sqlite:" . ($path ?: $name);
+                $sqlitePath = $path ?: $name;
+                $dsn = str_starts_with($sqlitePath, 'sqlite:') ? $sqlitePath : "sqlite:" . $sqlitePath;
                 $user = null;
                 $pass = null;
                 break;
@@ -1131,7 +1137,7 @@ class CLI
     {
         // Run wrk against the dev server and print results with 30s duration and 10 concurrent connections
         // save results to a file named benchmark_results.txt in the current directory
-        $port = self::getPortArg();
+        $port = $this->getPortArg();
         $duration = 30;
         $concurrency = 10;
 
@@ -1151,7 +1157,7 @@ class CLI
      */
     private function runBenchmarkDry(): void
     {
-        $port = self::getPortArg();
+        $port = $this->getPortArg();
         $duration = 30;
         $concurrency = 10;
 
@@ -1205,9 +1211,14 @@ class CLI
      */
     private function handleDevServer(): void
     {
-        $port = self::getPortArg();
+        $port = $this->getPortArg();
         $quiet = in_array("-q", $this->argv);
         $live = in_array("--live", $this->argv);
+        $clear = in_array("--clear-cache", $this->argv) || in_array("-c", $this->argv);
+
+        if ($clear) {
+            $this->clearCache(silent: true);
+        }
 
         if (!$quiet) {
             $this->showBanner();
@@ -1215,6 +1226,9 @@ class CLI
             if ($live) {
                 echo "[INFO] Live mode enabled. Watching for changes...\n";
                 putenv("SDF_LIVE_RELOAD=true");
+            }
+            if ($clear) {
+                echo "[INFO] Cache cleared before starting.\n";
             }
         }
 
@@ -1277,12 +1291,11 @@ class CLI
     /**
      * Spawn a background process to watch files and clear cache.
      */
-    private static function getPortArg(): int
+    private function getPortArg(): int
     {
-        $argv = $GLOBALS['argv'] ?? [];
-        $pIndex = array_search("-p", $argv);
-        if ($pIndex !== false && isset($argv[$pIndex + 1])) {
-            return (int) $argv[$pIndex + 1];
+        $pIndex = array_search("-p", $this->argv);
+        if ($pIndex !== false && isset($this->argv[$pIndex + 1])) {
+            return (int) $this->argv[$pIndex + 1];
         }
         return 8080;
     }
@@ -1468,7 +1481,7 @@ class CLI
         echo "    seed                      Run all seeders\n";
         echo "    reset                     Rollback all + Migrate + Seed\n";
         echo "\n";
-        echo "  serve|devserver [-p port] [-q] [--live] Start dev server\n";
+        echo "  serve|devserver [-p port] [-q] [--live] [--clear-cache|-c]  Start dev server\n";
         echo "  test|tests [phpunit args]     Run PHPUnit test suite (for example: --filter, --testsuite)\n";
         echo "\n";
         echo "  cache [action]              Cache management\n";

@@ -241,17 +241,25 @@ class QueryBuilder
      */
     public function where(string $column, mixed $operator, mixed $value = null): self
     {
-        // Detect 2-arg shorthand by argument count
+        $allowed = ['=', '<', '>', '<=', '>=', '<>', '!=', 'LIKE', 'NOT LIKE', 'IS', 'IS NOT', 'IN', 'NOT IN'];
+
         if (func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
         }
 
+        $operator = strtoupper((string) $operator);
+
+        if (!in_array($operator, $allowed, true)) {
+            $operator = '=';
+        }
+
         $col = $this->quoteIdent($column);
 
-        // Handle explicit NULL comparisons
-        if ($value === null && strtoupper($operator) === '=') {
+        if ($value === null && $operator === '=') {
             $this->wheres[] = "$col IS NULL";
+        } elseif ($value === null && $operator === 'IS NOT') {
+            $this->wheres[] = "$col IS NOT NULL";
         } else {
             $this->wheres[] = "$col $operator ?";
             $this->bindings[] = $value;
@@ -324,6 +332,8 @@ class QueryBuilder
      */
     public function join(string $table, string $first, string $operator, string $second, string $type = 'INNER'): self
     {
+        $allowedOps = ['=', '<', '>', '<=', '>=', '<>', '!='];
+        $operator = in_array($operator, $allowedOps, true) ? $operator : '=';
         $type = strtoupper($type);
         $type = in_array($type, ['INNER', 'LEFT', 'RIGHT', 'FULL'], true) ? $type : 'INNER';
         $this->joins[] = " $type JOIN " . $this->quoteIdent($table) . " ON " . $this->quoteIdent($first) . " $operator " . $this->quoteIdent($second);

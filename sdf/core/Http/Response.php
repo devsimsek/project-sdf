@@ -324,6 +324,11 @@ class Response implements ResponseInterface
     {
         $values = is_array($values) ? $values : [$values];
         $lower = strtolower($name);
+        foreach ($this->headers as $existing => $v) {
+            if (strtolower($existing) === $lower && $existing !== $name) {
+                unset($this->headers[$existing]);
+            }
+        }
         $this->headerNames[$lower] = $name;
         $this->headers[$name] = $values;
     }

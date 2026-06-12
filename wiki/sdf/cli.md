@@ -44,6 +44,7 @@ The following commands are available in the cli:
   - `-q` - Runs the application in quiet mode.
   - `-p` - Specifies the port to run the application on. Default is 8000.
   - `--live` - Enables live-reload watcher.
+  - `--clear-cache` or `-c` - Clears framework caches (config, routes, Fuse) before starting the server.
 
 ### Generate
 

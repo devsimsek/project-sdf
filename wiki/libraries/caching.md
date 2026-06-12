@@ -101,7 +101,7 @@ $driver->set('x', 'y');   // false
 
 | Driver      | Extension required | Storage           |
 |-------------|-------------------|--------------------|
-| FileDriver  | none              | Serialized files   |
+| FileDriver  | none              | Serialized files (objects supported) |
 | RedisDriver | redis             | Redis key-value    |
 | MemcachedDriver | memcached     | Memcached          |
 

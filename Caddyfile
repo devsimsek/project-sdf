@@ -1,0 +1,50 @@
+{
+    frankenphp
+    admin off
+}
+
+{$SERVER_NAME:localhost}:{$PORT:80} {
+    root * /app
+    php {
+        resolve_root_symlink
+    }
+
+    @static {
+        file {
+            try_files {path} {path}/index.php
+        }
+    }
+    rewrite @static {path}
+
+    try_files {path} /index.php
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        -Server
+    }
+
+    @forbidden {
+        path /config/*
+        path /cache/*
+        path /sdf/*
+        path /vendor/*
+        path /composer.json
+        path /composer.lock
+        path /.env
+        path /Caddyfile
+        path /Dockerfile
+        path /compose.yaml
+    }
+    respond @forbidden 403
+}
+
+# Production with automatic HTTPS:
+# example.com {
+#     root * /app
+#     php { resolve_root_symlink }
+#     try_files {path} /index.php
+#     header { -Server }
+# }

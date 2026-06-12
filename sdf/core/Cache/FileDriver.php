@@ -262,7 +262,7 @@ class FileDriver implements CacheDriver
         if ($content === false) {
             return null;
         }
-        $data = unserialize($content, ['allowed_classes' => false]);
+        $data = unserialize($content, ['allowed_classes' => true]);
         if (!is_array($data)) {
             return null;
         }
@@ -279,7 +279,7 @@ class FileDriver implements CacheDriver
     private function write(string $key, array $data): bool
     {
         $file = $this->path($key);
-        $tmp = $file . '.tmp.' . getmypid();
+        $tmp = $file . '.tmp.' . uniqid('', true);
         $written = file_put_contents($tmp, serialize($data));
         if ($written === false) {
             return false;
@@ -353,6 +353,6 @@ class FileDriver implements CacheDriver
     private function saveTagIndex(array $index): void
     {
         $file = $this->path . $this->prefix . 'tag_index.cache';
-        file_put_contents($file, serialize($index));
+        file_put_contents($file, serialize($index), LOCK_EX);
     }
 }

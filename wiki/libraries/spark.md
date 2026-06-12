@@ -50,6 +50,7 @@ Configuration and DSN notes
 QueryBuilder identifier quoting and NULL handling
 
 - QueryBuilder quotes identifiers (table/column names) to reduce injection risk. Prefer using constant column names from your code (not raw user input). For complex cases, validate/whitelist identifiers before passing them to QueryBuilder.
+- Comparison operators in `where()` and `join()` are whitelisted against `['=', '<', '>', '<=', '>=', '<>', '!=', 'LIKE', 'NOT LIKE', 'IS', 'IS NOT', 'IN', 'NOT IN']`. Unknown operators default to `=`.
 
 - To compare against NULL explicitly use the full 3-arg form (e.g. `->where('deleted_at', 'IS', null)`) or helper methods (e.g. `whereNull()`); the builder detects the number of arguments to preserve explicit NULL comparisons.
 
@@ -225,3 +226,25 @@ php sdf/cli db rollback
 | `Spark::pdo()` | Get raw PDO instance |
 | `Model::all()` | Fetch all rows for a model |
 | `Model::query()` | Start a QueryBuilder for a model |
+
+## Timestamps & Soft Deletes
+
+Models auto-manage `created_at`/`updated_at` by default. Set `$softDeletes = true` on your model class to enable soft deletes via a `deleted_at` column.
+
+```php
+class Post extends Model
+{
+    protected static string $table = 'posts';
+    protected static bool $softDeletes = true;
+}
+
+$post = Post::find(1);
+$post->delete();         // soft delete (sets deleted_at)
+$post->restore();        // undo soft delete
+$post->forceDelete();    // permanent removal
+
+Post::withTrashed()->get();   // include soft-deleted
+Post::onlyTrashed()->get();   // only soft-deleted
+```
+
+See [Timestamps & Soft Deletes](libraries/timestamps.md) for full documentation.

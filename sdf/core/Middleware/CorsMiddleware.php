@@ -93,9 +93,10 @@ class CorsMiddleware implements Middleware
     protected function isOriginAllowed(string $origin, array $config): bool
     {
         $allowed = $config['allowed_origins'] ?? [];
+        $allowCredentials = !empty($config['allow_credentials']);
 
         if (in_array('*', $allowed, true)) {
-            return true;
+            return !$allowCredentials;
         }
 
         if (in_array($origin, $allowed, true)) {

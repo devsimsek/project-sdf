@@ -65,6 +65,29 @@ require_once SDF_DIR . 'core/Middleware/RateLimitMiddleware.php';
 require_once SDF_DIR . 'core/Validation/Validator.php';
 require_once SDF_DIR . 'core/Spark/Paginator.php';
 
+// New features (v2.3+)
+require_once SDF_DIR . 'core/Log/LoggerAdapter.php';
+require_once SDF_DIR . 'core/Events/ListenerProvider.php';
+require_once SDF_DIR . 'core/Events/EventDispatcher.php';
+require_once SDF_DIR . 'core/Schema/Blueprint.php';
+require_once SDF_DIR . 'core/Schema/ForeignKeyDefinition.php';
+require_once SDF_DIR . 'core/Schema/Schema.php';
+require_once SDF_DIR . 'core/Localization/Translator.php';
+require_once SDF_DIR . 'core/Mail/Mailable.php';
+require_once SDF_DIR . 'core/Mail/Mailer.php';
+require_once SDF_DIR . 'core/Mail/NativeMailer.php';
+require_once SDF_DIR . 'core/Mail/LogMailer.php';
+require_once SDF_DIR . 'core/Mail/Mail.php';
+require_once SDF_DIR . 'core/Queue/Queue.php';
+require_once SDF_DIR . 'core/Queue/Job.php';
+require_once SDF_DIR . 'core/Queue/DatabaseQueue.php';
+require_once SDF_DIR . 'core/Queue/RedisQueue.php';
+require_once SDF_DIR . 'core/Queue/Worker.php';
+require_once SDF_DIR . 'core/Storage/Contracts/StorageDriver.php';
+require_once SDF_DIR . 'core/Storage/Drivers/LocalDriver.php';
+require_once SDF_DIR . 'core/Storage/Drivers/S3Driver.php';
+require_once SDF_DIR . 'core/Storage/Storage.php';
+
 // Test helpers
 require_once __DIR__ . '/TestMiddlewares.php';
 require_once __DIR__ . '/TestRequest.php';

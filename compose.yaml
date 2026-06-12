@@ -1,0 +1,56 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "80:80"
+    environment:
+      - SDF_ENV=${SDF_ENV:-development}
+      - APP_KEY=${APP_KEY:-}
+      - DB_HOST=db
+      - DB_NAME=${DB_NAME:-sdf}
+      - DB_USER=${DB_USER:-sdf}
+      - DB_PASS=${DB_PASS:-sdf}
+      - REDIS_HOST=redis
+    volumes:
+      - ./app:/app/app:delegated
+      - ./sdf:/app/sdf:delegated
+      - ./index.php:/app/index.php:delegated
+      - ./composer.json:/app/composer.json:delegated
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: mysql:8.4
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:-root}
+      MYSQL_DATABASE: ${DB_NAME:-sdf}
+      MYSQL_USER: ${DB_USER:-sdf}
+      MYSQL_PASSWORD: ${DB_PASS:-sdf}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  redis_data:

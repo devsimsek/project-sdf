@@ -144,3 +144,34 @@ $this->fuse->render('home');
 //            app/views/home.phtml
 //            app/views/home.fuse
 ```
+
+## Template Inheritance (v2.3+)
+
+Fuse supports Blade-style template inheritance:
+
+### Layout
+```php
+{{-- layouts/app.php --}}
+<!DOCTYPE html>
+<html>
+<head><title>@yield('title', 'Default')</title></head>
+<body>
+  @yield('content')
+</body>
+</html>
+```
+
+### Child template
+```php
+@extends('layouts/app')
+@section('title', 'My Page')
+@section('content')
+  <h1>Hello</h1>
+@endsection
+```
+
+### Directives
+- `@extends('view')` — inherit from a parent layout
+- `@section('name')` / `@endsection` — define a content block
+- `@yield('name', 'default')` — render a section from child
+- `@include('view')` — include another view inline

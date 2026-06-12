@@ -152,6 +152,9 @@ class RedisDriver implements CacheDriver
         $iterator = null;
         $keys = [];
         while ($ret = $this->redis->scan($iterator, $this->prefix . '*')) {
+            if ($ret === false || !is_array($ret)) {
+                return false;
+            }
             foreach ($ret as $key) {
                 $keys[] = $key;
             }
@@ -199,14 +202,15 @@ class RedisDriver implements CacheDriver
      */
     public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
+        if (!$this->available) {
+            return false;
+        }
         $ok = true;
-        $this->redis->multi();
         foreach ($values as $key => $value) {
             if (!$this->set($key, $value, $ttl)) {
                 $ok = false;
             }
         }
-        $this->redis->exec();
         return $ok;
     }
 
