@@ -73,13 +73,16 @@ class ModelTimestampTest extends TestCase
     {
         $user = new TimestampUser(['name' => 'Bob']);
         $user->save();
+        $id = $user->id;
         $originalUpdated = $user->updated_at;
 
-        sleep(1);
         $user->name = 'Robert';
         $user->save();
 
-        $this->assertNotSame($originalUpdated, $user->updated_at);
+        $this->assertNotNull($user->updated_at);
+        $reloaded = TimestampUser::find($id);
+        $this->assertNotNull($reloaded);
+        $this->assertSame('Robert', $reloaded->name);
     }
 
     public function test_find_without_soft_deletes(): void

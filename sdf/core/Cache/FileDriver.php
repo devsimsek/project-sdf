@@ -353,6 +353,6 @@ class FileDriver implements CacheDriver
     private function saveTagIndex(array $index): void
     {
         $file = $this->path . $this->prefix . 'tag_index.cache';
-        file_put_contents($file, serialize($index));
+        file_put_contents($file, serialize($index), LOCK_EX);
     }
 }

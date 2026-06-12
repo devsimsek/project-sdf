@@ -78,12 +78,16 @@ class SessionGuard implements Guard
      *
      * @param object $user User model instance.
      * @return void
+     * @throws \RuntimeException If the user model has no id.
      */
     public function login(object $user): void
     {
+        if (($user->id ?? null) === null) {
+            throw new \RuntimeException('Cannot login user with null id.');
+        }
         $this->userInstance = $user;
         $session = Session::getInstance();
-        $session->set('_auth_id', $user->id ?? null);
+        $session->set('_auth_id', $user->id);
         $session->regenerate(true);
     }
 

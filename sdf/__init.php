@@ -22,7 +22,7 @@ if (!defined("SDF")) {
     print_r('PANIC: sdf is not called by it\'s own script.');
     exit(1);
 }
-const SDF_VERSION = "2.1.0";
+const SDF_VERSION = "2.3.0";
 
 // Check minimum version requirement of this framework.
 // PHP 8.2 or higher is required, framework is tested and compatible up to PHP 8.5

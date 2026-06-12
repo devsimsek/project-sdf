@@ -199,6 +199,9 @@ class RedisDriver implements CacheDriver
      */
     public function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
+        if (!$this->available) {
+            return false;
+        }
         $ok = true;
         $this->redis->multi();
         foreach ($values as $key => $value) {

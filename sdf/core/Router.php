@@ -253,7 +253,7 @@ class Router
         }
 
         foreach (self::$routes as $route) {
-            if (preg_match("#" . $route["expression"] . "#" . (self::$config["case_matters"] ? "" : "i") . (self::$config["multimatch"] ? "" : "u"), $request_path, $routeMatches)) {
+            if (preg_match("~" . $route["expression"] . "~" . (self::$config["case_matters"] ? "" : "i") . (self::$config["multimatch"] ? "" : "u"), $request_path, $routeMatches)) {
                 $path_match_found = true;
                 if (strtolower($request_method) == strtolower($route["method"]) || $route["method"] == "any") {
                     array_shift($routeMatches);

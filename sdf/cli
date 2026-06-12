@@ -1018,7 +1018,8 @@ class CLI
 
         switch ($driver) {
             case "sqlite":
-                $dsn = "sqlite:" . ($path ?: $name);
+                $sqlitePath = $path ?: $name;
+                $dsn = str_starts_with($sqlitePath, 'sqlite:') ? $sqlitePath : "sqlite:" . $sqlitePath;
                 $user = null;
                 $pass = null;
                 break;
@@ -1136,7 +1137,7 @@ class CLI
     {
         // Run wrk against the dev server and print results with 30s duration and 10 concurrent connections
         // save results to a file named benchmark_results.txt in the current directory
-        $port = self::getPortArg();
+        $port = $this->getPortArg();
         $duration = 30;
         $concurrency = 10;
 
@@ -1156,7 +1157,7 @@ class CLI
      */
     private function runBenchmarkDry(): void
     {
-        $port = self::getPortArg();
+        $port = $this->getPortArg();
         $duration = 30;
         $concurrency = 10;
 
@@ -1210,7 +1211,7 @@ class CLI
      */
     private function handleDevServer(): void
     {
-        $port = self::getPortArg();
+        $port = $this->getPortArg();
         $quiet = in_array("-q", $this->argv);
         $live = in_array("--live", $this->argv);
 
@@ -1282,12 +1283,11 @@ class CLI
     /**
      * Spawn a background process to watch files and clear cache.
      */
-    private static function getPortArg(): int
+    private function getPortArg(): int
     {
-        $argv = $GLOBALS['argv'] ?? [];
-        $pIndex = array_search("-p", $argv);
-        if ($pIndex !== false && isset($argv[$pIndex + 1])) {
-            return (int) $argv[$pIndex + 1];
+        $pIndex = array_search("-p", $this->argv);
+        if ($pIndex !== false && isset($this->argv[$pIndex + 1])) {
+            return (int) $this->argv[$pIndex + 1];
         }
         return 8080;
     }
