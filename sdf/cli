@@ -1214,6 +1214,11 @@ class CLI
         $port = $this->getPortArg();
         $quiet = in_array("-q", $this->argv);
         $live = in_array("--live", $this->argv);
+        $clear = in_array("--clear-cache", $this->argv) || in_array("-c", $this->argv);
+
+        if ($clear) {
+            $this->clearCache(silent: true);
+        }
 
         if (!$quiet) {
             $this->showBanner();
@@ -1221,6 +1226,9 @@ class CLI
             if ($live) {
                 echo "[INFO] Live mode enabled. Watching for changes...\n";
                 putenv("SDF_LIVE_RELOAD=true");
+            }
+            if ($clear) {
+                echo "[INFO] Cache cleared before starting.\n";
             }
         }
 
@@ -1473,7 +1481,7 @@ class CLI
         echo "    seed                      Run all seeders\n";
         echo "    reset                     Rollback all + Migrate + Seed\n";
         echo "\n";
-        echo "  serve|devserver [-p port] [-q] [--live] Start dev server\n";
+        echo "  serve|devserver [-p port] [-q] [--live] [--clear-cache|-c]  Start dev server\n";
         echo "  test|tests [phpunit args]     Run PHPUnit test suite (for example: --filter, --testsuite)\n";
         echo "\n";
         echo "  cache [action]              Cache management\n";
