@@ -327,6 +327,66 @@ class ValidationTest extends TestCase
         $this->assertFalse($v->validate());
     }
 
+    public function test_min_numeric_string_passes(): void
+    {
+        $v = Validator::make(['age' => '25'], ['age' => 'numeric|min:18']);
+        $this->assertTrue($v->validate());
+    }
+
+    public function test_min_numeric_string_fails(): void
+    {
+        $v = Validator::make(['age' => '15'], ['age' => 'numeric|min:18']);
+        $this->assertFalse($v->validate());
+    }
+
+    public function test_max_numeric_string_passes(): void
+    {
+        $v = Validator::make(['age' => '25'], ['age' => 'numeric|max:99']);
+        $this->assertTrue($v->validate());
+    }
+
+    public function test_max_numeric_string_fails(): void
+    {
+        $v = Validator::make(['age' => '100'], ['age' => 'numeric|max:99']);
+        $this->assertFalse($v->validate());
+    }
+
+    public function test_between_numeric_string_passes(): void
+    {
+        $v = Validator::make(['age' => '25'], ['age' => 'numeric|between:18,99']);
+        $this->assertTrue($v->validate());
+    }
+
+    public function test_between_numeric_string_fails_below(): void
+    {
+        $v = Validator::make(['age' => '10'], ['age' => 'numeric|between:18,99']);
+        $this->assertFalse($v->validate());
+    }
+
+    public function test_between_numeric_string_fails_above(): void
+    {
+        $v = Validator::make(['age' => '100'], ['age' => 'numeric|between:18,99']);
+        $this->assertFalse($v->validate());
+    }
+
+    public function test_string_min_still_works_for_pure_strings(): void
+    {
+        $v = Validator::make(['name' => 'Hello'], ['name' => 'string|min:3']);
+        $this->assertTrue($v->validate());
+    }
+
+    public function test_string_max_still_works_for_pure_strings(): void
+    {
+        $v = Validator::make(['name' => 'Hi'], ['name' => 'string|max:5']);
+        $this->assertTrue($v->validate());
+    }
+
+    public function test_string_min_with_numeric_string_uses_numeric_comparison(): void
+    {
+        $v = Validator::make(['code' => '12345'], ['code' => 'string|min:6']);
+        $this->assertTrue($v->validate());
+    }
+
     public function test_errors_empty_when_valid(): void
     {
         $v = Validator::make(['name' => 'John'], ['name' => 'required']);

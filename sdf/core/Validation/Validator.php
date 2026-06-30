@@ -156,7 +156,7 @@ class Validator
             return true;
         }
         $min = (int)$params[0];
-        if (is_string($value)) {
+        if (is_string($value) && !is_numeric($value)) {
             return mb_strlen($value) >= $min;
         }
         if (is_numeric($value)) {
@@ -174,7 +174,7 @@ class Validator
             return true;
         }
         $max = (int)$params[0];
-        if (is_string($value)) {
+        if (is_string($value) && !is_numeric($value)) {
             return mb_strlen($value) <= $max;
         }
         if (is_numeric($value)) {
