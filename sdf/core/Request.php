@@ -439,15 +439,16 @@ class Request
      */
     public function ip(): ?string
     {
-        $trusted = $_SERVER["SDF_TRUSTED_PROXIES"] ?? "";
         $remote = $_SERVER["REMOTE_ADDR"] ?? null;
+        $trusted = $_SERVER["SDF_TRUSTED_PROXIES"] ?? "";
 
-        if ($remote !== null && $trusted !== "") {
-            $proxies = explode(",", $trusted);
-            $proxies = array_map('trim', $proxies);
-            if (!in_array($remote, $proxies, true)) {
-                return $remote;
-            }
+        if ($trusted === "" || $remote === null) {
+            return $remote;
+        }
+
+        $proxies = array_map('trim', explode(",", $trusted));
+        if (!in_array($remote, $proxies, true)) {
+            return $remote;
         }
 
         $forwarded = $_SERVER["HTTP_X_FORWARDED_FOR"] ?? "";
@@ -460,7 +461,7 @@ class Request
                 }
             }
         }
-        return $remote ?? ($_SERVER["HTTP_CLIENT_IP"] ?? null);
+        return $remote;
     }
 
     /**

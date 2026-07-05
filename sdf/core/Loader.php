@@ -28,18 +28,18 @@ class Loader
 
     /**
      * Load a view file.
-     * @param string $name
+     * @param string $view
      * @param array|object $params
      * @param string $directory
      * @return bool
      * @throws Exception
      */
     public function view(
-        string       $name,
+        string       $view,
         array|object $params = [],
         string       $directory = SDF_APP_VIEW
     ): bool {
-        $viewName = $this->normalizeFilename($name);
+        $viewName = $this->normalizeFilename($view);
         $useFuse = defined('USE_FUSE') ? (bool) constant('USE_FUSE') : false;
 
         if (!$this->isLoaded($viewName) && file_exists($directory . $viewName)) {
@@ -47,7 +47,7 @@ class Loader
                 $params = get_object_vars($params);
             }
             if (is_array($params)) {
-                extract($params);
+                extract($params, EXTR_SKIP);
             }
 
             $this->load($viewName);

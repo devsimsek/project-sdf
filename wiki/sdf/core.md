@@ -79,6 +79,8 @@ $this->load->library('CsvExporter');         // require app/libraries/CsvExporte
 $this->load->config('mail');                 // load app/config/mail.php
 ```
 
+> As of **v2.3.1**, `Loader::view()` first parameter is named `$view` (was `$name`). The rename is positional-only - existing callers `$this->load->view('home')` are unaffected. View data is now extracted with `EXTR_SKIP` (see [Fuse - Safe variable extraction](../libraries/fuse.md#safe-variable-extraction-v231)).
+
 ## Controller Base
 
 All controllers extend `SDF\Controller`. Properties auto-injected:

@@ -8,8 +8,13 @@
  */
 function eh_pathNotFound($requestPath): void
 {
+    if (!headers_sent()) {
+        header('HTTP/1.0 404 Not Found');
+        header('Content-Type: text/html; charset=UTF-8');
+    }
     if (!is_array($requestPath)) {
-        print_r('404 Error, Path ' . $requestPath . ' Not Found.');
+        $safePath = htmlspecialchars($requestPath, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+        print_r('404 Error, Path ' . $safePath . ' Not Found.');
     } else {
         print_r('404 Error, Path Not Found.');
     }
@@ -25,7 +30,13 @@ function eh_pathNotFound($requestPath): void
  */
 function eh_methodNotAllowed($requestPath, $requestMethod): void
 {
-    print_r("Method " . $requestMethod . " not allowed on this path.");
+    if (!headers_sent()) {
+        header('HTTP/1.0 405 Method Not Allowed');
+        header('Content-Type: text/html; charset=UTF-8');
+    }
+    $safeMethod = htmlspecialchars($requestMethod, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    $safePath = is_array($requestPath) ? '' : ' ' . htmlspecialchars($requestPath, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    print_r("Method " . $safeMethod . " not allowed on this path" . $safePath . ".");
     exit();
 }
 

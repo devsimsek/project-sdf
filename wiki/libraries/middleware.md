@@ -137,12 +137,26 @@ When `allow_credentials` is `true`, wildcard origins (`*`) are rejected — you 
 
 ## Rate Limit Middleware
 
-The built-in `RateLimitMiddleware` uses the Cache facade (60 req/min per IP+route by default). IP detection respects trusted proxies — configure via the `SDF_TRUSTED_PROXIES` server variable:
+The built-in `RateLimitMiddleware` uses the Cache facade (60 req/min per IP+route by default). IP detection respects trusted proxies - configure via the `SDF_TRUSTED_PROXIES` server variable:
 
 ```php
 // In index.php or .env
 $_SERVER['SDF_TRUSTED_PROXIES'] = '10.0.0.1,10.0.0.2';
 ```
+
+### Default-deny X-Forwarded-For (v2.3.1+)
+
+As of **v2.3.1**, `Request::ip()` follows a **default-deny** policy. When `SDF_TRUSTED_PROXIES` is unset (the default on a fresh install and the bundled `compose.yaml`/`Caddyfile`), only `REMOTE_ADDR` is returned - **`X-Forwarded-For` and `HTTP_CLIENT_IP` are never consulted**. This closes a rate-limit / IP-ban bypass where any client could spoof its IP by setting `X-Forwarded-For: <random>` per request.
+
+Behaviour summary:
+
+| `SDF_TRUSTED_PROXIES` | `REMOTE_ADDR` matches? | IP returned |
+|---|---|---|
+| unset / empty | n/a | `REMOTE_ADDR` (XFF ignored) |
+| set | yes | first valid IP from `X-Forwarded-For` |
+| set | no | `REMOTE_ADDR` (XFF ignored - untrusted proxy) |
+
+The legacy `HTTP_CLIENT_IP` fallback has been removed entirely. If you deployed SDF behind a TLS-terminating proxy before v2.3.1 and relied on implicit XFF trust, you **must** set `SDF_TRUSTED_PROXIES` to the proxy's IP after upgrading, or rate limiting / IP-based auth will key on the proxy's address for every client.
 
 Untrusted `X-Forwarded-For` headers are ignored.
 
