@@ -284,9 +284,7 @@ class FileDriver implements CacheDriver
         if ($written === false) {
             return false;
         }
-        if (PHP_SAPI !== 'cli-server' && PHP_SAPI !== 'cli') {
-            chmod($tmp, 0600);
-        }
+        chmod($tmp, 0600);
         $renamed = rename($tmp, $file);
         if (!$renamed) {
             unlink($tmp);
@@ -353,6 +351,12 @@ class FileDriver implements CacheDriver
     private function saveTagIndex(array $index): void
     {
         $file = $this->path . $this->prefix . 'tag_index.cache';
-        file_put_contents($file, serialize($index), LOCK_EX);
+        $tmp = $file . '.tmp.' . uniqid('', true);
+        if (file_put_contents($tmp, serialize($index), LOCK_EX) !== false) {
+            chmod($tmp, 0600);
+            if (!rename($tmp, $file)) {
+                unlink($tmp);
+            }
+        }
     }
 }

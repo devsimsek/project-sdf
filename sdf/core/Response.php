@@ -62,6 +62,9 @@ class Response
      */
     public function addHeader(string $header): void
     {
+        if (preg_match('/[\r\n\0]/', $header)) {
+            throw new \InvalidArgumentException('Header injection detected in raw header');
+        }
         $this->headers[] = $header;
     }
 
@@ -74,6 +77,9 @@ class Response
      */
     public function setHeader(string $name, string $value): self
     {
+        if (preg_match('/[\r\n\0]/', $name . $value)) {
+            throw new \InvalidArgumentException('Header injection detected');
+        }
         $this->namedHeaders[$name] = $value;
         return $this;
     }
@@ -229,9 +235,36 @@ class Response
      */
     public function redirect(string $url, int $statusCode = 302): void
     {
+        if (!$this->isSafeRedirectUrl($url)) {
+            throw new \InvalidArgumentException('Unsafe redirect target blocked: ' . $url);
+        }
         $this->setHeader('Location', $url);
         $this->setHttpCode($statusCode);
         $this->sendHeaders();
+    }
+
+    /**
+     * Validate that a redirect URL is same-origin or a relative path.
+     * Blocks protocol-relative (//), javascript:, data:, and vbscript: schemes.
+     *
+     * @param string $url
+     * @return bool
+     */
+    private function isSafeRedirectUrl(string $url): bool
+    {
+        if ($url === '') {
+            return true;
+        }
+        if (str_starts_with($url, '//')) {
+            return false;
+        }
+        if (preg_match('#^([a-z][a-z0-9+.\-]*):#i', $url, $m)) {
+            $scheme = strtolower($m[1]);
+            if (!in_array($scheme, ['http', 'https'], true)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -281,8 +314,11 @@ class Response
         $size = filesize($file);
         $mime = mime_content_type($file) ?: 'application/octet-stream';
 
+        $safeName = str_replace(['"', "\r", "\n", "\0"], '', $name);
+        $encodedName = rawurlencode($name);
+
         $this->setHeader('Content-Type', $mime);
-        $this->setHeader('Content-Disposition', 'attachment; filename="' . $name . '"');
+        $this->setHeader('Content-Disposition', 'attachment; filename="' . $safeName . '"; filename*=UTF-8\'\'' . $encodedName);
         $this->setHeader('Content-Length', (string) $size);
         $this->setHttpCode(200);
         $this->sendHeaders();

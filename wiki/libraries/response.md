@@ -52,6 +52,8 @@ Adds a raw header string to the response.
 
 - **Returns:** `void`
 
+- **Throws:** `InvalidArgumentException` if the header contains CR, LF, or NUL characters (header injection / response splitting protection, v2.3.4+).
+
 #### `setHeader(string $name, string $value): self`
 
 Set a named header. Replaces any existing value for that name.
@@ -61,6 +63,8 @@ Set a named header. Replaces any existing value for that name.
   - `string $value`: The header value.
 
 - **Returns:** `self` (fluent)
+
+- **Throws:** `InvalidArgumentException` if `$name` or `$value` contains CR, LF, or NUL characters (header injection / response splitting protection, v2.3.4+).
 
 - **Example:**
   ```php
@@ -208,7 +212,12 @@ Sends an XML response (`Content-Type: application/xml`).
 
 #### `redirect(string $url, int $statusCode = 302): void`
 
-Send a redirect response.
+Send a redirect response. As of v2.3.4, validates the URL to prevent open-redirect attacks:
+
+- Relative paths (`/dashboard`) and same-origin URLs are allowed
+- `http://` and `https://` absolute URLs are allowed
+- Protocol-relative URLs (`//evil.com`) are rejected
+- `javascript:`, `data:`, `vbscript:` and other non-HTTP schemes are rejected
 
 - **Parameters:**
   - `string $url`: The URL to redirect to.
@@ -216,10 +225,13 @@ Send a redirect response.
 
 - **Returns:** `void`
 
+- **Throws:** `InvalidArgumentException` if the URL is an unsafe redirect target.
+
 - **Example:**
   ```php
   $this->response->redirect('/login');
   $this->response->redirect('/dashboard', 301);
+  $this->response->redirect('https://example.com/path');  // allowed
   ```
 
 #### `noContent(): void`
@@ -235,7 +247,10 @@ Send a 204 No Content response.
 
 #### `download(string $file, ?string $name = null): void`
 
-Send a file as a download response. Automatically sets `Content-Type`, `Content-Disposition`, and `Content-Length`.
+Send a file as a download response. Automatically sets `Content-Type`, `Content-Disposition`, and `Content-Length`. As of v2.3.4, the download filename is sanitized per RFC 6266:
+
+- `"`, CR, LF, and NUL characters are stripped from the filename
+- Both a quoted `filename="..."` and an encoded `filename*=UTF-8''...` parameter are emitted for cross-browser compatibility
 
 - **Parameters:**
   - `string $file`: Path to the file.
@@ -298,3 +313,5 @@ Set the `Content-Type` header.
 - If headers have already been sent, a `HeadersSendException` (500) is thrown.
 - If the HTTP status code is not set before sending headers, an `HttpResponseException` (500) is thrown.
 - `download()` throws `HttpResponseException` (404) if the file does not exist.
+- `setHeader()` / `addHeader()` throw `InvalidArgumentException` if the header contains CR, LF, or NUL (v2.3.4+).
+- `redirect()` throws `InvalidArgumentException` for unsafe redirect targets (v2.3.4+).

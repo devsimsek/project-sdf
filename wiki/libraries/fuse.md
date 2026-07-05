@@ -142,6 +142,16 @@ Both `Fuse::render()` and `Loader::view()` extract view data with `EXTR_SKIP` in
 - Subsequent renders: compiled file used directly - no parsing overhead
 - Cache invalidated automatically when source file `mtime` changes
 
+### Atomic cache writes (v2.3.4+)
+
+As of **v2.3.4**, compiled template cache files are written atomically:
+
+- `LOCK_EX` on the temp file prevents concurrent writers from corrupting each other
+- Temp file + `rename()` ensures the cached `.php` file is never in a half-written state (prevents the TOCTOU race where an attacker could replace the file between `file_put_contents` and `require`)
+- `chmod 0600` on the temp file before rename, regardless of SAPI
+
+This closes a cache-poisoning RCE vector on shared hosting where `/tmp/fuse_cache/` is world-writable.
+
 ## Supported Extensions
 
 Fuse resolves view files in this order: `.php` → `.phtml` → `.fuse`
