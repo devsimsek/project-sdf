@@ -97,6 +97,21 @@ $driver->get('anything', 'fallback'); // 'fallback'
 $driver->set('x', 'y');   // false
 ```
 
+### Key normalization (v2.3.1+)
+
+Every facade method (`get`, `set`, `delete`, `has`, `forget`, `getMultiple`, `setMultiple`, `deleteMultiple`) runs the key through `Cache::normalizeKey()` before delegating to the driver. This enforces the PSR-16 charset and closes injection vectors into Redis hash tags, Memcached keyspaces, and the file-driver path.
+
+- Reserved PSR-16 characters `{}()/\@:"` are replaced with `_`.
+- Any character outside `[a-zA-Z0-9_.]` is stripped.
+- Empty keys throw `InvalidArgumentException` (PSR-16 §1.3 forbids empty keys).
+
+```php
+Cache::normalizeKey('user:{42}/posts');   // 'user_42_posts'
+Cache::normalizeKey('');                  // throws \InvalidArgumentException
+```
+
+> If you cache objects, note that `FileDriver` currently unserializes with `allowed_classes => true`. Keep your cache directory private (`app/cache/` rather than `/tmp`) and never cache content that could be tampered with by another tenant. A future release will switch the default to `allowed_classes => false` for defense in depth.
+
 ## Drivers
 
 | Driver      | Extension required | Storage           |

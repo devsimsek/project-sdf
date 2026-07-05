@@ -31,6 +31,12 @@ In the view, data is available as extracted PHP variables:
 <p>{{ $total }} posts found.</p>
 ```
 
+### Safe variable extraction (v2.3.1+)
+
+Both `Fuse::render()` and `Loader::view()` extract view data with `EXTR_SKIP` instead of the default `EXTR_OVERWRITE`. This means **view data cannot overwrite the framework's internal local variables** (`$cacheFile`, `$cacheDir`, `$path`, `$viewFile`, `$viewName`, `$directory`, `$useFuse`). Without this guard, passing user-controlled keys like `['cacheFile' => '/etc/passwd']` into a view would let an attacker hijack the `require` path (LFI/RCE).
+
+> Safe pattern: `Fuse::with($_REQUEST)->render(...)` is now safe; previously it was not. You should still prefer `with(['specific' => $value])` over passing raw superglobals.
+
 ## Variable Interpolation
 
 `{{ $var }}` - escaped via `htmlspecialchars`. Safe by default.
@@ -39,6 +45,8 @@ In the view, data is available as extracted PHP variables:
 <p>Welcome, {{ $user['name'] }}!</p>
 <p>Email: {{ $user['email'] }}</p>
 ```
+
+> As of v2.3.1, `{{ $var }}` compiles to `htmlspecialchars($var, ENT_QUOTES)`. Note this omits `ENT_SUBSTITUTE` and an explicit `'UTF-8'` charset argument - tracked for a future hardening release. For now, ensure your app serves UTF-8 to avoid edge cases with invalid byte sequences.
 
 ## Directives
 

@@ -45,7 +45,7 @@ class Cache
      */
     public static function get(string $key, mixed $default = null): mixed
     {
-        return self::driver()->get($key, $default);
+        return self::driver()->get(self::normalizeKey($key), $default);
     }
 
     /**
@@ -58,7 +58,7 @@ class Cache
      */
     public static function set(string $key, mixed $value, null|int|DateInterval $ttl = null): bool
     {
-        return self::driver()->set($key, $value, $ttl);
+        return self::driver()->set(self::normalizeKey($key), $value, $ttl);
     }
 
     /**
@@ -69,7 +69,7 @@ class Cache
      */
     public static function delete(string $key): bool
     {
-        return self::driver()->delete($key);
+        return self::driver()->delete(self::normalizeKey($key));
     }
 
     /**
@@ -91,7 +91,11 @@ class Cache
      */
     public static function getMultiple(iterable $keys, mixed $default = null): iterable
     {
-        return self::driver()->getMultiple($keys, $default);
+        $normalized = [];
+        foreach ($keys as $k) {
+            $normalized[] = self::normalizeKey($k);
+        }
+        return self::driver()->getMultiple($normalized, $default);
     }
 
     /**
@@ -103,7 +107,11 @@ class Cache
      */
     public static function setMultiple(iterable $values, null|int|DateInterval $ttl = null): bool
     {
-        return self::driver()->setMultiple($values, $ttl);
+        $normalized = [];
+        foreach ($values as $k => $v) {
+            $normalized[self::normalizeKey($k)] = $v;
+        }
+        return self::driver()->setMultiple($normalized, $ttl);
     }
 
     /**
@@ -114,7 +122,11 @@ class Cache
      */
     public static function deleteMultiple(iterable $keys): bool
     {
-        return self::driver()->deleteMultiple($keys);
+        $normalized = [];
+        foreach ($keys as $k) {
+            $normalized[] = self::normalizeKey($k);
+        }
+        return self::driver()->deleteMultiple($normalized);
     }
 
     /**
@@ -125,7 +137,7 @@ class Cache
      */
     public static function has(string $key): bool
     {
-        return self::driver()->has($key);
+        return self::driver()->has(self::normalizeKey($key));
     }
 
     /**
@@ -147,7 +159,7 @@ class Cache
      */
     public static function forget(string $key): bool
     {
-        return self::driver()->delete($key);
+        return self::driver()->delete(self::normalizeKey($key));
     }
 
     /**
@@ -248,6 +260,9 @@ class Cache
      */
     public static function normalizeKey(string $key): string
     {
+        if ($key === '') {
+            throw new \InvalidArgumentException('Cache key must not be empty (PSR-16)');
+        }
         $key = preg_replace('/[{}()\/\\\@:"]/', '_', $key);
         return trim(preg_replace('/[^a-zA-Z0-9_.]/', '', $key));
     }

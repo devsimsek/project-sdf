@@ -332,7 +332,7 @@ Get the request origin (scheme + host).
 
 #### `ip(): ?string`
 
-Get the client IP address. Checks `X-Forwarded-For`, `HTTP_CLIENT_IP`, and `REMOTE_ADDR`.
+Get the client IP address. Returns `REMOTE_ADDR` directly when no trusted proxy is configured. When `SDF_TRUSTED_PROXIES` is set and `REMOTE_ADDR` matches an entry in that list, the first valid IP from `X-Forwarded-For` is returned instead. As of v2.3.1, `X-Forwarded-For` and `HTTP_CLIENT_IP` are never consulted unless `SDF_TRUSTED_PROXIES` is explicitly configured (default-deny).
 
 - **Returns:** `string|null`
 

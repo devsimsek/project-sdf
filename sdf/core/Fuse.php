@@ -96,7 +96,7 @@ class Fuse
         $cacheFile = $cacheDir . md5($path . $viewFile) . '.php';
         file_put_contents($cacheFile, $content);
 
-        extract($this->data);
+        extract($this->data, EXTR_SKIP);
         ob_start();
         require $cacheFile;
         return ob_get_clean();

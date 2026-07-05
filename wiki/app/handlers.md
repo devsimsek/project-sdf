@@ -85,3 +85,36 @@ function to load the configuration file and output it as JSON.
 
 In this section, you learned how to create handlers in SDF. You learned about the basic handler, functions, and using
 handlers in controllers.
+
+## Error Handlers (v2.3.1+)
+
+The framework calls two built-in error handlers wired in `sdf/__init.php`:
+
+- `eh_pathNotFound($requestPath)` - called by the Router on 404
+- `eh_methodNotAllowed($requestPath, $requestMethod)` - called on 405
+
+Both live in `app/handlers/errors.php` alongside `eh_errorHandler`. As of **v2.3.1**, these handlers:
+
+- Send the correct HTTP status (`404 Not Found` / `405 Method Not Allowed`) and an explicit `Content-Type: text/html; charset=UTF-8` header before any output.
+- HTML-escape every user-controlled value (`$requestPath`, `$requestMethod`) with `htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8')` to prevent reflected XSS.
+
+> Security: Never echo `$requestPath` or `$requestMethod` raw - both come from `$_SERVER['REQUEST_URI']` / `$_SERVER['REQUEST_METHOD']` and are fully attacker-controlled via the raw HTTP request line. If you replace these handlers, follow the same escaping + header pattern shown in `app/handlers/errors.php`.
+
+A hardened 404 handler looks like:
+
+```php
+function eh_pathNotFound($requestPath): void
+{
+    if (!headers_sent()) {
+        header('HTTP/1.0 404 Not Found');
+        header('Content-Type: text/html; charset=UTF-8');
+    }
+    if (!is_array($requestPath)) {
+        $safePath = htmlspecialchars($requestPath, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+        print_r('404 Error, Path ' . $safePath . ' Not Found.');
+    } else {
+        print_r('404 Error, Path Not Found.');
+    }
+    exit();
+}
+```
