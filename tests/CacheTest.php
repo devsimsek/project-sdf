@@ -121,6 +121,22 @@ class CacheTest extends TestCase
         $this->assertSame($data, $driver->get('complex'));
     }
 
+    public function test_file_driver_refuses_object_unserialization(): void
+    {
+        $driver = new FileDriver(['path' => $this->tmpDir, 'prefix' => 'test_']);
+
+        // Craft a serialized object payload that would trigger __wakeup on a
+        // vulnerable class. Simulate an attacker writing the cache file directly.
+        $payload = 'O:8:"stdClass":1:{s:3:"foo";s:3:"bar";}';
+        $file = $this->tmpDir . '/test_obj.cache';
+        file_put_contents($file, $payload);
+
+        // With allowed_classes=false, unserialize returns __PHP_Incomplete_Class
+        // which fails the is_array() check and returns null - no gadget chain fires.
+        $result = $driver->get('obj');
+        $this->assertNull($result);
+    }
+
     // ─── FileDriver: Tagging ──────────────────────────────────────────────────
 
     public function test_file_driver_tagging(): void

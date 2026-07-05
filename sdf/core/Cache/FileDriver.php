@@ -262,7 +262,7 @@ class FileDriver implements CacheDriver
         if ($content === false) {
             return null;
         }
-        $data = unserialize($content, ['allowed_classes' => true]);
+        $data = unserialize($content, ['allowed_classes' => false]);
         if (!is_array($data)) {
             return null;
         }

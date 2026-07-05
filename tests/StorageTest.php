@@ -191,6 +191,37 @@ class StorageTest extends TestCase
         $this->assertSame('file.jpg', $this->driver->url('file.jpg'));
     }
 
+    public function test_path_traversal_in_get_throws(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->driver->get('../../../etc/passwd');
+    }
+
+    public function test_path_traversal_in_put_throws(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->driver->put('../../outside.txt', 'evil');
+    }
+
+    public function test_path_traversal_in_delete_throws(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->driver->delete('../../../etc/passwd');
+    }
+
+    public function test_null_byte_in_path_throws(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->driver->get("file\0.txt");
+    }
+
+    public function test_dotdot_inside_path_normalizes(): void
+    {
+        $this->driver->makeDirectory('sub');
+        $this->driver->put('sub/file.txt', 'inside');
+        $this->assertSame('inside', $this->driver->get('sub/../sub/file.txt'));
+    }
+
     public function test_facade_put_and_exists(): void
     {
         $this->setUpStorageConfig();

@@ -68,6 +68,25 @@ $driver->makeDirectory('new/path');
 $driver->deleteDirectory('old/path');
 ```
 
+### Path traversal protection (v2.3.2+)
+
+As of **v2.3.2**, every `LocalDriver` method runs its `$path` through a lexical normalizer before touching the filesystem. The normalizer:
+
+- Rejects null bytes (`\0`) with `InvalidArgumentException`
+- Resolves `.` and `..` segments purely lexically (no `realpath()` needed, so it works for files that don't exist yet)
+- Asserts the resolved path stays inside the configured root
+
+If a path would escape the root, an `InvalidArgumentException` is thrown:
+
+```php
+$driver->get('../../../etc/passwd');     // throws InvalidArgumentException
+$driver->put('../../shell.php', '<?php ...');  // throws InvalidArgumentException
+$driver->get("file\0.txt");              // throws InvalidArgumentException
+$driver->get('sub/../sub/file.txt');     // OK - normalizes to 'sub/file.txt'
+```
+
+This applies to all methods: `get`, `put`, `stream`, `delete`, `exists`, `size`, `mimeType`, `files`, `allFiles`, `directories`, `copy`, `move`, `makeDirectory`, `deleteDirectory`.
+
 ## S3Driver
 
 Requires `aws/aws-sdk-php` via Composer. Supports S3-compatible object stores (MinIO, DigitalOcean Spaces, etc.) via the `endpoint` config key.

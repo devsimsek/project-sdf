@@ -19,7 +19,31 @@ class LocalDriver implements StorageDriver
 
     private function resolve(string $path): string
     {
-        return $this->root . '/' . ltrim($path, '/');
+        if (str_contains($path, "\0")) {
+            throw new \InvalidArgumentException('Storage path contains null byte');
+        }
+
+        $full = $this->root . '/' . ltrim($path, '/');
+        $parts = explode('/', $full);
+        $normalized = [];
+        foreach ($parts as $part) {
+            if ($part === '' || $part === '.') {
+                continue;
+            }
+            if ($part === '..') {
+                array_pop($normalized);
+                continue;
+            }
+            $normalized[] = $part;
+        }
+        $normalizedPath = '/' . implode('/', $normalized);
+
+        $rootPath = rtrim($this->root, '/');
+        if (!str_starts_with($normalizedPath . '/', $rootPath . '/')) {
+            throw new \InvalidArgumentException('Path escapes storage root: ' . $path);
+        }
+
+        return $normalizedPath;
     }
 
     public function exists(string $path): bool
