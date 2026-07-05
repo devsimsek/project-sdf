@@ -112,6 +112,28 @@ Cache::normalizeKey('');                  // throws \InvalidArgumentException
 
 > If you cache objects, note that `FileDriver` currently unserializes with `allowed_classes => true`. Keep your cache directory private (`app/cache/` rather than `/tmp`) and never cache content that could be tampered with by another tenant. A future release will switch the default to `allowed_classes => false` for defense in depth.
 
+### Object unserialization safety (v2.3.3+)
+
+As of **v2.3.3**, `FileDriver::read()` unserializes with `allowed_classes => false`. This means **cached objects are no longer resurrected into PHP class instances** - they become `__PHP_Incomplete_Class` instead, which is a safe no-op (no `__wakeup`/`__destruct` magic methods fire). This blocks object-injection RCE gadget chains (Monolog, Guzzle, etc.) even if an attacker can write to the cache directory.
+
+**Breaking change for users caching objects:** if you previously did `Cache::set('user', $userObject)` and expected `Cache::get('user')` to return a `User` instance, you will now get `null` (because the incomplete class fails the `is_array()` check) or an `__PHP_Incomplete_Class` if you bypass the facade. **Migrate to caching arrays/scalars:**
+
+```php
+// Before (v2.3.2 and earlier)
+Cache::set('user', $userObject);
+$user = Cache::get('user');  // User instance
+
+// After (v2.3.3+)
+Cache::set('user', $userObject->toArray());
+$user = Cache::get('user');  // array
+
+// Or JSON-encode explicitly
+Cache::set('user', json_encode($userObject));
+$user = User::fromArray(json_decode(Cache::get('user'), true));
+```
+
+This brings `FileDriver` in line with `RedisDriver` and `MemcachedDriver`, which already used `allowed_classes => false`. The tag-index unserializer (`loadTagIndex()`) was already safe.
+
 ## Drivers
 
 | Driver      | Extension required | Storage           |
