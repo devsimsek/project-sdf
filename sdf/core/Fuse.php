@@ -94,7 +94,11 @@ class Fuse
             mkdir($cacheDir, 0755, true);
         }
         $cacheFile = $cacheDir . md5($path . $viewFile) . '.php';
-        file_put_contents($cacheFile, $content);
+        $tmp = $cacheFile . '.tmp.' . uniqid('', true);
+        if (file_put_contents($tmp, $content, LOCK_EX) !== false) {
+            chmod($tmp, 0600);
+            rename($tmp, $cacheFile);
+        }
 
         extract($this->data, EXTR_SKIP);
         ob_start();

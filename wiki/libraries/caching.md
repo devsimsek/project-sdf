@@ -134,6 +134,17 @@ $user = User::fromArray(json_decode(Cache::get('user'), true));
 
 This brings `FileDriver` in line with `RedisDriver` and `MemcachedDriver`, which already used `allowed_classes => false`. The tag-index unserializer (`loadTagIndex()`) was already safe.
 
+### Atomic writes and file permissions (v2.3.4+)
+
+As of **v2.3.4**, all `FileDriver` writes use the temp-file + atomic `rename()` pattern with `chmod 0600` applied regardless of SAPI:
+
+- `write()` - cache entries (was already atomic, now always chmods even in CLI)
+- `saveTagIndex()` - tag index (was non-atomic in-place write, now temp+rename+chmod)
+
+The config cache in `Core.php` also chmods on the legacy `var_export` rewrite path.
+
+This prevents truncated/corrupted cache files on crash, TOCTOU races between concurrent writes, and world-readable cache files on shared hosts where CLI umask defaults to `0644`.
+
 ## Drivers
 
 | Driver      | Extension required | Storage           |

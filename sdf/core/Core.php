@@ -128,6 +128,7 @@ trait CoreUtilities
                 \SDF\Core::$config = $config;
                 // Rewrite in new format for next time
                 file_put_contents($cacheFile, serialize($config));
+                chmod($cacheFile, 0600);
                 return;
             }
         }
